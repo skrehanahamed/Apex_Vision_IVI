@@ -19,11 +19,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Qt 6
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
           version: '6.5.3'
           arch: win64_msvc2019_64
-          modules: 'qtwebengine qtsvg'
+          modules: 'qtwebengine'
           cache: true
           cache-key-prefix: 'install-qt-action-6.5.3-win-webengine'
 

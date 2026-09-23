@@ -37,14 +37,19 @@ jobs:
             libasound2-dev \
             libpulse-dev \
             libnss3-dev \
-            libdbus-1-dev
+            libdbus-1-dev \
+            libxcomposite-dev \
+            libxdamage-dev \
+            libxrandr-dev \
+            libxtst-dev \
+            libpci-dev
 
       - name: Setup Qt 6
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
           version: '6.5.3'
           arch: gcc_64
-          modules: 'qtwebengine qtsvg'
+          modules: 'qtwebengine'
           cache: true
           cache-key-prefix: 'install-qt-action-6.5.3-webengine'
 
