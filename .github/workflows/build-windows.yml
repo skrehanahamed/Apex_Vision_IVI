@@ -40,7 +40,7 @@ jobs:
         run: |
           cmake -B build -G Ninja ^
             -DCMAKE_BUILD_TYPE=Release ^
-            -DCMAKE_PREFIX_PATH="%QT_ROOT%" ^
+            -DCMAKE_PREFIX_PATH="%QT_ROOT_DIR%" ^
             -DCMAKE_C_COMPILER=cl ^
             -DCMAKE_CXX_COMPILER=cl
 
