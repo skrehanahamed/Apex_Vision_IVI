@@ -10,6 +10,13 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
+if(DEFINED ENV{QT_ROOT})
+    list(PREPEND CMAKE_PREFIX_PATH "$ENV{QT_ROOT}")
+endif()
+if(DEFINED ENV{Qt6_DIR})
+    list(PREPEND CMAKE_PREFIX_PATH "$ENV{Qt6_DIR}")
+endif()
+
 if(APPLE AND EXISTS "/opt/homebrew/opt/qt")
     list(PREPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt" "/opt/homebrew/opt/qtwebengine")
 endif()

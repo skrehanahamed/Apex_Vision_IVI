@@ -48,7 +48,6 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.5.3'
-          arch: gcc_64
           modules: 'qtwebengine'
           cache: true
           cache-key-prefix: 'install-qt-action-6.5.3-webengine'
@@ -56,7 +55,8 @@ jobs:
       - name: Configure CMake
         run: |
           cmake -B build -G Ninja \
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${QT_ROOT}"
 
       - name: Build Application
         run: |
