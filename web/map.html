@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>APEX 3D Cockpit Navigation</title>
+    <!-- MapLibre GL 3.6.2 (100% Free Open-Source 3D Engine) -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #E2E8F0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+            color: #FFFFFF;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: #E2E8F0;
+        }
+
+        /* Clean map presentation - strip default browser controls */
+        .maplibregl-ctrl,
+        .maplibregl-ctrl-attrib,
+        .maplibregl-ctrl-bottom-right {
+            display: none !important;
+        }
+
+        /* Navigation Marker Container (Matches user reference image) */
+        .ref-marker-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        /* 3D White Ground Disc (Puck) */
+        .ground-disc {
+            width: 64px;
+            height: 42px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, #FFFFFF 55%, rgba(245, 248, 252, 0.95) 85%, rgba(215, 228, 245, 0.4) 100%);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22), 0 2px 5px rgba(0, 0, 0, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        /* Blue Directional Arrow (Rotates in any direction 0-360 deg) */
+        .nav-arrow-svg {
+            width: 32px;
+            height: 32px;
+            transform-origin: 50% 50%;
+            transition: transform 0.28s cubic-bezier(0.2, 0, 0.2, 1);
+            pointer-events: none;
+            filter: drop-shadow(0 2px 4px rgba(37, 99, 235, 0.35));
+        }
+
+        /* Street Name Pill Below Arrow (Matches reference: "Merritton Rd" - updates dynamically with location) */
+        .street-pill {
+            margin-top: 6px;
+            background: #FFFFFF;
+            padding: 4px 16px;
+            border-radius: 14px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18), 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            font-size: 13px;
+            font-weight: 700;
+            color: #2563EB;
+            white-space: nowrap;
+            letter-spacing: -0.2px;
+            text-align: center;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        /* Map Company Logo with Name */
+        .map-provider-logo {
+            position: absolute;
+            bottom: 14px;
+            right: 16px;
+            z-index: 100;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(255, 255, 255, 0.90);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            padding: 4px 10px 4px 6px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14), 0 1px 2px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .map-provider-logo img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .map-provider-logo span {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1E293B;
+            letter-spacing: -0.2px;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <!-- Map Company Logo with Name -->
+    <div class="map-provider-logo">
+        <img src="osm_logo.png" alt="OpenStreetMap" />
+        <span>OpenStreetMap</span>
+    </div>
+
+    <!-- MapLibre GL 3.6.2 JS -->
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+    <script>
+        // Current coordinates (Bengaluru / live GPS detected)
+        let currentLat = 12.9719445;
+        let currentLng = 77.5936873;
+        let currentHeading = 42.0; // 0° to 360° rotation in any direction
+        let currentZoom = 16.5;
+        let currentPitch = 56.0; // 3D forward-looking driving perspective
+        let currentStreet = "Kasturba Road";
+
+        let map = null;
+        let marker = null;
+        let markerEl = null;
+        let arrowSvgEl = null;
+        let streetTextEl = null;
+        let geocodeTimeout = null;
+        let isDriving = false;
+
+        function initializeMap(lat, lng, zoom) {
+            if (lat !== undefined && lng !== undefined) {
+                currentLat = lat;
+                currentLng = lng;
+            }
+            if (zoom !== undefined) {
+                currentZoom = zoom;
+            }
+
+            if (typeof maplibregl === "undefined") {
+                console.warn("[3D Map] MapLibre library loading...");
+                return;
+            }
+
+            try {
+                // Initialize 3D Map with Raster Base + 3D Extruded Buildings + Zoom Capping
+                map = new maplibregl.Map({
+                    container: "map",
+                    style: {
+                        version: 8,
+                        sources: {
+                            "osm-tiles": {
+                                type: "raster",
+                                tiles: [
+                                    "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                ],
+                                tileSize: 256,
+                                maxzoom: 19
+                            },
+                            "openmaptiles": {
+                                type: "vector",
+                                url: "https://tiles.openfreemap.org/planet"
+                            }
+                        },
+                        layers: [
+                            {
+                                id: "osm-layer",
+                                type: "raster",
+                                source: "osm-tiles",
+                                minzoom: 0,
+                                maxzoom: 19
+                            },
+                            {
+                                id: "3d-buildings",
+                                source: "openmaptiles",
+                                "source-layer": "building",
+                                type: "fill-extrusion",
+                                minzoom: 13,
+                                paint: {
+                                    "fill-extrusion-color": [
+                                        "interpolate",
+                                        ["linear"],
+                                        ["coalesce", ["get", "render_height"], 12],
+                                        0, "#DDE4EE",
+                                        20, "#CBD5E1",
+                                        40, "#94A3B8",
+                                        80, "#64748B",
+                                        120, "#475569"
+                                    ],
+                                    "fill-extrusion-height": [
+                                        "interpolate",
+                                        ["linear"],
+                                        ["zoom"],
+                                        13, 0,
+                                        13.5, ["coalesce", ["get", "render_height"], 14]
+                                    ],
+                                    "fill-extrusion-base": [
+                                        "interpolate",
+                                        ["linear"],
+                                        ["zoom"],
+                                        13, 0,
+                                        13.5, ["coalesce", ["get", "render_min_height"], 0]
+                                    ],
+                                    "fill-extrusion-opacity": 0.86
+                                }
+                            }
+                        ]
+                    },
+                    center: [currentLng, currentLat],
+                    zoom: currentZoom,
+                    minZoom: 12.0,   // Cannot zoom out into void
+                    maxZoom: 18.0,   // Strictly cap zoom in: "zoom in upto certain part then no zoom in"
+                    pitch: currentPitch, // 3D Tilt perspective
+                    bearing: 0,
+                    maxPitch: 75,
+                    attributionControl: false
+                });
+
+                // Missing sprite handler prevents any missing icon warnings
+                map.on("styleimagemissing", function(e) {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = 1;
+                    canvas.height = 1;
+                    const ctx = canvas.getContext("2d");
+                    const imgData = ctx.getImageData(0, 0, 1, 1);
+                    if (!map.hasImage(e.id)) {
+                        map.addImage(e.id, imgData);
+                    }
+                });
+
+                // Create 3D Reference Navigation Marker (White ground disc + Blue arrow + Street pill)
+                markerEl = document.createElement("div");
+                markerEl.className = "ref-marker-container";
+                markerEl.innerHTML = `
+                    <div class="ground-disc">
+                        <svg class="nav-arrow-svg" id="navArrowSvg" viewBox="0 0 36 36" style="transform: rotate(${currentHeading}deg);">
+                            <polygon points="18,4 31,30 18,24 5,30" fill="#2563EB" />
+                        </svg>
+                    </div>
+                    <div class="street-pill">
+                        <span id="streetNameText">${currentStreet}</span>
+                    </div>
+                `;
+
+                // 3D Navigation Marker fixed to vehicle GPS position
+                marker = new maplibregl.Marker({
+                    element: markerEl,
+                    draggable: false,
+                    pitchAlignment: "viewport",
+                    rotationAlignment: "viewport"
+                })
+                .setLngLat([currentLng, currentLat])
+                .addTo(map);
+
+                setTimeout(function() {
+                    arrowSvgEl = document.getElementById("navArrowSvg");
+                    streetTextEl = document.getElementById("streetNameText");
+                }, 100);
+
+                // Initial street lookup for GPS location
+                fetchStreetName(currentLat, currentLng);
+
+                // Automatically detect live GPS/IP location to set the real user location
+                setTimeout(function() {
+                    fetchLiveGPS(false);
+                }, 400);
+
+                console.log("[3D Map] Ready: GPS enabled, 3D buildings, capped maxZoom, 360° arrow, and dynamic location pill.");
+            } catch (err) {
+                console.error("[3D Map] Initialization error:", err);
+            }
+        }
+
+        /**
+         * Fetch live GPS coordinates via fast network IP or device Geolocation
+         */
+        function fetchLiveGPS(animateToLocation) {
+            const btn = document.getElementById("gpsLocateBtn");
+            if (btn) btn.style.opacity = "0.5";
+
+            function onGpsSuccess(lat, lng) {
+                if (btn) btn.style.opacity = "1";
+                if (animateToLocation) {
+                    driveTo(lat, lng);
+                } else {
+                    currentLat = lat;
+                    currentLng = lng;
+                    if (marker) marker.setLngLat([lng, lat]);
+                    if (map) map.easeTo({ center: [lng, lat], zoom: 16.5, duration: 800 });
+                    fetchStreetName(lat, lng);
+                }
+            }
+
+            // Fast network location resolution (instant, 0 timeout errors)
+            fetch("https://ipwho.is/")
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data && data.success && data.latitude && data.longitude) {
+                        onGpsSuccess(data.latitude, data.longitude);
+                    } else if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            function(pos) { onGpsSuccess(pos.coords.latitude, pos.coords.longitude); },
+                            function() { if (btn) btn.style.opacity = "1"; },
+                            { timeout: 1500 }
+                        );
+                    } else {
+                        if (btn) btn.style.opacity = "1";
+                    }
+                })
+                .catch(function() {
+                    if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                            function(pos) { onGpsSuccess(pos.coords.latitude, pos.coords.longitude); },
+                            function() { if (btn) btn.style.opacity = "1"; },
+                            { timeout: 1500 }
+                        );
+                    } else if (btn) {
+                        btn.style.opacity = "1";
+                    }
+                });
+        }
+
+        /**
+         * Calculate mathematical bearing between two coordinates (0° to 360°)
+         */
+        function calculateBearing(startLat, startLng, endLat, endLng) {
+            const dLng = (endLng - startLng) * Math.PI / 180;
+            const sLat = startLat * Math.PI / 180;
+            const eLat = endLat * Math.PI / 180;
+            const y = Math.sin(dLng) * Math.cos(eLat);
+            const x = Math.cos(sLat) * Math.sin(eLat) - Math.sin(sLat) * Math.cos(eLat) * Math.cos(dLng);
+            let brng = Math.atan2(y, x) * 180 / Math.PI;
+            return (brng + 360) % 360;
+        }
+
+        /**
+         * Smoothly drive to destination: turns arrow in direction of motion and updates street name
+         */
+        function driveTo(targetLat, targetLng) {
+            const bearing = calculateBearing(currentLat, currentLng, targetLat, targetLng);
+            currentHeading = bearing;
+            
+            if (!arrowSvgEl) {
+                arrowSvgEl = document.getElementById("navArrowSvg");
+            }
+            if (arrowSvgEl) {
+                arrowSvgEl.style.transform = `rotate(${currentHeading}deg)`;
+            }
+
+            const startLat = currentLat;
+            const startLng = currentLng;
+            const startTime = performance.now();
+            const duration = 1200; // 1.2s smooth motion
+
+            isDriving = true;
+
+            function animateStep(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+                // Ease out cubic
+                const ease = 1 - Math.pow(1 - progress, 3);
+
+                const lat = startLat + (targetLat - startLat) * ease;
+                const lng = startLng + (targetLng - startLng) * ease;
+                currentLat = lat;
+                currentLng = lng;
+
+                if (marker) {
+                    marker.setLngLat([lng, lat]);
+                }
+                if (map) {
+                    map.setCenter([lng, lat]);
+                }
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(animateStep);
+                } else {
+                    isDriving = false;
+                    fetchStreetName(targetLat, targetLng);
+                }
+            }
+            requestAnimationFrame(animateStep);
+        }
+
+        /**
+         * Update vehicle position and rotate arrow in any direction (0° to 360°)
+         */
+        function setVehiclePosition(lat, lng, heading) {
+            if (isDriving) return;
+
+            // Avoid redundant work if position unchanged
+            if (Math.abs(currentLat - lat) < 0.00001 && 
+                Math.abs(currentLng - lng) < 0.00001 && 
+                (heading === undefined || Math.abs(currentHeading - heading) < 0.1)) {
+                return;
+            }
+
+            currentLat = lat;
+            currentLng = lng;
+            if (heading !== undefined && heading !== null) {
+                currentHeading = heading;
+            }
+
+            if (marker) {
+                marker.setLngLat([currentLng, currentLat]);
+            }
+
+            if (!arrowSvgEl) {
+                arrowSvgEl = document.getElementById("navArrowSvg");
+            }
+            if (arrowSvgEl) {
+                arrowSvgEl.style.transform = `rotate(${currentHeading}deg)`;
+            }
+
+            if (map) {
+                map.easeTo({
+                    center: [currentLng, currentLat],
+                    duration: 350
+                });
+            }
+
+            fetchStreetName(currentLat, currentLng);
+        }
+
+        let lastGeocodedLat = 0;
+        let lastGeocodedLng = 0;
+
+        /**
+         * Automatically fetch real street name from coordinates (Reverse Geocoding)
+         */
+        function fetchStreetName(lat, lng) {
+            if (Math.abs(lastGeocodedLat - lat) < 0.0001 && Math.abs(lastGeocodedLng - lng) < 0.0001 && currentStreet && currentStreet !== "Merritton Rd") {
+                return;
+            }
+            lastGeocodedLat = lat;
+            lastGeocodedLng = lng;
+            clearTimeout(geocodeTimeout);
+            geocodeTimeout = setTimeout(function() {
+                const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18&addressdetails=1`;
+                fetch(url, { headers: { "User-Agent": "ApexVisionIVI/1.0" } })
+                    .then(function(res) { return res.json(); })
+                    .then(function(data) {
+                        if (data && data.address) {
+                            const street = data.address.road || 
+                                           data.address.pedestrian || 
+                                           data.address.footway || 
+                                           data.address.suburb || 
+                                           data.address.neighbourhood || 
+                                           data.address.commercial || 
+                                           data.name || 
+                                           data.address.city || 
+                                           "Kasturba Road";
+                            setStreetName(street);
+                        }
+                    })
+                    .catch(function(e) {
+                        // Offline or network delay fallback
+                    });
+            }, 200);
+        }
+
+        /**
+         * Update street pill text with smooth fade transition
+         */
+        function setStreetName(name) {
+            if (name) {
+                currentStreet = name;
+                if (!streetTextEl) {
+                    streetTextEl = document.getElementById("streetNameText");
+                }
+                if (streetTextEl) {
+                    streetTextEl.style.opacity = 0;
+                    setTimeout(function() {
+                        streetTextEl.textContent = currentStreet;
+                        streetTextEl.style.opacity = 1;
+                    }, 120);
+                }
+            }
+        }
+
+        function setMapCenter(lat, lng) {
+            currentLat = lat;
+            currentLng = lng;
+            if (map) {
+                map.panTo([currentLng, currentLat]);
+            }
+        }
+
+        function setMapZoom(level) {
+            currentZoom = Math.min(level, 18.0);
+            if (map) {
+                map.setZoom(currentZoom);
+            }
+        }
+
+        function zoomIn() {
+            if (map && map.getZoom() < 18.0) {
+                map.zoomIn();
+            }
+        }
+
+        function zoomOut() {
+            if (map) {
+                map.zoomOut();
+            }
+        }
+
+        function recenterMap() {
+            if (map) {
+                map.easeTo({
+                    center: [currentLng, currentLat],
+                    duration: 400
+                });
+            }
+        }
+
+        function clearRoute() {}
+        function displayRoute(waypoints) {}
+
+        window.addEventListener("DOMContentLoaded", function() {
+            initializeMap();
+        });
+    </script>
+</body>
+</html>

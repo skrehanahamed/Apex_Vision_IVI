@@ -1,0 +1,172 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v1.0.0)'
+        required: false
+        default: ''
+
+jobs:
+  build-linux:
+    name: Build Linux (Ubuntu 22.04)
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo rm -f /etc/apt/apt.conf.d/20auto-upgrades
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            ninja-build \
+            libgl1-mesa-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libegl1-mesa-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev \
+            libasound2-dev \
+            libpulse-dev \
+            libnss3-dev \
+            libdbus-1-dev \
+            zip
+
+      - name: Setup Qt 6
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.3'
+          arch: gcc_64
+          modules: 'qtwebengine qtsvg'
+          cache: true
+          cache-key-prefix: 'install-qt-action-6.5.3-linux'
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build Application
+        run: |
+          cmake --build build --config Release --parallel
+
+      - name: Package Linux Binary
+        run: |
+          mkdir -p package/ApexVisionIVI-Ubuntu-x86_64
+          cp build/apex_vision_ivi package/ApexVisionIVI-Ubuntu-x86_64/
+          cp -r web package/ApexVisionIVI-Ubuntu-x86_64/
+          chmod +x package/ApexVisionIVI-Ubuntu-x86_64/apex_vision_ivi
+          echo '#!/bin/bash' > package/ApexVisionIVI-Ubuntu-x86_64/run.sh
+          echo 'DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"' >> package/ApexVisionIVI-Ubuntu-x86_64/run.sh
+          echo '"$DIR/apex_vision_ivi" "$@"' >> package/ApexVisionIVI-Ubuntu-x86_64/run.sh
+          chmod +x package/ApexVisionIVI-Ubuntu-x86_64/run.sh
+          cd package
+          zip -r ../ApexVisionIVI-Ubuntu-x86_64.zip ApexVisionIVI-Ubuntu-x86_64
+          cd ..
+
+      - name: Upload Linux Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ApexVisionIVI-Ubuntu-x86_64
+          path: ApexVisionIVI-Ubuntu-x86_64.zip
+          retention-days: 1
+
+  build-macos:
+    name: Build macOS
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Qt and Ninja via Homebrew
+        run: |
+          brew install qt qtwebengine ninja
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix qtwebengine)"
+
+      - name: Build Application
+        run: |
+          cmake --build build --config Release --parallel
+
+      - name: Package macOS Binary
+        run: |
+          mkdir -p package/ApexVisionIVI-macOS
+          cp build/apex_vision_ivi package/ApexVisionIVI-macOS/
+          cp -r web package/ApexVisionIVI-macOS/
+          chmod +x package/ApexVisionIVI-macOS/apex_vision_ivi
+          echo '#!/bin/bash' > package/ApexVisionIVI-macOS/run.sh
+          echo 'DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"' >> package/ApexVisionIVI-macOS/run.sh
+          echo '"$DIR/apex_vision_ivi" "$@"' >> package/ApexVisionIVI-macOS/run.sh
+          chmod +x package/ApexVisionIVI-macOS/run.sh
+          cd package
+          zip -r ../ApexVisionIVI-macOS.zip ApexVisionIVI-macOS
+          cd ..
+
+      - name: Upload macOS Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ApexVisionIVI-macOS
+          path: ApexVisionIVI-macOS.zip
+          retention-days: 1
+
+  release:
+    name: Publish GitHub Release
+    needs: [build-linux, build-macos]
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine Release Version
+        id: version
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            TAG="${{ github.event.inputs.tag_name }}"
+          elif [ -n "${{ github.event.release.tag_name }}" ]; then
+            TAG="${{ github.event.release.tag_name }}"
+          elif [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="v1.0.0"
+          fi
+          echo "VERSION=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release_assets
+          merge-multiple: true
+
+      - name: List Release Assets
+        run: |
+          ls -lh release_assets
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: "Apex VISION IVI - Digital Cockpit ${{ steps.version.outputs.VERSION }}"
+          files: release_assets/*.zip
+          draft: false
+          prerelease: false

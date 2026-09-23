@@ -1,0 +1,42 @@
+# Build directories and artifacts
+build/
+bin/
+lib/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile.old
+*.o
+*.obj
+*.a
+*.so
+*.dylib
+*.dll
+*.exe
+
+# CMake generated files
+compile_commands.json
+.cmake/
+.rcc/
+
+# Qt moc/uic/rcc outputs
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# IDE and Editor files
+.vscode/
+.idea/
+.clangd
+.cache/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+*.swp
+*~
+
+# Scratch and temp files
+tmp/
+temp/
+*.log
