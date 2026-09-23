@@ -32,6 +32,24 @@ The architecture decouples the QML presentation layer from deterministic C++ bac
 
 ---
 
+## Visual Showcase and Subsystem Tour
+
+<div align="center">
+
+### 1. Dual-Card Cockpit Home and Status Chrome
+![Apex VISION Cockpit Dashboard](docs/screenshots/01_cockpit_dashboard.png)
+*Widescreen digital cockpit head unit featuring live 3D perspective navigation card, media player with waveform visualizer, persistent top status bar, and automotive dock controls.*
+
+<br/>
+
+### 2. Multi-Zone Climate and Seat Thermal Comfort
+![Climate and Seat Comfort](docs/screenshots/02_climate_seat_comfort.png)
+*Interactive thermal comfort control featuring independent dual-zone temperature regulation, 3-level seat ventilation and heating flyout, steering wheel heating, and airflow distribution.*
+
+</div>
+
+---
+
 ## Subsystem Specifications
 
 ### 1. 3D Cockpit Navigation and Geospatial Engine
@@ -93,6 +111,10 @@ Apex_Vision_IVI/
 │       ├── build-macos.yml       # macOS Clang & Homebrew Qt CI
 │       ├── build-windows.yml     # Windows MSVC 2022 CI
 │       └── release.yml           # Automated release packager
+├── docs/                         # System documentation and visual media
+│   └── screenshots/              # Cockpit interface screenshots
+│       ├── 01_cockpit_dashboard.png
+│       └── 02_climate_seat_comfort.png
 ├── backend/                      # C++20 backend engines
 │   ├── VehicleSimulator.h/.cpp   # Vehicle physics and telemetry simulator
 │   ├── VehicleBackend.h/.cpp     # Vehicle status and lighting controller
