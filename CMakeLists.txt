@@ -10,7 +10,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
-list(PREPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt" "/opt/homebrew/opt/qtwebengine")
+if(APPLE AND EXISTS "/opt/homebrew/opt/qt")
+    list(PREPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt" "/opt/homebrew/opt/qtwebengine")
+endif()
 
 find_package(Qt6 REQUIRED COMPONENTS
     Core
@@ -90,7 +92,7 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/status_notification.png
         qml/assets/icons/status_tower.png
         qml/assets/icons/status_gps.png
-        qml/assets/icons/image.png
+        "qml/assets/icons/image copy.png"
         qml/assets/icons/compass.svg
         qml/assets/icons/bluetooth.svg
 
@@ -135,16 +137,14 @@ qt_add_qml_module(apex_vision_ivi
 target_include_directories(apex_vision_ivi PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/backend
-    /opt/homebrew/opt/qt/lib/QtCore.framework/Headers
-    /opt/homebrew/opt/qt/lib/QtGui.framework/Headers
-    /opt/homebrew/opt/qt/lib/QtQuick.framework/Headers
-    /opt/homebrew/opt/qt/lib/QtQml.framework/Headers
-    /opt/homebrew/opt/qt/lib/QtQuickControls2.framework/Headers
-    /opt/homebrew/opt/qt/lib/QtSvg.framework/Headers
-    /opt/homebrew/opt/qt/include
-    /opt/homebrew/opt/qtwebengine/lib/QtWebEngineQuick.framework/Headers
-    /opt/homebrew/opt/qtwebengine/include
 )
+
+if(APPLE AND EXISTS "/opt/homebrew/opt/qt")
+    target_include_directories(apex_vision_ivi PRIVATE
+        /opt/homebrew/opt/qt/include
+        /opt/homebrew/opt/qtwebengine/include
+    )
+endif()
 
 target_link_libraries(apex_vision_ivi PRIVATE
     Qt6::Core
