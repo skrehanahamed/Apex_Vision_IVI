@@ -6,13 +6,15 @@ import "../components"
 Item {
     id: root
 
+    property bool climateOpen: false
+
     RowLayout {
         anchors.fill: parent
         anchors.topMargin: 8
         anchors.bottomMargin: 8
-        anchors.leftMargin: 12
-        anchors.rightMargin: 16
-        spacing: 20
+        anchors.leftMargin: 0
+        anchors.rightMargin: 12
+        spacing: 16
 
         // Navigation Area (Left / Center: ~62% width)
         NavigationPanel {

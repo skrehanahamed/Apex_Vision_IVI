@@ -542,11 +542,17 @@
         }
 
         function clearRoute() {}
-        function displayRoute(waypoints) {}
+        function setFadeOverlay(active) {
+            var el = document.getElementById("fade-overlay");
+            if (el) {
+                el.style.opacity = active ? "1" : "0";
+            }
+        }
 
         window.addEventListener("DOMContentLoaded", function() {
             initializeMap();
         });
     </script>
+    <div id="fade-overlay" style="position: absolute; top:0; left:0; width:100%; height:100%; background-color:#040810; opacity:0; pointer-events:none; transition: opacity 0.35s cubic-bezier(0.45, 0, 0.55, 1); z-index: 99999;"></div>
 </body>
 </html>

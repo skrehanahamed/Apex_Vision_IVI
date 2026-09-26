@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="#FFFFFF">
+  <!-- Car Seat Base & Back -->
+  <path d="M8 20C8 20 5 13 5 9.5S7 6 7 6H8C8 6 9 6 9 7S8 8 8 9.5 11 13 11 15.5 8 20 8 20M12.5 19C11.7 19 9 21 9 21C8.7 21.2 8.8 21.5 9 21.7C9 21.7 10 23.5 11.8 23.5H17C17.9 23.5 18.7 22.8 18.7 21.9V21.1C18.7 20.2 17.9 19 17 19H12.5Z" transform="scale(0.85) translate(0, 3)"/>
+  <!-- 2nd row position badge & bidirectional arrow -->
+  <path d="M22 8L26 8M24 6L26 8L24 10" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <text x="20" y="20" font-family="sans-serif" font-size="8" font-weight="bold" fill="#FFFFFF">2</text>
+</svg>

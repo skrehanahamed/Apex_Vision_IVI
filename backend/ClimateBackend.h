@@ -59,6 +59,17 @@ class ClimateBackend : public QObject
 
     Q_PROPERTY(bool syncMode READ syncMode WRITE setSyncMode NOTIFY syncModeChanged)
 
+    // Rear Seat Climate Controls
+    Q_PROPERTY(bool rearPower READ rearPower WRITE setRearPower NOTIFY rearPowerChanged)
+    Q_PROPERTY(int rearFanSpeed READ rearFanSpeed WRITE setRearFanSpeed NOTIFY rearFanSpeedChanged)
+    Q_PROPERTY(double rearTemperature READ rearTemperature WRITE setRearTemperature NOTIFY rearTemperatureChanged)
+    Q_PROPERTY(QString rearTemperatureDisplay READ rearTemperatureDisplay NOTIFY rearTemperatureChanged)
+    Q_PROPERTY(bool rearAutoMode READ rearAutoMode WRITE setRearAutoMode NOTIFY rearAutoModeChanged)
+    Q_PROPERTY(int rearAirflowMode READ rearAirflowMode WRITE setRearAirflowMode NOTIFY rearAirflowModeChanged)
+    Q_PROPERTY(bool rearLock READ rearLock WRITE setRearLock NOTIFY rearLockChanged)
+    Q_PROPERTY(int rearSelectedRow READ rearSelectedRow WRITE setRearSelectedRow NOTIFY rearSelectedRowChanged)
+    Q_PROPERTY(bool rearRowsSynced READ rearRowsSynced WRITE setRearRowsSynced NOTIFY rearRowsSyncedChanged)
+
 public:
     enum class TemperatureMode {
         Off = 0,
@@ -118,6 +129,17 @@ public:
     bool driverSeatAuto() const { return m_driverSeatAuto; }
     bool passengerSeatAuto() const { return m_passengerSeatAuto; }
     bool syncMode() const { return m_syncMode; }
+
+    // Rear Climate Getters
+    bool rearPower() const { return m_rearPower; }
+    int rearFanSpeed() const { return m_rearFanSpeed; }
+    double rearTemperature() const { return m_rearTemperature; }
+    QString rearTemperatureDisplay() const;
+    bool rearAutoMode() const { return m_rearAutoMode; }
+    int rearAirflowMode() const { return m_rearAirflowMode; }
+    bool rearLock() const { return m_rearLock; }
+    int rearSelectedRow() const { return m_rearSelectedRow; }
+    bool rearRowsSynced() const { return m_rearRowsSynced; }
 
     // Temperature Controls (Arrow Step & Explicit Set)
     Q_INVOKABLE void increaseDriverTemperature();
@@ -200,6 +222,24 @@ public:
     Q_INVOKABLE void setSyncMode(bool enabled);
     Q_INVOKABLE void toggleSyncMode();
 
+    // Rear Climate Controls (Invokables)
+    Q_INVOKABLE void setRearPower(bool on);
+    Q_INVOKABLE void toggleRearPower();
+    Q_INVOKABLE void setRearFanSpeed(int speed);
+    Q_INVOKABLE void increaseRearFanSpeed();
+    Q_INVOKABLE void decreaseRearFanSpeed();
+    Q_INVOKABLE void setRearTemperature(double temp);
+    Q_INVOKABLE void increaseRearTemperature();
+    Q_INVOKABLE void decreaseRearTemperature();
+    Q_INVOKABLE void setRearAutoMode(bool enabled);
+    Q_INVOKABLE void toggleRearAuto();
+    Q_INVOKABLE void setRearAirflowMode(int mode);
+    Q_INVOKABLE void setRearLock(bool locked);
+    Q_INVOKABLE void toggleRearLock();
+    Q_INVOKABLE void setRearSelectedRow(int row);
+    Q_INVOKABLE void setRearRowsSynced(bool synced);
+    Q_INVOKABLE void toggleRearRowsSync();
+
 signals:
     void driverTemperatureChanged();
     void passengerTemperatureChanged();
@@ -225,6 +265,16 @@ signals:
     void passengerSeatAutoChanged();
     void airflowModeChanged();
     void syncModeChanged();
+
+    // Rear Signals
+    void rearPowerChanged();
+    void rearFanSpeedChanged();
+    void rearTemperatureChanged();
+    void rearAutoModeChanged();
+    void rearAirflowModeChanged();
+    void rearLockChanged();
+    void rearSelectedRowChanged();
+    void rearRowsSyncedChanged();
 
 private:
     void exitMaxPresets();
@@ -256,4 +306,15 @@ private:
     bool m_passengerSeatAuto{false};
     int m_airflowMode{1}; // 0: Face, 1: Face + Feet, 2: Feet, 3: Defrost + Feet
     bool m_syncMode{false};
+
+    // Rear Climate Private State
+    bool m_rearPower{true};
+    int m_rearFanSpeed{2};
+    int m_savedRearFanSpeed{2};
+    double m_rearTemperature{22.0};
+    bool m_rearAutoMode{false};
+    int m_rearAirflowMode{0}; // 0: Face, 1: Feet
+    bool m_rearLock{false};
+    int m_rearSelectedRow{2}; // 2 or 3
+    bool m_rearRowsSynced{true};
 };

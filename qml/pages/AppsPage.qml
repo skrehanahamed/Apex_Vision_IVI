@@ -4,12 +4,14 @@ import QtQuick.Controls
 Item {
     id: root
 
+    signal appSelected(string name)
+
     Rectangle {
         anchors.fill: parent
         anchors.margins: 16
         radius: 20
-        color: "#0E1522"
-        border.color: Qt.rgba(255, 255, 255, 0.08)
+        color: Qt.rgba(14/255, 21/255, 34/255, 0.68)
+        border.color: Qt.rgba(255, 255, 255, 0.12)
         border.width: 1
 
         Column {
@@ -70,6 +72,7 @@ Item {
                             id: appMouse
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
+                            onClicked: root.appSelected(modelData.name)
                         }
                     }
                 }

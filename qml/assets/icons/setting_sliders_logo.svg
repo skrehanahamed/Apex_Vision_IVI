@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" fill="none">
+  <circle cx="22" cy="22" r="22" fill="#3B82F6"/>
+  <!-- Top slider: dot on left, line on right -->
+  <circle cx="14" cy="17" r="3.2" fill="white"/>
+  <rect x="20" y="15" width="13" height="4" rx="2" fill="white"/>
+  <!-- Bottom slider: line on left, dot on right -->
+  <rect x="11" y="25" width="13" height="4" rx="2" fill="white"/>
+  <circle cx="30" cy="27" r="3.2" fill="white"/>
+</svg>

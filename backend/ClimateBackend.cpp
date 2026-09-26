@@ -829,3 +829,200 @@ void ClimateBackend::toggleSyncMode()
 {
     setSyncMode(!m_syncMode);
 }
+
+QString ClimateBackend::rearTemperatureDisplay() const
+{
+    if (!m_rearPower) {
+        return QStringLiteral("OFF");
+    }
+    if (m_rearTemperature <= 15.5) {
+        return QStringLiteral("LO");
+    }
+    if (m_rearTemperature >= 28.5) {
+        return QStringLiteral("HI");
+    }
+    return QString::asprintf("%.1f°", m_rearTemperature);
+}
+
+void ClimateBackend::setRearPower(bool on)
+{
+    if (m_rearPower != on) {
+        m_rearPower = on;
+        if (m_rearPower) {
+            if (m_rearFanSpeed == 0) {
+                m_rearFanSpeed = (m_savedRearFanSpeed > 0 ? m_savedRearFanSpeed : 2);
+                emit rearFanSpeedChanged();
+            }
+            setRearAirflowMode(0);
+        } else {
+            if (m_rearFanSpeed > 0) {
+                m_savedRearFanSpeed = m_rearFanSpeed;
+            }
+            m_rearFanSpeed = 0;
+            emit rearFanSpeedChanged();
+        }
+        emit rearPowerChanged();
+        emit rearTemperatureChanged();
+    }
+}
+
+void ClimateBackend::toggleRearPower()
+{
+    setRearPower(!m_rearPower);
+}
+
+void ClimateBackend::setRearFanSpeed(int speed)
+{
+    speed = std::clamp(speed, 0, 7);
+    if (m_rearFanSpeed != speed) {
+        m_rearFanSpeed = speed;
+        if (m_rearFanSpeed > 0) {
+            m_savedRearFanSpeed = m_rearFanSpeed;
+            if (!m_rearPower) {
+                m_rearPower = true;
+                emit rearPowerChanged();
+            }
+        } else {
+            m_rearPower = false;
+            emit rearPowerChanged();
+        }
+        emit rearFanSpeedChanged();
+        emit rearTemperatureChanged();
+    }
+}
+
+void ClimateBackend::increaseRearFanSpeed()
+{
+    if (!m_rearPower || m_rearFanSpeed == 0) {
+        m_rearPower = true;
+        m_rearFanSpeed = (m_savedRearFanSpeed > 0 ? m_savedRearFanSpeed : 2);
+        emit rearPowerChanged();
+        emit rearFanSpeedChanged();
+        emit rearTemperatureChanged();
+    } else if (m_rearFanSpeed < 7) {
+        m_rearFanSpeed++;
+        m_savedRearFanSpeed = m_rearFanSpeed;
+        emit rearFanSpeedChanged();
+    }
+}
+
+void ClimateBackend::decreaseRearFanSpeed()
+{
+    if (!m_rearPower || m_rearFanSpeed == 0) {
+        return;
+    }
+    if (m_rearFanSpeed > 1) {
+        m_rearFanSpeed--;
+        m_savedRearFanSpeed = m_rearFanSpeed;
+        emit rearFanSpeedChanged();
+    } else {
+        m_rearFanSpeed = 0;
+        m_rearPower = false;
+        emit rearPowerChanged();
+        emit rearFanSpeedChanged();
+        emit rearTemperatureChanged();
+    }
+}
+
+void ClimateBackend::setRearTemperature(double temp)
+{
+    temp = std::clamp(temp, 15.0, 29.0);
+    if (std::abs(m_rearTemperature - temp) > 1e-4) {
+        m_rearTemperature = temp;
+        if (!m_rearPower) {
+            m_rearPower = true;
+            if (m_rearFanSpeed == 0) {
+                m_rearFanSpeed = (m_savedRearFanSpeed > 0 ? m_savedRearFanSpeed : 2);
+                emit rearFanSpeedChanged();
+            }
+            emit rearPowerChanged();
+        }
+        emit rearTemperatureChanged();
+    }
+}
+
+void ClimateBackend::increaseRearTemperature()
+{
+    if (!m_rearPower) {
+        m_rearPower = true;
+        m_rearTemperature = 22.0;
+        if (m_rearFanSpeed == 0) {
+            m_rearFanSpeed = (m_savedRearFanSpeed > 0 ? m_savedRearFanSpeed : 2);
+            emit rearFanSpeedChanged();
+        }
+        emit rearPowerChanged();
+        emit rearTemperatureChanged();
+    } else if (m_rearTemperature + 0.5 <= 28.5) {
+        m_rearTemperature += 0.5;
+        emit rearTemperatureChanged();
+    }
+}
+
+void ClimateBackend::decreaseRearTemperature()
+{
+    if (!m_rearPower) {
+        return;
+    }
+    if (m_rearTemperature - 0.5 >= 15.5) {
+        m_rearTemperature -= 0.5;
+        emit rearTemperatureChanged();
+    }
+}
+
+void ClimateBackend::setRearAutoMode(bool enabled)
+{
+    if (m_rearAutoMode != enabled) {
+        m_rearAutoMode = enabled;
+        emit rearAutoModeChanged();
+    }
+}
+
+void ClimateBackend::toggleRearAuto()
+{
+    setRearAutoMode(!m_rearAutoMode);
+}
+
+void ClimateBackend::setRearAirflowMode(int mode)
+{
+    mode = std::clamp(mode, 0, 1);
+    if (m_rearAirflowMode != mode) {
+        m_rearAirflowMode = mode;
+        emit rearAirflowModeChanged();
+    }
+}
+
+void ClimateBackend::setRearLock(bool locked)
+{
+    if (m_rearLock != locked) {
+        m_rearLock = locked;
+        emit rearLockChanged();
+    }
+}
+
+void ClimateBackend::toggleRearLock()
+{
+    setRearLock(!m_rearLock);
+}
+
+void ClimateBackend::setRearSelectedRow(int row)
+{
+    if (row != 2 && row != 3) row = 2;
+    if (m_rearSelectedRow != row) {
+        m_rearSelectedRow = row;
+        emit rearSelectedRowChanged();
+        setRearAirflowMode(0);
+    }
+}
+
+void ClimateBackend::setRearRowsSynced(bool synced)
+{
+    if (m_rearRowsSynced != synced) {
+        m_rearRowsSynced = synced;
+        emit rearRowsSyncedChanged();
+    }
+}
+
+void ClimateBackend::toggleRearRowsSync()
+{
+    setRearRowsSynced(!m_rearRowsSynced);
+}

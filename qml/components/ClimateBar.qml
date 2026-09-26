@@ -13,6 +13,7 @@ Rectangle {
     property bool driverSeatMenuOpen: false
     property bool passengerSeatMenuOpen: false
     property bool fanMenuOpen: false
+    property alias climate3DOpen: airflowItem.active
     readonly property bool anyPopupOpen: driverSeatMenuOpen || passengerSeatMenuOpen || fanMenuOpen
     readonly property bool anySeatMenuOpen: driverSeatMenuOpen || passengerSeatMenuOpen
 
@@ -109,7 +110,7 @@ Rectangle {
         }
 
         // =====================================================================
-        // 2. DRIVER SEAT COMFORT & POPUP MENU (Lincoln Style)
+        // 2. DRIVER SEAT COMFORT & POPUP MENU
         // =====================================================================
         Item {
             id: driverSeatContainer
@@ -338,11 +339,11 @@ Rectangle {
                 }
             }
 
-            // Bottom bar driver seat comfort button
+            // Bottom bar driver seat comfort button (Dynamic: displays active feature/lines or default icon)
             Item {
                 id: driverSeatBtn
                 anchors.centerIn: parent
-                width: 60
+                width: 68
                 height: 44
                 visible: !root.driverSeatMenuOpen
 
@@ -353,6 +354,7 @@ Rectangle {
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
+                // 1. Default Seat Comfort Icon (when all seat features are off)
                 Image {
                     anchors.centerIn: parent
                     width: 38
@@ -360,6 +362,110 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     source: "qrc:/ApexVision/qml/assets/icons/seat_comfort_icon.png"
                     opacity: 0.95
+                    visible: ClimateBackend.driverSeatLevel === 0 &&
+                             ClimateBackend.driverSeatVentilation === 0 &&
+                             !ClimateBackend.steeringHeat &&
+                             !ClimateBackend.driverSeatAuto
+                }
+
+                // 2. Seat Heating Active (facing left, red dashes on right)
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    visible: ClimateBackend.driverSeatLevel > 0 &&
+                             ClimateBackend.driverSeatLevel >= ClimateBackend.driverSeatVentilation
+
+                    Image {
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        source: "qrc:/ApexVision/qml/assets/icons/icon_seat_heat.png"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                width: 8
+                                height: 2.2
+                                radius: 1.1
+                                color: (ClimateBackend.driverSeatLevel > (2 - index)) ?
+                                       "#FF4444" : Qt.rgba(255, 255, 255, 0.25)
+                            }
+                        }
+                    }
+                }
+
+                // 3. Seat Ventilation Active (facing left, blue dashes on right)
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    visible: ClimateBackend.driverSeatVentilation > 0 &&
+                             ClimateBackend.driverSeatVentilation > ClimateBackend.driverSeatLevel
+
+                    Image {
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        source: "qrc:/ApexVision/qml/assets/icons/icon_seat_vent.png"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                width: 8
+                                height: 2.2
+                                radius: 1.1
+                                color: (ClimateBackend.driverSeatVentilation > (2 - index)) ?
+                                       "#00D2FF" : Qt.rgba(255, 255, 255, 0.25)
+                            }
+                        }
+                    }
+                }
+
+                // 4. Steering Wheel Heat Active (when seat heat and vent are 0)
+                Image {
+                    anchors.centerIn: parent
+                    width: 26
+                    height: 26
+                    fillMode: Image.PreserveAspectFit
+                    source: "qrc:/ApexVision/qml/assets/icons/icon_steering_heat.png"
+                    visible: ClimateBackend.steeringHeat &&
+                             ClimateBackend.driverSeatLevel === 0 &&
+                             ClimateBackend.driverSeatVentilation === 0
+                }
+
+                // 5. Driver Auto Seat Active (when heat, vent, and steering are off)
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    visible: ClimateBackend.driverSeatAuto &&
+                             ClimateBackend.driverSeatLevel === 0 &&
+                             ClimateBackend.driverSeatVentilation === 0 &&
+                             !ClimateBackend.steeringHeat
+
+                    Image {
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        source: "qrc:/ApexVision/qml/assets/icons/icon_seat_auto.png"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Rectangle {
+                        width: 10
+                        height: 2.2
+                        radius: 1.1
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "#00D2FF"
+                    }
                 }
 
                 MouseArea {
@@ -379,7 +485,7 @@ Rectangle {
         Item { Layout.fillWidth: true; Layout.fillHeight: true }
 
         // =====================================================================
-        // 3. FAN CONTROL (< 🪭 3 >) + POPUP SLIDER DOCK (Lincoln Style)
+        // 3. FAN CONTROL (< 🪭 3 >) + POPUP SLIDER DOCK
         // =====================================================================
         Item {
             id: fanControlItem
@@ -736,7 +842,6 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         airflowItem.active = !airflowItem.active;
-                        ClimateBackend.cycleAirflowMode();
                     }
                 }
             }
@@ -1073,11 +1178,11 @@ Rectangle {
                 }
             }
 
-            // Bottom bar passenger seat comfort button
+            // Bottom bar passenger seat comfort button (Dynamic: displays active feature/lines or default icon)
             Item {
                 id: passengerSeatBtn
                 anchors.centerIn: parent
-                width: 60
+                width: 68
                 height: 44
                 visible: !root.passengerSeatMenuOpen
 
@@ -1088,6 +1193,7 @@ Rectangle {
                     Behavior on color { ColorAnimation { duration: 150 } }
                 }
 
+                // 1. Default Seat Icon (when all passenger seat features are off)
                 Image {
                     anchors.centerIn: parent
                     width: 36
@@ -1095,6 +1201,96 @@ Rectangle {
                     fillMode: Image.PreserveAspectFit
                     source: "qrc:/ApexVision/qml/assets/icons/icon_seat_vent_passenger.png"
                     opacity: 0.95
+                    visible: ClimateBackend.passengerSeatLevel === 0 &&
+                             ClimateBackend.passengerSeatVentilation === 0 &&
+                             !ClimateBackend.passengerSeatAuto
+                }
+
+                // 2. Seat Heating Active (dashes on left, seat facing right)
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    visible: ClimateBackend.passengerSeatLevel > 0 &&
+                             ClimateBackend.passengerSeatLevel >= ClimateBackend.passengerSeatVentilation
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                width: 8
+                                height: 2.2
+                                radius: 1.1
+                                color: (ClimateBackend.passengerSeatLevel > (2 - index)) ?
+                                       "#FF4444" : Qt.rgba(255, 255, 255, 0.25)
+                            }
+                        }
+                    }
+
+                    Image {
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        source: "qrc:/ApexVision/qml/assets/icons/icon_seat_heat_passenger.png"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                // 3. Seat Ventilation Active (dashes on left, blue fan seat facing right)
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    visible: ClimateBackend.passengerSeatVentilation > 0 &&
+                             ClimateBackend.passengerSeatVentilation > ClimateBackend.passengerSeatLevel
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+                        Repeater {
+                            model: 3
+                            Rectangle {
+                                width: 8
+                                height: 2.2
+                                radius: 1.1
+                                color: (ClimateBackend.passengerSeatVentilation > (2 - index)) ?
+                                       "#00D2FF" : Qt.rgba(255, 255, 255, 0.25)
+                            }
+                        }
+                    }
+
+                    Image {
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        source: "qrc:/ApexVision/qml/assets/icons/icon_seat_vent_blue_passenger.png"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                // 4. Passenger Auto Seat Active (when heat and vent are off)
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 6
+                    visible: ClimateBackend.passengerSeatAuto &&
+                             ClimateBackend.passengerSeatLevel === 0 &&
+                             ClimateBackend.passengerSeatVentilation === 0
+
+                    Rectangle {
+                        width: 10
+                        height: 2.2
+                        radius: 1.1
+                        anchors.verticalCenter: parent.verticalCenter
+                        color: "#00D2FF"
+                    }
+
+                    Image {
+                        width: 24
+                        height: 24
+                        fillMode: Image.PreserveAspectFit
+                        source: "qrc:/ApexVision/qml/assets/icons/icon_seat_auto_passenger.png"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 MouseArea {

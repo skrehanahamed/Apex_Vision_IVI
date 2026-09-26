@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(APEX_VISION_IVI LANGUAGES CXX)
+project(APEX_VISION_IVI VERSION 2.0.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,6 +33,8 @@ find_package(Qt6 REQUIRED COMPONENTS
     Svg
     WebEngineQuick
     Network
+    Quick3D
+    Quick3DHelpers
 )
 
 qt_standard_project_setup()
@@ -78,8 +80,11 @@ qt_add_qml_module(apex_vision_ivi
         qml/components/MediaCard.qml
         qml/components/NavigationPanel.qml
         qml/components/ClimateBar.qml
+        qml/components/Climate3DPanel.qml
+        qml/components/CabinAirRefreshOverlay.qml
         qml/components/IconButton.qml
         qml/components/TemperatureControl.qml
+        qml/components/ValetLockOverlay.qml
         qml/Typography.qml
     RESOURCES
         # Fonts
@@ -97,12 +102,26 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/nav_vehicle.svg
         qml/assets/icons/nav_phone.svg
         qml/assets/icons/nav_settings.svg
+        qml/assets/icons/icon_ambient_lighting.png
+        qml/assets/icons/icon_auto_hold.png
+        qml/assets/icons/icon_auto_hold_amber.png
+        qml/assets/icons/icon_seats.png
+        qml/assets/icons/icon_valet_mode.png
+        qml/assets/icons/icon_vehicle_status.png
+        qml/assets/icons/icon_vehicle_settings.png
+        qml/assets/icons/icon_tire_pressure.png
+        qml/assets/icons/icon_oil_life.png
+        qml/assets/icons/icon_trunk.svg
+        qml/assets/icons/icon_trunk_suv.png
+        qml/assets/icons/icon_brightness.svg
 
         # Status Bar & Connectivity
         qml/assets/icons/status_notification.png
         qml/assets/icons/status_tower.png
         qml/assets/icons/status_gps.png
-        "qml/assets/icons/image copy.png"
+        qml/assets/default_background.png
+        qml/assets/icons/image.png
+        qml/assets/vehicle_studio_bg.png
         qml/assets/icons/compass.svg
         qml/assets/icons/bluetooth.svg
 
@@ -122,6 +141,63 @@ qt_add_qml_module(apex_vision_ivi
         # Climate & Seat Comfort
         qml/assets/icons/seat_comfort_icon.png
         qml/assets/icons/seat_comfort_icon_passenger.png
+        qml/assets/icons/seat_second_row_render.png
+        "qml/assets/icons/image copy 2.png"
+        qml/assets/icons/seat_passenger_render.png
+        "qml/assets/icons/image copy 3.png"
+        "qml/assets/icons/image copy 4.png"
+        "qml/assets/icons/image copy 5.png"
+        "qml/assets/icons/image copy 6.png"
+        "qml/assets/icons/image copy 7.png"
+        qml/assets/icons/setting_sound.png
+        qml/assets/icons/setting_sound_white.png
+        qml/assets/icons/setting_sound_yellow.png
+        qml/assets/icons/setting_bluetooth.png
+        qml/assets/icons/setting_bluetooth_white.png
+        qml/assets/icons/setting_bluetooth_yellow.png
+        qml/assets/icons/setting_driver_assistance.png
+        qml/assets/icons/setting_driver_assistance_white.png
+        qml/assets/icons/setting_driver_assistance_yellow.png
+        qml/assets/icons/setting_driver_assist_white.png
+        qml/assets/icons/setting_driver_assist_yellow.png
+        qml/assets/icons/setting_vehicle_amber.png
+        qml/assets/icons/setting_vehicle_white.png
+        qml/assets/icons/setting_vehicle_yellow.png
+        qml/assets/icons/setting_system.png
+        qml/assets/icons/setting_system_white.png
+        qml/assets/icons/setting_system_yellow.png
+        qml/assets/icons/setting_profile.png
+        qml/assets/icons/setting_profile_white.png
+        qml/assets/icons/setting_profile_yellow.png
+        qml/assets/icons/setting_sliders_logo.svg
+        qml/assets/icons/setting_sliders_logo.png
+        qml/assets/icons/setting_back_return.svg
+        qml/assets/icons/setting_back_return.png
+        qml/assets/icons/seat_menu_second_row_blue.png
+        qml/assets/icons/seat_menu_second_row_amber.png
+        qml/assets/icons/seat_menu_passenger_blue.png
+        qml/assets/icons/seat_menu_passenger_amber.png
+        qml/assets/icons/seat_menu_adjust_massage_blue.png
+        qml/assets/icons/seat_menu_adjust_massage_amber.png
+        qml/assets/icons/icon_tire_pressure_blue.png
+        qml/assets/icons/icon_tire_pressure_amber.png
+        qml/assets/icons/icon_oil_life_blue.png
+        qml/assets/icons/icon_oil_life_amber.png
+        qml/assets/icons/icon_passenger_recline_back.png
+        qml/assets/icons/icon_passenger_recline_fwd.png
+        qml/assets/icons/icon_passenger_cushion_down.png
+        qml/assets/icons/icon_passenger_cushion_up.png
+        qml/assets/icons/icon_seat_second_row.svg
+        qml/assets/icons/icon_seat_passenger.svg
+        qml/assets/icons/icon_seat_adjust_massage.svg
+        qml/assets/icons/icon_seat_recline_forward.svg
+        qml/assets/icons/icon_seat_recline_backward.svg
+        qml/assets/icons/icon_seat_slide_forward.svg
+        qml/assets/icons/icon_seat_slide_backward.svg
+        qml/assets/icons/icon_seat_preset.svg
+        qml/assets/icons/icon_power.svg
+        qml/assets/icons/icon_seat_minus.svg
+        qml/assets/icons/icon_seat_plus.svg
         qml/assets/icons/icon_fan.png
         qml/assets/icons/icon_airflow_seat.png
         qml/assets/icons/chevron_up.svg
@@ -137,6 +213,20 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/icon_steering_heat.png
         qml/assets/icons/defrost_front.svg
         qml/assets/icons/defrost_rear.svg
+        qml/assets/icons/icon_left_close.png
+        qml/assets/icons/icon_left_power.png
+        qml/assets/icons/icon_left_defrost.png
+        qml/assets/icons/icon_left_defrost_yellow.png
+        qml/assets/icons/icon_left_face.png
+        qml/assets/icons/icon_left_face_yellow.png
+        qml/assets/icons/icon_rear_face.png
+        qml/assets/icons/icon_rear_face_yellow.png
+        qml/assets/icons/icon_left_feet.png
+        qml/assets/icons/icon_left_feet_yellow.png
+        qml/assets/icons/icon_left_sync.png
+        qml/assets/icons/icon_right_recirc.png
+        qml/assets/icons/icon_right_max_ac.png
+        qml/assets/icons/icon_right_refresh.png
 
         # Web & Live 3D Map
         web/map.html
@@ -165,4 +255,16 @@ target_link_libraries(apex_vision_ivi PRIVATE
     Qt6::Svg
     Qt6::WebEngineQuick
     Qt6::Network
+    Qt6::Quick3D
+    Qt6::Quick3DHelpers
 )
+
+# Custom target to keep 3D model meshes, textures, and assets in sync with build directory
+add_custom_target(DeployClimate3DAssets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/qml/climate3d
+        ${CMAKE_CURRENT_BINARY_DIR}/qml/climate3d
+    COMMENT "Deploying 3D Climate assets to build directory"
+)
+add_dependencies(apex_vision_ivi DeployClimate3DAssets)
+

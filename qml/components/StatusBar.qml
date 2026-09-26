@@ -1,11 +1,22 @@
 import QtQuick
 import QtQuick.Controls
 
-Item {
+Rectangle {
     id: root
 
     implicitWidth: 44
     implicitHeight: 120
+    color: "#070A0F"
+
+    // 1px vertical left divider matching left navigation rail
+    Rectangle {
+        anchors.left: parent.left
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        width: 1
+        color: Qt.rgba(255, 255, 255, 0.08)
+        z: 10
+    }
 
     Column {
         anchors.top: parent.top

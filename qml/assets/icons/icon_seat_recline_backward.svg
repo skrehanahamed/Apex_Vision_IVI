@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Headrest -->
+  <rect x="11" y="4" width="4" height="5" rx="2" fill="#FFFFFF"/>
+  <!-- Backrest & Cushion L-shape -->
+  <path d="M13 10L12 21C12 22 13 23 14 23H24C25 23 25.5 22 25.5 21"/>
+  <!-- Track/Base rail -->
+  <line x1="11" y1="26" x2="26" y2="26" stroke-width="1.5" stroke-opacity="0.6"/>
+  <!-- Curved Recline Backward Arrow -->
+  <path d="M16 6C19 7 21 9 21 12" stroke="#64B5F6" stroke-width="2"/>
+  <polyline points="18,10 21,12 23,9" stroke="#64B5F6" stroke-width="2" fill="none"/>
+</svg>
