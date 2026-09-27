@@ -23,9 +23,9 @@ jobs:
         with:
           version: '6.5.3'
           arch: win64_msvc2019_64
-          modules: 'qtwebengine qtwebchannel qtpositioning'
+          modules: 'qtwebengine qtwebchannel qtpositioning qtquick3d qtshadertools qtquicktimeline'
           cache: true
-          cache-key-prefix: 'install-qt-action-6.5.3-win-webengine'
+          cache-key-prefix: 'install-qt-action-6.5.3-win-webengine-quick3d-v2'
 
       - name: Setup MSVC Developer Environment
         uses: ilammy/msvc-dev-cmd@v1

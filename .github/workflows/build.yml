@@ -48,9 +48,9 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.5.3'
-          modules: 'qtwebengine qtwebchannel qtpositioning'
+          modules: 'qtwebengine qtwebchannel qtpositioning qtquick3d qtshadertools qtquicktimeline'
           cache: true
-          cache-key-prefix: 'install-qt-action-6.5.3-webengine'
+          cache-key-prefix: 'install-qt-action-6.5.3-webengine-quick3d-v2'
 
       - name: Configure CMake
         run: |
