@@ -20,6 +20,8 @@ class ClimateBackend : public QObject
 
     Q_PROPERTY(QString driverTemperatureDisplay READ driverTemperatureDisplay NOTIFY driverTemperatureChanged)
     Q_PROPERTY(QString passengerTemperatureDisplay READ passengerTemperatureDisplay NOTIFY passengerTemperatureChanged)
+    Q_PROPERTY(bool isFahrenheit READ isFahrenheit WRITE setIsFahrenheit NOTIFY temperatureUnitChanged)
+    Q_PROPERTY(QString temperatureUnit READ temperatureUnit WRITE setTemperatureUnit NOTIFY temperatureUnitChanged)
 
     Q_PROPERTY(bool driverPower READ driverPower WRITE setDriverPower NOTIFY driverPowerChanged)
     Q_PROPERTY(bool passengerPower READ passengerPower WRITE setPassengerPower NOTIFY passengerPowerChanged)
@@ -101,6 +103,11 @@ public:
 
     QString driverTemperatureDisplay() const;
     QString passengerTemperatureDisplay() const;
+
+    bool isFahrenheit() const { return m_isFahrenheit; }
+    QString temperatureUnit() const { return m_isFahrenheit ? QStringLiteral("Fahrenheit (°F)") : QStringLiteral("Celsius (°C)"); }
+    Q_INVOKABLE void setIsFahrenheit(bool fahrenheit);
+    Q_INVOKABLE void setTemperatureUnit(const QString &unit);
 
     bool driverPower() const { return m_driverPower && m_driverTempMode != TemperatureMode::Off; }
     bool passengerPower() const { return m_passengerPower && m_passengerTempMode != TemperatureMode::Off; }
@@ -275,11 +282,13 @@ signals:
     void rearLockChanged();
     void rearSelectedRowChanged();
     void rearRowsSyncedChanged();
+    void temperatureUnitChanged();
 
 private:
     void exitMaxPresets();
     void syncPassengerToDriver();
 
+    bool m_isFahrenheit{false};
     TemperatureMode m_driverTempMode{TemperatureMode::Normal};
     TemperatureMode m_passengerTempMode{TemperatureMode::Normal};
     double m_driverTemperature{21.5};

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="60" cy="60" r="60"/>
+    </clipPath>
+    <pattern id="chevronPattern" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M0 6 L12 18 L24 6 L24 12 L12 24 L0 12 Z" fill="#F59E0B"/>
+      <path d="M0 0 L12 12 L24 0 L24 4 L12 16 L0 4 Z" fill="#D97706"/>
+      <path d="M0 12 L12 24 L24 12 L24 16 L12 28 L0 16 Z" fill="#B45309"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#circleClip)">
+    <rect width="120" height="120" fill="#0F172A"/>
+    <rect width="120" height="120" fill="url(#chevronPattern)" opacity="0.9"/>
+  </g>
+</svg>

@@ -85,6 +85,7 @@ qt_add_qml_module(apex_vision_ivi
         qml/components/IconButton.qml
         qml/components/TemperatureControl.qml
         qml/components/ValetLockOverlay.qml
+        qml/components/LaneKeepingVisualizer.qml
         qml/Typography.qml
     RESOURCES
         # Fonts
@@ -120,6 +121,20 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/status_tower.png
         qml/assets/icons/status_gps.png
         qml/assets/default_background.png
+        qml/assets/autolamp_delay_preview.png
+        qml/assets/autolamp_card.png
+        qml/assets/remote_start_climate_preview.png
+        qml/assets/remote_start_seats_preview.png
+        qml/assets/image.png
+        "qml/assets/image copy.png"
+        "qml/assets/image copy 2.png"
+        qml/assets/theme_constellation.png
+        qml/assets/theme_tranquil.png
+        qml/assets/theme_voyage.png
+        qml/assets/theme_inspire.png
+        qml/assets/icons/car_top_balance_fade.png
+        qml/assets/remote_unlock_all.png
+        qml/assets/remote_unlock_driver.png
         qml/assets/icons/image.png
         qml/assets/vehicle_studio_bg.png
         qml/assets/icons/compass.svg
@@ -171,6 +186,72 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/setting_profile_yellow.png
         qml/assets/icons/setting_sliders_logo.svg
         qml/assets/icons/setting_sliders_logo.png
+        qml/assets/icons/icon_globe.svg
+        qml/assets/icons/icon_units_speedo.svg
+        qml/assets/icons/icon_time_clock.svg
+        qml/assets/icons/icon_reset_options.svg
+        qml/assets/icons/icon_software_update.svg
+        qml/assets/icons/icon_about_info.svg
+        qml/assets/icons/icon_legal_info.svg
+        qml/assets/icons/icon_software_licenses.svg
+        qml/assets/icons/icon_storage.svg
+        qml/assets/icons/icon_phone_link.svg
+        qml/assets/icons/icon_storage_music.svg
+        qml/assets/icons/icon_storage_apps.svg
+        qml/assets/icons/icon_storage_maps.svg
+        qml/assets/icons/icon_storage_system.svg
+        qml/assets/icons/icon_profile_lock.svg
+        qml/assets/icons/icon_mic.svg
+        qml/assets/icons/setting_display_white.svg
+        qml/assets/icons/setting_display_yellow.svg
+        qml/assets/icons/setting_wifi_white.svg
+        qml/assets/icons/setting_wifi_yellow.svg
+        qml/assets/icons/setting_911_assist_white.svg
+        qml/assets/icons/setting_911_assist_yellow.svg
+        qml/assets/icons/setting_assistant_voice_white.svg
+        qml/assets/icons/setting_assistant_voice_yellow.svg
+        qml/assets/icons/setting_location_white.svg
+        qml/assets/icons/setting_location_yellow.svg
+        qml/assets/icons/setting_notifications_white.svg
+        qml/assets/icons/setting_notifications_yellow.svg
+        qml/assets/icons/setting_privacy_white.svg
+        qml/assets/icons/setting_privacy_yellow.svg
+        qml/assets/icons/setting_security_white.svg
+        qml/assets/icons/setting_security_yellow.svg
+        qml/assets/icons/setting_accessibility_white.svg
+        qml/assets/icons/setting_accessibility_yellow.svg
+        qml/assets/icons/icon_mic_privacy.svg
+        qml/assets/icons/icon_app_permissions.svg
+        qml/assets/icons/icon_privacy_infotainment.svg
+        qml/assets/icons/icon_data_sharing_apex.svg
+        qml/assets/icons/icon_security_update.svg
+        qml/assets/icons/icon_accessibility_captions.svg
+        qml/assets/icons/icon_sound_fader.svg
+        qml/assets/icons/icon_google_assistant.svg
+        qml/assets/avatars/avatar_climber.jpg
+        qml/assets/avatars/avatar_desert.jpg
+        qml/assets/avatars/avatar_phoenix.jpg
+        qml/assets/avatars/avatar_architecture.jpg
+        qml/assets/avatars/avatar_fish.jpg
+        qml/assets/avatars/avatar_cabin.jpg
+        qml/assets/avatars/avatar_aurora.jpg
+        qml/assets/avatars/avatar_sunset.jpg
+        qml/assets/avatars/avatar_twilight.jpg
+        qml/assets/avatars/avatar_bird.jpg
+        qml/assets/avatars/avatar_mountain.jpg
+        qml/assets/avatars/avatar_forest.jpg
+        qml/assets/avatars/avatar_chevron.jpg
+        qml/assets/avatars/avatar_geometric.jpg
+        qml/assets/avatars/avatar_waves.jpg
+        qml/assets/avatars/avatar_marble.jpg
+        qml/assets/avatars/avatar_bird.svg
+        qml/assets/avatars/avatar_chevron.svg
+        qml/assets/avatars/avatar_diamond.svg
+        qml/assets/avatars/avatar_waves.svg
+        qml/assets/avatars/avatar_marble.svg
+        qml/assets/icons/icon_translate.svg
+        qml/assets/icons/icon_google.svg
+        qml/assets/icons/icon_settings_gear.svg
         qml/assets/icons/setting_back_return.svg
         qml/assets/icons/setting_back_return.png
         qml/assets/icons/seat_menu_second_row_blue.png
@@ -183,6 +264,21 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/icon_tire_pressure_amber.png
         qml/assets/icons/icon_oil_life_blue.png
         qml/assets/icons/icon_oil_life_amber.png
+        qml/assets/icons/lane_assist_aid.jpg
+        qml/assets/icons/lane_assist_alert.jpg
+        qml/assets/icons/lane_assist_car.png
+        qml/assets/icons/lane_assist_body_bg.png
+        qml/assets/icons/lane_assist_body_fg.png
+        qml/assets/icons/lane_assist_wheel_1.png
+        qml/assets/icons/lane_assist_wheel_2.png
+        qml/assets/icons/lane_assist_wheel_3.png
+        qml/assets/icons/lane_assist_wheel_4.png
+        qml/assets/icons/lane_assist_steering.png
+        qml/assets/icons/lane_track_left.png
+        qml/assets/icons/lane_track_right.png
+        qml/assets/icons/lane_track_left_alert.png
+        qml/assets/icons/wheel_disc_rl.png
+        qml/assets/icons/wheel_disc_fl.png
         qml/assets/icons/icon_passenger_recline_back.png
         qml/assets/icons/icon_passenger_recline_fwd.png
         qml/assets/icons/icon_passenger_cushion_down.png

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="60" cy="60" r="60"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#circleClip)">
+    <rect width="120" height="120" fill="#0A0A0A"/>
+    <!-- Concentric golden contour waves -->
+    <path d="M-10 20 Q30 50 60 25 T130 30" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+    <path d="M-10 32 Q30 62 60 37 T130 42" fill="none" stroke="#D97706" stroke-width="2.2"/>
+    <path d="M-10 44 Q30 74 60 49 T130 54" fill="none" stroke="#FBBF24" stroke-width="2.4"/>
+    <path d="M-10 56 Q30 86 60 61 T130 66" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+    <path d="M-10 68 Q30 98 60 73 T130 78" fill="none" stroke="#D97706" stroke-width="2.2"/>
+    <path d="M-10 80 Q30 110 60 85 T130 90" fill="none" stroke="#FBBF24" stroke-width="2.4"/>
+    <path d="M-10 92 Q30 122 60 97 T130 102" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+    <path d="M-10 104 Q30 134 60 109 T130 114" fill="none" stroke="#B45309" stroke-width="2.2"/>
+  </g>
+</svg>

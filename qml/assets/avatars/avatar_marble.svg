@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="60" cy="60" r="60"/>
+    </clipPath>
+    <linearGradient id="marbleBase" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#020617"/>
+      <stop offset="50%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <g clip-path="url(#circleClip)">
+    <rect width="120" height="120" fill="url(#marbleBase)"/>
+    <path d="M-20 40 C30 10 20 80 80 50 C120 30 110 100 140 90" fill="none" stroke="#38BDF8" stroke-width="8" opacity="0.7"/>
+    <path d="M-10 60 C40 30 50 110 90 70 C110 50 130 120 150 110" fill="none" stroke="#60A5FA" stroke-width="12" opacity="0.5"/>
+    <path d="M0 20 C60 0 70 90 120 30" fill="none" stroke="#0284C7" stroke-width="14" opacity="0.6"/>
+    <path d="M-10 90 C30 70 70 120 130 80" fill="none" stroke="#93C5FD" stroke-width="4" opacity="0.8"/>
+  </g>
+</svg>

@@ -50,7 +50,11 @@ QString ClimateBackend::driverTemperatureDisplay() const
     if (m_driverTempMode == TemperatureMode::Hi) {
         return QStringLiteral("HI");
     }
-    return QString::asprintf("%.1f°C", m_driverTemperature);
+    if (m_isFahrenheit) {
+        int f = qRound(m_driverTemperature * 1.8 + 32.0);
+        return QString::asprintf("%d", f);
+    }
+    return QString::asprintf("%.1f", m_driverTemperature);
 }
 
 QString ClimateBackend::passengerTemperatureDisplay() const
@@ -64,7 +68,28 @@ QString ClimateBackend::passengerTemperatureDisplay() const
     if (m_passengerTempMode == TemperatureMode::Hi) {
         return QStringLiteral("HI");
     }
-    return QString::asprintf("%.1f°C", m_passengerTemperature);
+    if (m_isFahrenheit) {
+        int f = qRound(m_passengerTemperature * 1.8 + 32.0);
+        return QString::asprintf("%d", f);
+    }
+    return QString::asprintf("%.1f", m_passengerTemperature);
+}
+
+void ClimateBackend::setIsFahrenheit(bool fahrenheit)
+{
+    if (m_isFahrenheit != fahrenheit) {
+        m_isFahrenheit = fahrenheit;
+        emit temperatureUnitChanged();
+        emit driverTemperatureChanged();
+        emit passengerTemperatureChanged();
+        emit rearTemperatureChanged();
+    }
+}
+
+void ClimateBackend::setTemperatureUnit(const QString &unit)
+{
+    bool fahrenheit = unit.contains(QLatin1String("Fahrenheit"), Qt::CaseInsensitive) || unit.contains(QLatin1String("°F"));
+    setIsFahrenheit(fahrenheit);
 }
 
 void ClimateBackend::exitMaxPresets()
@@ -124,29 +149,51 @@ void ClimateBackend::increaseDriverTemperature()
         emit passengerTemperatureChanged();
         emit passengerTemperatureModeChanged();
     } else if (m_driverTempMode == TemperatureMode::Lo) {
-        // LO -> 16.0°C
+        // LO -> 16.0°C (61°F)
         m_driverTempMode = TemperatureMode::Normal;
         m_driverTemperature = 16.0;
         emit driverTemperatureChanged();
         emit driverTemperatureModeChanged();
     } else if (m_driverTempMode == TemperatureMode::Normal) {
-        if (m_driverTemperature + 0.5 > 28.0 + 1e-4) {
-            // 28.0°C -> HI (internal target 30.0°C)
-            m_driverTempMode = TemperatureMode::Hi;
-            m_driverTemperature = 30.0;
-            emit driverTemperatureChanged();
-            emit driverTemperatureModeChanged();
+        if (m_isFahrenheit) {
+            int curF = qRound(m_driverTemperature * 1.8 + 32.0);
+            if (curF + 1 > 82) {
+                // 82°F -> HI (internal target 30.0°C)
+                m_driverTempMode = TemperatureMode::Hi;
+                m_driverTemperature = 30.0;
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
 
-            // Both sides go HI
-            m_passengerPower = true;
-            m_passengerTempMode = TemperatureMode::Hi;
-            m_passengerTemperature = 30.0;
-            emit passengerPowerChanged();
-            emit passengerTemperatureChanged();
-            emit passengerTemperatureModeChanged();
+                // Both sides go HI
+                m_passengerPower = true;
+                m_passengerTempMode = TemperatureMode::Hi;
+                m_passengerTemperature = 30.0;
+                emit passengerPowerChanged();
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
+            } else {
+                m_driverTemperature = ((curF + 1) - 32.0) / 1.8;
+                emit driverTemperatureChanged();
+            }
         } else {
-            m_driverTemperature += 0.5;
-            emit driverTemperatureChanged();
+            if (m_driverTemperature + 0.5 > 28.0 + 1e-4) {
+                // 28.0°C -> HI (internal target 30.0°C)
+                m_driverTempMode = TemperatureMode::Hi;
+                m_driverTemperature = 30.0;
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
+
+                // Both sides go HI
+                m_passengerPower = true;
+                m_passengerTempMode = TemperatureMode::Hi;
+                m_passengerTemperature = 30.0;
+                emit passengerPowerChanged();
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
+            } else {
+                m_driverTemperature += 0.5;
+                emit driverTemperatureChanged();
+            }
         }
     } else if (m_driverTempMode == TemperatureMode::Hi) {
         // Stay at HI
@@ -173,23 +220,45 @@ void ClimateBackend::decreaseDriverTemperature()
         emit driverTemperatureChanged();
         emit driverTemperatureModeChanged();
     } else if (m_driverTempMode == TemperatureMode::Normal) {
-        if (m_driverTemperature - 0.5 < 16.0 - 1e-4) {
-            // 16.0°C -> LO (internal target 15.0°C)
-            m_driverTempMode = TemperatureMode::Lo;
-            m_driverTemperature = 15.0;
-            emit driverTemperatureChanged();
-            emit driverTemperatureModeChanged();
+        if (m_isFahrenheit) {
+            int curF = qRound(m_driverTemperature * 1.8 + 32.0);
+            if (curF - 1 < 61) {
+                // 61°F -> LO (internal target 15.0°C)
+                m_driverTempMode = TemperatureMode::Lo;
+                m_driverTemperature = 15.0;
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
 
-            // Both sides go LO
-            m_passengerPower = true;
-            m_passengerTempMode = TemperatureMode::Lo;
-            m_passengerTemperature = 15.0;
-            emit passengerPowerChanged();
-            emit passengerTemperatureChanged();
-            emit passengerTemperatureModeChanged();
+                // Both sides go LO
+                m_passengerPower = true;
+                m_passengerTempMode = TemperatureMode::Lo;
+                m_passengerTemperature = 15.0;
+                emit passengerPowerChanged();
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
+            } else {
+                m_driverTemperature = ((curF - 1) - 32.0) / 1.8;
+                emit driverTemperatureChanged();
+            }
         } else {
-            m_driverTemperature -= 0.5;
-            emit driverTemperatureChanged();
+            if (m_driverTemperature - 0.5 < 16.0 - 1e-4) {
+                // 16.0°C -> LO (internal target 15.0°C)
+                m_driverTempMode = TemperatureMode::Lo;
+                m_driverTemperature = 15.0;
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
+
+                // Both sides go LO
+                m_passengerPower = true;
+                m_passengerTempMode = TemperatureMode::Lo;
+                m_passengerTemperature = 15.0;
+                emit passengerPowerChanged();
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
+            } else {
+                m_driverTemperature -= 0.5;
+                emit driverTemperatureChanged();
+            }
         }
     } else if (m_driverTempMode == TemperatureMode::Lo) {
         // LO -> OFF
@@ -246,29 +315,51 @@ void ClimateBackend::increasePassengerTemperature()
         emit driverTemperatureChanged();
         emit driverTemperatureModeChanged();
     } else if (m_passengerTempMode == TemperatureMode::Lo) {
-        // LO -> 16.0°C
+        // LO -> 16.0°C (61°F)
         m_passengerTempMode = TemperatureMode::Normal;
         m_passengerTemperature = 16.0;
         emit passengerTemperatureChanged();
         emit passengerTemperatureModeChanged();
     } else if (m_passengerTempMode == TemperatureMode::Normal) {
-        if (m_passengerTemperature + 0.5 > 28.0 + 1e-4) {
-            // 28.0°C -> HI
-            m_passengerTempMode = TemperatureMode::Hi;
-            m_passengerTemperature = 30.0;
-            emit passengerTemperatureChanged();
-            emit passengerTemperatureModeChanged();
+        if (m_isFahrenheit) {
+            int curF = qRound(m_passengerTemperature * 1.8 + 32.0);
+            if (curF + 1 > 82) {
+                // 82°F -> HI
+                m_passengerTempMode = TemperatureMode::Hi;
+                m_passengerTemperature = 30.0;
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
 
-            // Both sides go HI
-            m_driverPower = true;
-            m_driverTempMode = TemperatureMode::Hi;
-            m_driverTemperature = 30.0;
-            emit driverPowerChanged();
-            emit driverTemperatureChanged();
-            emit driverTemperatureModeChanged();
+                // Both sides go HI
+                m_driverPower = true;
+                m_driverTempMode = TemperatureMode::Hi;
+                m_driverTemperature = 30.0;
+                emit driverPowerChanged();
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
+            } else {
+                m_passengerTemperature = ((curF + 1) - 32.0) / 1.8;
+                emit passengerTemperatureChanged();
+            }
         } else {
-            m_passengerTemperature += 0.5;
-            emit passengerTemperatureChanged();
+            if (m_passengerTemperature + 0.5 > 28.0 + 1e-4) {
+                // 28.0°C -> HI
+                m_passengerTempMode = TemperatureMode::Hi;
+                m_passengerTemperature = 30.0;
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
+
+                // Both sides go HI
+                m_driverPower = true;
+                m_driverTempMode = TemperatureMode::Hi;
+                m_driverTemperature = 30.0;
+                emit driverPowerChanged();
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
+            } else {
+                m_passengerTemperature += 0.5;
+                emit passengerTemperatureChanged();
+            }
         }
     } else if (m_passengerTempMode == TemperatureMode::Hi) {
         // Stay at HI
@@ -294,23 +385,47 @@ void ClimateBackend::decreasePassengerTemperature()
         emit passengerTemperatureChanged();
         emit passengerTemperatureModeChanged();
     } else if (m_passengerTempMode == TemperatureMode::Normal) {
-        if (m_passengerTemperature - 0.5 < 16.0 - 1e-4) {
-            // 16.0°C -> LO
-            m_passengerTempMode = TemperatureMode::Lo;
-            m_passengerTemperature = 15.0;
-            emit passengerTemperatureChanged();
-            emit passengerTemperatureModeChanged();
+        if (m_isFahrenheit) {
+            int curF = qRound(m_passengerTemperature * 1.8 + 32.0);
+            if (curF - 1 < 61) {
+                // 61°F -> LO
+                m_passengerTempMode = TemperatureMode::Lo;
+                m_passengerTemperature = 15.0;
+                emit passengerPowerChanged();
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
 
-            // Both sides go LO
-            m_driverPower = true;
-            m_driverTempMode = TemperatureMode::Lo;
-            m_driverTemperature = 15.0;
-            emit driverPowerChanged();
-            emit driverTemperatureChanged();
-            emit driverTemperatureModeChanged();
+                // Both sides go LO
+                m_driverPower = true;
+                m_driverTempMode = TemperatureMode::Lo;
+                m_driverTemperature = 15.0;
+                emit driverPowerChanged();
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
+            } else {
+                m_passengerTemperature = ((curF - 1) - 32.0) / 1.8;
+                emit passengerTemperatureChanged();
+            }
         } else {
-            m_passengerTemperature -= 0.5;
-            emit passengerTemperatureChanged();
+            if (m_passengerTemperature - 0.5 < 16.0 - 1e-4) {
+                // 16.0°C -> LO
+                m_passengerTempMode = TemperatureMode::Lo;
+                m_passengerTemperature = 15.0;
+                emit passengerPowerChanged();
+                emit passengerTemperatureChanged();
+                emit passengerTemperatureModeChanged();
+
+                // Both sides go LO
+                m_driverPower = true;
+                m_driverTempMode = TemperatureMode::Lo;
+                m_driverTemperature = 15.0;
+                emit driverPowerChanged();
+                emit driverTemperatureChanged();
+                emit driverTemperatureModeChanged();
+            } else {
+                m_passengerTemperature -= 0.5;
+                emit passengerTemperatureChanged();
+            }
         }
     } else if (m_passengerTempMode == TemperatureMode::Lo) {
         // LO -> OFF
@@ -841,7 +956,11 @@ QString ClimateBackend::rearTemperatureDisplay() const
     if (m_rearTemperature >= 28.5) {
         return QStringLiteral("HI");
     }
-    return QString::asprintf("%.1f°", m_rearTemperature);
+    if (m_isFahrenheit) {
+        int f = qRound(m_rearTemperature * 1.8 + 32.0);
+        return QString::asprintf("%d", f);
+    }
+    return QString::asprintf("%.1f", m_rearTemperature);
 }
 
 void ClimateBackend::setRearPower(bool on)
@@ -952,6 +1071,12 @@ void ClimateBackend::increaseRearTemperature()
         }
         emit rearPowerChanged();
         emit rearTemperatureChanged();
+    } else if (m_isFahrenheit) {
+        int curF = qRound(m_rearTemperature * 1.8 + 32.0);
+        if (curF + 1 <= 83) {
+            m_rearTemperature = ((curF + 1) - 32.0) / 1.8;
+            emit rearTemperatureChanged();
+        }
     } else if (m_rearTemperature + 0.5 <= 28.5) {
         m_rearTemperature += 0.5;
         emit rearTemperatureChanged();
@@ -963,7 +1088,13 @@ void ClimateBackend::decreaseRearTemperature()
     if (!m_rearPower) {
         return;
     }
-    if (m_rearTemperature - 0.5 >= 15.5) {
+    if (m_isFahrenheit) {
+        int curF = qRound(m_rearTemperature * 1.8 + 32.0);
+        if (curF - 1 >= 60) {
+            m_rearTemperature = ((curF - 1) - 32.0) / 1.8;
+            emit rearTemperatureChanged();
+        }
+    } else if (m_rearTemperature - 0.5 >= 15.5) {
         m_rearTemperature -= 0.5;
         emit rearTemperatureChanged();
     }

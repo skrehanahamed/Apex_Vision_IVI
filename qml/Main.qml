@@ -137,7 +137,7 @@ Window {
                 id: pageStack
                 objectName: "pageStack"
                 anchors.fill: parent
-                property int currentIndex: 0
+                property int currentIndex: 4
                 z: 1
 
                 // Page 0: Home (Navigation + Media)

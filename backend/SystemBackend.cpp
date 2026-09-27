@@ -1,5 +1,6 @@
 #include "SystemBackend.h"
 #include <algorithm>
+#include <QProcess>
 
 SystemBackend::SystemBackend(QObject *parent)
     : QObject(parent)
@@ -11,8 +12,19 @@ SystemBackend::SystemBackend(QObject *parent)
 
 void SystemBackend::updateClock()
 {
-    const QDateTime now = QDateTime::currentDateTime();
-    const QString timeStr = now.toString("hh:mm");
+    QDateTime now = QDateTime::currentDateTime();
+    if (!m_autoTimeEnabled && m_hasManualOffset) {
+        now = now.addSecs(m_manualTimeOffsetSec);
+    }
+
+    QString timeStr;
+    if (m_is24HourFormat) {
+        timeStr = now.toString("HH:mm");
+    } else {
+        int h = now.time().hour() % 12;
+        if (h == 0) h = 12;
+        timeStr = QString("%1:%2").arg(h).arg(now.time().minute(), 2, 10, QChar('0'));
+    }
     const QString dateStr = now.toString("dddd, MMM d");
 
     bool changed = false;
@@ -27,6 +39,69 @@ void SystemBackend::updateClock()
     if (changed) {
         emit timeChanged();
     }
+}
+
+void SystemBackend::setIs24HourFormat(bool is24)
+{
+    if (m_is24HourFormat != is24) {
+        m_is24HourFormat = is24;
+        updateClock();
+        emit is24HourFormatChanged();
+    }
+}
+
+void SystemBackend::setAutoTimeEnabled(bool enabled)
+{
+    if (m_autoTimeEnabled != enabled) {
+        m_autoTimeEnabled = enabled;
+        if (m_autoTimeEnabled) {
+            m_hasManualOffset = false;
+            m_manualTimeOffsetSec = 0;
+        }
+        updateClock();
+        emit autoTimeEnabledChanged();
+    }
+}
+
+void SystemBackend::setAutoTimeZoneEnabled(bool enabled)
+{
+    if (m_autoTimeZoneEnabled != enabled) {
+        m_autoTimeZoneEnabled = enabled;
+        emit autoTimeZoneEnabledChanged();
+    }
+}
+
+void SystemBackend::setSelectedTimeZone(const QString &tz)
+{
+    if (m_selectedTimeZone != tz) {
+        m_selectedTimeZone = tz;
+        emit selectedTimeZoneChanged();
+    }
+}
+
+void SystemBackend::setManualTime(int hour, int minute)
+{
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime target(now.date(), QTime(hour, minute, 0));
+    m_manualTimeOffsetSec = now.secsTo(target);
+    m_hasManualOffset = true;
+    m_autoTimeEnabled = false;
+    emit autoTimeEnabledChanged();
+    updateClock();
+}
+
+void SystemBackend::setManualDate(int year, int month, int day)
+{
+    QDateTime now = QDateTime::currentDateTime();
+    if (m_hasManualOffset) {
+        now = now.addSecs(m_manualTimeOffsetSec);
+    }
+    QDateTime target(QDate(year, month, day), now.time());
+    m_manualTimeOffsetSec = QDateTime::currentDateTime().secsTo(target);
+    m_hasManualOffset = true;
+    m_autoTimeEnabled = false;
+    emit autoTimeEnabledChanged();
+    updateClock();
 }
 
 void SystemBackend::setWifiConnected(bool connected)
@@ -45,3 +120,55 @@ void SystemBackend::setBrightness(int b)
         emit brightnessChanged();
     }
 }
+
+void SystemBackend::setSelectedLanguage(const QString &lang)
+{
+    if (m_selectedLanguage != lang) {
+        m_selectedLanguage = lang;
+        emit selectedLanguageChanged();
+    }
+}
+
+void SystemBackend::setSelectedKeyboard(const QString &kb)
+{
+    if (m_selectedKeyboard != kb) {
+        m_selectedKeyboard = kb;
+        emit selectedKeyboardChanged();
+    }
+}
+
+void SystemBackend::setSelectedAutofill(const QString &af)
+{
+    if (m_selectedAutofill != af) {
+        m_selectedAutofill = af;
+        emit selectedAutofillChanged();
+    }
+}
+
+void SystemBackend::setPointerSpeed(int speed)
+{
+    speed = std::clamp(speed, 0, 100);
+    if (m_pointerSpeed != speed) {
+        m_pointerSpeed = speed;
+        emit pointerSpeedChanged();
+    }
+}
+
+void SystemBackend::playTtsSample(const QString &text, double rate, double pitch)
+{
+    Q_UNUSED(pitch);
+    int wpm = static_cast<int>(110 + (rate / 100.0) * 140);
+    QStringList args;
+    args << text << "-r" << QString::number(wpm);
+    QProcess::startDetached("say", args);
+}
+
+void SystemBackend::setUnitsTemperature(const QString &unit)
+{
+    if (m_unitsTemperature != unit) {
+        m_unitsTemperature = unit;
+        emit unitsTemperatureChanged();
+    }
+}
+
+

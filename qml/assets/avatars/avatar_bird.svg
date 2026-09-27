@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="birdBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#38BDF8"/>
+      <stop offset="100%" stop-color="#0284C7"/>
+    </linearGradient>
+    <clipPath id="circleClip">
+      <circle cx="60" cy="60" r="60"/>
+    </clipPath>
+  </defs>
+  <g clip-path="url(#circleClip)">
+    <rect width="120" height="120" fill="url(#birdBg)"/>
+    <path d="M22 66 C38 48 54 58 60 62 C66 58 82 48 98 66 C84 63 70 69 60 76 C50 69 36 63 22 66 Z" fill="#FFFFFF" opacity="0.95"/>
+    <circle cx="60" cy="56" r="3" fill="#FFFFFF"/>
+  </g>
+</svg>

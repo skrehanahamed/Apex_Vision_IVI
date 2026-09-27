@@ -129,6 +129,22 @@ int main(int argc, char *argv[])
     qInfo() << "[APEX IVI] Resolved 3D Seat Studio View URL:" << seatStudioUrl;
     rootContext->setContextProperty("SeatStudioViewUrl", seatStudioUrl);
 
+    QStringList laneKeepingCandidates = {
+        appDir + "/qml/climate3d/LaneKeepingCarView3D.qml",
+        appDir + "/../qml/climate3d/LaneKeepingCarView3D.qml",
+        QDir::currentPath() + "/qml/climate3d/LaneKeepingCarView3D.qml",
+        "/Users/reno/Projects/APEX_VISION_IVI/qml/climate3d/LaneKeepingCarView3D.qml"
+    };
+    QUrl laneKeeping3dUrl;
+    for (const QString &cand : laneKeepingCandidates) {
+        if (QFileInfo::exists(cand)) {
+            laneKeeping3dUrl = QUrl::fromLocalFile(QFileInfo(cand).canonicalFilePath());
+            break;
+        }
+    }
+    qInfo() << "[APEX IVI] Resolved 3D Lane Keeping Car View URL:" << laneKeeping3dUrl;
+    rootContext->setContextProperty("LaneKeeping3DCarUrl", laneKeeping3dUrl);
+
     const QUrl url(QStringLiteral("qrc:/ApexVision/qml/Main.qml"));
     QObject::connect(
         &engine,

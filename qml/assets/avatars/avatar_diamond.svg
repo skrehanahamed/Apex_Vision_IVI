@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
+  <defs>
+    <clipPath id="circleClip">
+      <circle cx="60" cy="60" r="60"/>
+    </clipPath>
+    <pattern id="diamondPattern" width="20" height="30" patternUnits="userSpaceOnUse">
+      <path d="M10 0 L20 15 L10 30 L0 15 Z" fill="none" stroke="#FBBF24" stroke-width="1.2"/>
+      <path d="M10 5 L17 15 L10 25 L3 15 Z" fill="none" stroke="#D97706" stroke-width="0.8"/>
+      <line x1="10" y1="0" x2="10" y2="30" stroke="#FBBF24" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+  <g clip-path="url(#circleClip)">
+    <rect width="120" height="120" fill="#042F2E"/>
+    <rect width="120" height="120" fill="url(#diamondPattern)"/>
+  </g>
+</svg>

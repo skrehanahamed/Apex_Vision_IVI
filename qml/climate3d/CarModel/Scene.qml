@@ -1052,16 +1052,24 @@ Node {
                 id: object_9
                 objectName: "Object_9"
                 source: "meshes/object_7_mesh.mesh"
+                position: Qt.vector3d(-22.11885, -80.29015, 1.38448)
+                pivot: Qt.vector3d(-22.11885, -80.29015, 1.38448)
+                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
                 materials: [
-                    meshesuntitled1wheelfrowheeltire1Mtl_material
+                    meshesuntitled1wheelfrowheeltire1Mtl_material,
+                    whiteRim_material
                 ]
             }
             Model {
                 id: object_10
                 objectName: "Object_10"
                 source: "meshes/object_8_mesh.mesh"
+                position: Qt.vector3d(-22.11885, -68.51400, 1.38448)
+                pivot: Qt.vector3d(-22.11885, -68.51400, 1.38448)
+                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
                 materials: [
-                    meshesuntitled1wheelbrowheeltire1Mtl_material
+                    meshesuntitled1wheelbrowheeltire1Mtl_material,
+                    whiteRim_material
                 ]
             }
             Model {
@@ -1150,8 +1158,12 @@ Node {
                 id: object_21
                 objectName: "Object_21"
                 source: "meshes/object_19_mesh.mesh"
+                position: Qt.vector3d(-15.99815, -80.29015, 1.38449)
+                pivot: Qt.vector3d(-15.99815, -80.29015, 1.38449)
+                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
                 materials: [
-                    meshesuntitled2wheelflowheeltire1Mtl_material
+                    meshesuntitled2wheelflowheeltire1Mtl_material,
+                    whiteRim_material
                 ]
             }
             Model {
@@ -1214,8 +1226,12 @@ Node {
                 id: object_29
                 objectName: "Object_29"
                 source: "meshes/object_27_mesh.mesh"
+                position: Qt.vector3d(-15.99815, -68.51500, 1.38452)
+                pivot: Qt.vector3d(-15.99815, -68.51500, 1.38452)
+                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
                 materials: [
-                    meshesuntitled3wheelblowheeltire1Mtl_material
+                    meshesuntitled3wheelblowheeltire1Mtl_material,
+                    whiteRim_material
                 ]
             }
             Model {

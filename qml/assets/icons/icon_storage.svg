@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
+  <!-- Server drive 1 -->
+  <rect x="2" y="3" width="20" height="4.5" rx="1.5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+  <circle cx="17.5" cy="5.25" r="1" fill="#FFFFFF"/>
+  <line x1="5" y1="5.25" x2="8" y2="5.25" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Server drive 2 -->
+  <rect x="2" y="9.75" width="20" height="4.5" rx="1.5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+  <circle cx="17.5" cy="12" r="1" fill="#FFFFFF"/>
+  <line x1="5" y1="12" x2="8" y2="12" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Server drive 3 -->
+  <rect x="2" y="16.5" width="20" height="4.5" rx="1.5" stroke="#FFFFFF" stroke-width="1.8" fill="none"/>
+  <circle cx="17.5" cy="18.75" r="1" fill="#FFFFFF"/>
+  <line x1="5" y1="18.75" x2="8" y2="18.75" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
