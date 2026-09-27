@@ -64,6 +64,24 @@ The architecture strictly decouples the QML presentation layer from deterministi
 ![Valet Mode Security Lockout](docs/screenshots/05_valet_security_lock.png)
 *Automotive security overlay with 4-digit PIN authentication, interactive masked keypad, trunk/glove box lockout, and tamper-resistant unlock flows.*
 
+<br/>
+
+### 6. Acoustic Soundstage with Radiating Wave Ripples & Cabin Dissolve
+![Acoustic Soundstage Balance and Fade](docs/screenshots/06_acoustic_soundstage_balance_fade.png)
+*Acoustic balance and fader soundstage featuring zoomed-in cabin geometry seamlessly faded into ambient wallpaper gradients, real-time radiating sound wave ripples from the draggable reticle, and one-touch center reset.*
+
+<br/>
+
+### 7. Automotive Connectivity and Network Management
+![Automotive Connectivity and Network Settings](docs/screenshots/07_connectivity_network_settings.png)
+*Comprehensive connectivity control center managing Wi-Fi network scanning and associations, personal mobile hotspot sharing, cellular 5G data telemetry, and roaming toggles.*
+
+<br/>
+
+### 8. Voice Assistant and Speech Feedback Settings
+![Voice Assistant and Speech Feedback](docs/screenshots/08_voice_assistant_settings.png)
+*Integrated voice and assistant controls offering Google Assistant wake phrase detection ("Hey Google"), screen context analysis, offline speech processing, and language selection.*
+
 </div>
 
 ---
@@ -159,8 +177,10 @@ Apex_Vision_IVI/
 │       ├── 02_climate_seat_comfort.png
 │       ├── 03_seat_comfort_massage.png
 │       ├── 04_cabin_air_refresh.png
-│       ├── 05_settings_hmi.png
-│       └── 06_valet_security_lock.png
+│       ├── 05_valet_security_lock.png
+│       ├── 06_acoustic_soundstage_balance_fade.png
+│       ├── 07_connectivity_network_settings.png
+│       └── 08_voice_assistant_settings.png
 ├── backend/                      # C++20 backend engines
 │   ├── VehicleSimulator.h/.cpp   # Vehicle physics and telemetry simulator
 │   ├── VehicleBackend.h/.cpp     # Vehicle status and lighting controller
