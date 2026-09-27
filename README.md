@@ -60,14 +60,8 @@ The architecture strictly decouples the QML presentation layer from deterministi
 
 <br/>
 
-### 5. Automotive OEM Settings Architecture
-![Settings HMI](docs/screenshots/05_settings_hmi.png)
-*Driver Assistance and Cruise Control HMI featuring mutual-exclusion Adaptive/Normal cruise radio selections, Lane Centering hands-free toggles, and dynamic yellow active category highlights.*
-
-<br/>
-
-### 6. Full-Screen Valet Mode Security Lockout
-![Valet Mode Security Lockout](docs/screenshots/06_valet_security_lock.png)
+### 5. Full-Screen Valet Mode Security Lockout
+![Valet Mode Security Lockout](docs/screenshots/05_valet_security_lock.png)
 *Automotive security overlay with 4-digit PIN authentication, interactive masked keypad, trunk/glove box lockout, and tamper-resistant unlock flows.*
 
 </div>
