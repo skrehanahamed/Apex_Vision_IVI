@@ -8,11 +8,11 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.0.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.1.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
 [![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
 [![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.0.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Releases](https://img.shields.io/badge/Release-v2.1.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -96,13 +96,20 @@ The architecture strictly decouples the QML presentation layer from deterministi
 - **Secure Keypad HMI**: Automotive touch keypad with PIN confirmation, auto-clearing masked digits, and tactile click feedback.
 - **System Lockout State**: Dynamic status broadcasting to all IVI pages and lock confirmation indicators.
 
-### 5. Automotive OEM Settings Architecture
+### 5. Automotive OEM Settings Architecture & Multi-Category Navigation
 - **Top Header Bar**: Dual-column header featuring standalone circular sliders logo, bold "Settings" title, standard `←` return navigation, and dynamic section titles.
-- **Category Navigation Rail**: 6 settings categories (Sound, Bluetooth, Driver Assistance, Vehicle, System, Profile).
+- **7-Category Navigation Rail**: Full automotive OEM settings hierarchy:
+  - **Connectivity**: Wi-Fi network scanning, connection status, Bluetooth device pairing, and Mobile Hotspot management.
+  - **Voice & Assistant**: Google Assistant voice feedback options, sensitivity calibration, and customizable wake phrases.
+  - **Location**: System GPS toggle, recent location requests, and granular application location permissions.
+  - **Notifications**: In-cluster urgent safety warnings, drive summaries, and scheduled quiet hours.
+  - **Privacy**: Vehicle telemetry and data sharing controls, microphone privacy indicators, and valet lock mode.
+  - **System**: Multi-language localization, 12h/24h clock toggle, Imperial/Metric unit selection, OTA software updates, and visual storage allocation graphs.
+  - **Accessibility**: High-contrast display mode, closed captioning styling, and interactive screen magnification.
 - **Dynamic Visual State Lighting**: Selected category icon illuminates in vibrant OEM **yellow** (`#FBBF24`), while unselected icons remain crisp pure **white** (`#FFFFFF`).
+- **Fluid Horizontal Slide Transitions**: Smooth directional sliding animations between the primary categories and nested sub-setting views.
 - **Cruise Control Suite**: Mutually exclusive Normal vs. Adaptive Cruise Control with amber radio indicators, plus Lane Centering ("Hands-Free Available") and In-Lane Repositioning toggles.
 - **Contextual Help**: Integrated `ⓘ` circular info dialogs explaining individual subsystem mechanics.
-- **Smooth View Transitions**: 250ms `Easing.InOutQuad` opacity cross-fade when entering or exiting Settings.
 
 ### 6. Vehicle Telemetry and CAN Bus Simulator
 - **Dynamic Cruising Loop**: Periodic 500 ms simulation timer modeling realistic highway driving conditions.
@@ -110,11 +117,23 @@ The architecture strictly decouples the QML presentation layer from deterministi
 - **Tire Pressure Monitoring (TPMS)**: Real-time 4-wheel independent pressure sensor monitoring with blue/amber warning states.
 - **Oil Life Telemetry**: Fluid health percentage tracking with maintenance alert triggers.
 
-### 7. Media Player and Audio Architecture
+### 7. Media Player, Audio, and Acoustic Soundstage Architecture
+- **Acoustic Balance & Fade Soundstage**:
+  - **Zoomed Cabin Geometry**: Focused interior cabin layout showcasing driver, passenger, and second-row seating with metallic roof contours.
+  - **Theme-Blended Alpha Dissolve**: Vehicle top-view renders with a smooth cubic alpha gradient, blending effortlessly into active wallpapers (**Inspire**, **Constellation**, **Tranquil**, **Voyage**) without harsh bounding boxes.
+  - **Radiating Acoustic Wave Ripples**: Animated concentric sound wave pulses continuously propagate outward in real-time from the draggable focal point.
+  - **Interactive Reticle Thumb & Instant Reset**: Touch and drag positioning to adjust front/rear fade and left/right balance, with a one-touch "Reset" button restoring center equilibrium `(0, 0)`.
+- **Dynamic Tone Controls**:
+  - **13-Point Discrete Sliders**: Bass, Midrange, and Treble frequency bands stepping from `-6` to `+6`.
+  - **Floating Teardrop Level Tooltips**: Real-time elevated badge pops up above the slider thumb on touch/drag, displaying signed numeric levels (`+1`, `0`, `-3`).
 - **Playback Telemetry**: Track title, artist, album, elapsed track time, total track duration, and album artwork.
 - **Interactive Timeline**: Dynamic progress bar with scrubbing and 500 ms position tracking.
 - **Audio Controls**: Previous track, play/pause toggle, next track, and audio source selection.
 - **Waveform Visualizer**: Animated audio spectrum visualization reflecting active media streaming states.
+
+### 8. Lane-Keeping Assist 3D Real-Time Visualizer
+- **Interactive Chassis Rendering**: 3D vehicle perspective demonstrating lane positioning and steering guidance.
+- **Dynamic Lane Boundaries**: Real-time animated track boundaries displaying active lane keeping (Aid) and departure warnings (Alert) with color-coded alerts.
 
 ---
 
@@ -156,16 +175,19 @@ Apex_Vision_IVI/
 │   ├── Typography.qml            # Shared typographical design tokens
 │   ├── assets/                   # Vector and raster UI iconography
 │   │   ├── fonts/                # Bundled Inter typeface font files
-│   │   └── icons/                # Cockpit controls, climate, and media icons
+│   │   ├── icons/                # Cockpit controls, climate, settings, and media icons
+│   │   └── avatars/              # OEM profile and identity avatars
 │   ├── climate3d/                # 3D interactive studio views
 │   │   ├── ClimateCabinView.qml  # 3D cabin airflow and thermal view
 │   │   ├── SeatStudioView.qml    # 3D seat posture and massage view
-│   │   └── VehicleStudioView.qml # 3D vehicle exterior interactive studio
+│   │   ├── VehicleStudioView.qml # 3D vehicle exterior interactive studio
+│   │   └── LaneKeepingCarView3D.qml # 3D lane-keeping assist chassis view
 │   ├── components/               # Reusable automotive cockpit components
 │   │   ├── ClimateBar.qml        # Bottom climate dock with seat flyouts
 │   │   ├── Climate3DPanel.qml    # 3D climate overlay panel
 │   │   ├── CabinAirRefreshOverlay.qml # PM2.5 air purification gauge overlay
 │   │   ├── ValetLockOverlay.qml  # Full-screen PIN security lock overlay
+│   │   ├── LaneKeepingVisualizer.qml # Interactive lane tracking & alert component
 │   │   ├── NavigationPanel.qml   # 3D navigation card with WebEngine viewport
 │   │   ├── MediaCard.qml         # Music player card with progress bar
 │   │   ├── StatusBar.qml         # Persistent top status chrome
@@ -177,7 +199,7 @@ Apex_Vision_IVI/
 │       ├── VehiclePage.qml       # Vehicle settings and status display
 │       ├── PhonePage.qml         # Telephony interface
 │       ├── AppsPage.qml          # Application drawer
-│       └── SettingsPage.qml      # Automotive settings page
+│       └── SettingsPage.qml      # Automotive settings suite with 7-category slider navigation
 └── web/                          # Embedded 3D navigation web assets
     ├── map.html                  # MapLibre GL 3D perspective navigation view
     ├── osm_logo.png              # OpenStreetMap attribution logo mark
@@ -268,6 +290,33 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 - **OpenFreeMap**: Community-driven 3D vector tile infrastructure providing vector building extrusions.
 - **Nominatim**: OpenStreetMap search and reverse-geocoding engine for live automotive street resolution.
 - **Rasmus Andersson**: Inter font family designed for computer screens and automotive digital displays.
+
+---
+
+## Release History & Highlights
+
+### [v2.1.0] - Acoustic Soundstage Wave Ripples, Zoomed Cabin Fade, Tone Tooltips & 7-Category OEM Settings Suite
+- **Acoustic Balance & Fade Soundstage**:
+  - Zoomed vehicle cabin geometry focusing on passenger seating and silver roof structure.
+  - Smooth cubic alpha gradient fading the vehicle directly into active ambient wallpapers (**Inspire**, **Constellation**, **Tranquil**, **Voyage**) without hard rectangular boundaries.
+  - Concentric sound wave pulse animation actively propagating outward from the draggable focal point.
+  - Interactive reticle thumb with instant "Reset" restoring acoustic center equilibrium `(0, 0)`.
+- **Dynamic Tone Controls**:
+  - 13-point discrete sliders (-6 to +6) for Bass, Midrange, and Treble.
+  - Floating teardrop level tooltips displaying live signed values on touch or drag.
+- **7-Category OEM Settings Architecture & Slide Transitions**:
+  - Fluid horizontal directional slide animations across Connectivity, Voice, Location, Notifications, Privacy, System, and Accessibility.
+  - Multi-tiered settings stack with persistent breadcrumb headers and fluid back transitions.
+- **Lane-Keeping Assist 3D Real-Time Visualizer**:
+  - Interactive vehicle chassis rendering with dynamic lane tracking boundaries and Aid/Alert state visualizers.
+- **Cleaned & Optimized Assets**:
+  - Purged intermediate scratch assets and test scripts; optimized bundled resources in `CMakeLists.txt`.
+
+### [v2.0.0] - 3D Cabin & Seat Studio, Valet Lock Mode, and OEM Settings Suite
+- 3D interactive multi-contour massage seats and cabin airflow studio.
+- Full-screen PIN security valet lock overlay with masked keypad.
+- Real-time PM2.5 air quality gauge and high-velocity cabin air refresh cycle.
+- Automotive OEM settings layout with dual-column headers and visual category illumination.
 
 ---
 
