@@ -20,13 +20,13 @@ jobs:
 
       - name: Install Qt and Dependencies via Homebrew
         run: |
-          brew install qt qtwebengine ninja
+          brew install qt qtwebengine qtmultimedia ninja
 
       - name: Configure CMake
         run: |
           cmake -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix qtwebengine)"
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix qtwebengine);$(brew --prefix qtmultimedia)"
 
       - name: Build Application
         run: |

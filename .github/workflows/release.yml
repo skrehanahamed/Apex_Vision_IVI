@@ -53,9 +53,9 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           version: '6.5.3'
-          modules: 'qtwebengine qtwebchannel qtpositioning qtquick3d qtshadertools qtquicktimeline'
+          modules: 'qtwebengine qtwebchannel qtpositioning qtquick3d qtshadertools qtquicktimeline qtmultimedia'
           cache: true
-          cache-key-prefix: 'install-qt-action-6.5.3-linux-quick3d-v2'
+          cache-key-prefix: 'install-qt-action-6.5.3-linux-multimedia-v1'
 
       - name: Configure CMake
         run: |
@@ -97,13 +97,13 @@ jobs:
 
       - name: Install Qt and Ninja via Homebrew
         run: |
-          brew install qt qtwebengine ninja
+          brew install qt qtwebengine qtmultimedia ninja
 
       - name: Configure CMake
         run: |
           cmake -B build -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix qtwebengine)"
+            -DCMAKE_PREFIX_PATH="$(brew --prefix qt);$(brew --prefix qtwebengine);$(brew --prefix qtmultimedia)"
 
       - name: Build Application
         run: |
@@ -173,6 +173,7 @@ jobs:
         with:
           tag_name: ${{ steps.version.outputs.VERSION }}
           name: "Apex VISION IVI - Digital Cockpit ${{ steps.version.outputs.VERSION }}"
+          body_path: RELEASE_NOTES.md
           files: release_assets/*.zip
           draft: false
           prerelease: false
