@@ -8,11 +8,11 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.1.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.2.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
 [![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
 [![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.1.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Releases](https://img.shields.io/badge/Release-v2.2.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -26,9 +26,9 @@
 
 ## Executive Overview
 
-Apex VISION IVI is a production-grade automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered with Qt 6 (QML / Qt Quick), WebEngine WebGL 3D acceleration, and modern C++20. Modeled on modern connected electric vehicle (EV) widescreen cockpit architectures, the system features a hardware-accelerated dual-viewport dashboard, live 3D perspective cockpit navigation with vector 3D buildings and real-time reverse geocoding, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite.
+Apex VISION IVI is a production-grade automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered with Qt 6 (QML / Qt Quick), WebEngine WebGL 3D acceleration, and modern C++20. Modeled on modern connected electric vehicle (EV) widescreen cockpit architectures, the system features a hardware-accelerated dual-viewport dashboard, live 3D perspective cockpit navigation with vector 3D buildings, an integrated native **YouTube Video Streaming Suite** with infinite feed browsing and seamless Up Next recommendations, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite.
 
-The architecture strictly decouples the QML presentation layer from deterministic C++ backend controllers, establishing an automotive-compliant state machine that manages live telemetry, reverse geocode lookups, thermal comfort states, valet access arbitration, and vehicle telemetry.
+The architecture strictly decouples the QML presentation layer from deterministic C++ backend controllers, establishing an automotive-compliant state machine that manages live telemetry, reverse geocode lookups, thermal comfort states, valet access arbitration, YouTube network extraction, and vehicle telemetry.
 
 ---
 
@@ -82,39 +82,71 @@ The architecture strictly decouples the QML presentation layer from deterministi
 ![Voice Assistant and Speech Feedback](docs/screenshots/08_voice_assistant_settings.png)
 *Integrated voice and assistant controls offering Google Assistant wake phrase detection ("Hey Google"), screen context analysis, offline speech processing, and language selection.*
 
+<br/>
+
+### 9. Native YouTube Video Feed & Categorical Browser
+![Native YouTube Video Feed](docs/screenshots/09_youtube_video_feed.png)
+*Native YouTube video browsing with integrated search, touch keyboard, 7 category tabs (All, Trending, Music, Gaming, Movies, Podcasts, Live), infinite scroll, channel badges, view counts, and duration badges.*
+
+<br/>
+
+### 10. Cinematic Embedded YouTube Player with Instant Up Next Queue
+![Embedded YouTube Player and Up Next](docs/screenshots/10_youtube_player_upnext.png)
+*16:9 embedded player with full automotive controls, fullscreen expand within cockpit frame, and seamless instant-switching Up Next recommendations queue.*
+
+<br/>
+
+### 11. High-Precision OpenStreetMap Navigation Cartography
+![Clean OpenStreetMap Navigation](docs/screenshots/11_navigation_map.png)
+*Modern OpenStreetMap navigation integration running on official tile infrastructure without watermarks, API keys, or rate limits.*
+
+<br/>
+
+### 12. Digital Radio Tuner, Keypad & Presets
+![Digital Radio Media Center](docs/screenshots/12_radio_media_center.png)
+*Multi-band AM/FM/SiriusXM digital tuner with frequency keypad, preset star favorites, and live waveform visualization.*
+
 </div>
 
 ---
 
 ## Subsystem Specifications
 
-### 1. 3D Cockpit Navigation and Geospatial Engine
+### 1. Native YouTube Video Hub & Embedded Streaming Engine
+- **Asynchronous Scraping Engine (`VideoBackend`)**: Native C++ network client interacting directly with YouTube endpoints via `QNetworkAccessManager`, parsing initial data payloads and search streams without third-party API keys or quota limits.
+- **7 Automotive Categorical Feeds**: One-touch category filtering for `All`, `Trending`, `Music`, `Gaming`, `Movies`, `Podcasts`, and `Live`.
+- **Infinite Drag-Scroll Pagination**: Dynamic scroll-depth monitoring triggering automatic pre-fetching and append operations for seamless browsing.
+- **Embedded Sandbox Player**: Hardware-accelerated QtWebEngineView loading sandbox embeds with Chromium flag `--autoplay-policy=no-user-gesture-required`.
+- **Seamless Up Next Queue**: Tap-to-play related videos leveraging the YouTube iframe API (`loadVideoById`) for immediate in-place transitions without reload latency.
+- **Cockpit-Preserving Fullscreen**: Full-bleed workspace expansion with permanent visibility of the left navigation rail, right status/slider bar, and bottom climate control dock.
+
+### 2. 3D Cockpit Navigation and Geospatial Engine
 - **Rendering Pipeline**: Hardware-accelerated WebGL 3D engine powered by MapLibre GL and QtWebEngineQuick.
 - **3D Perspective**: 56-degree forward-looking driving pitch with vector extruded 3D buildings (OpenFreeMap planet vector tiles).
-- **Base Cartography**: High-resolution OpenStreetMap raster tiles capped at zoom level 18.0 to prevent void zoom states.
-- **Live GPS Coordinate Acquisition**: Asynchronous startup resolution via network IP geolocation (`https://ipwho.is/` with fallback to `https://ipapi.co/json/`) for immediate, card-free global location positioning.
-- **Reverse Geocoding**: Automated OpenStreetMap Nominatim query engine resolving live coordinates to street-level metadata (e.g., road, pedestrian way, suburb).
+- **Base Cartography**: Official OpenStreetMap raster tile infrastructure (`tile.openstreetmap.de` & `tile.openstreetmap.fr`) completely free from watermarks or API key restrictions.
+- **Live GPS Coordinate Acquisition**: Asynchronous startup resolution via network IP geolocation (`https://ipwho.is/` with fallback to `https://ipapi.co/json/`) for immediate global location positioning.
+- **Reverse Geocoding**: Automated OpenStreetMap Nominatim query engine resolving live coordinates to street-level metadata.
 - **Rate-Limited Geocoding Cache**: Distance-delta thresholding preventing redundant Nominatim network calls during cruising.
 - **Navigation Reference Marker**: 3D elliptical ground disc with directional blue chevron rotating 0 to 360 degrees and dynamic street name badge.
 
-### 2. HVAC, Climate, and Cabin Air Purification
+### 3. HVAC, Climate, and Cabin Air Purification
 - **Dual-Zone Temperature Control**: Independent driver and passenger thermal regulation ranging from 16.0°C to 28.0°C with fine-grained 0.5°C stepping.
 - **3D Interactive Cabin Studio**: Real-time 3D rendered cabin view with interactive directional airflow vents.
 - **Cabin Air Refresh Overlay**: Real-time cabin air purification loop with animated air particle streams and live PM2.5 index gauges.
 - **3-Level Seat Ventilation & Heating**: Independent seat cooling and PTC heating control with 3-stage visual state feedback.
 - **Defrost Modes**: Dedicated MAX Front Windshield Defrost and Rear Heated Glass controls.
 
-### 3. Multi-Contour Massage and Seat Studio
+### 4. Multi-Contour Massage and Seat Studio
 - **Multi-Zone Pneumatic Massage**: Upper Back, Lower Back, and Cushion massage zones with independent intensity control (Off, Low, Medium, High).
 - **Front Passenger & 2nd Row Controls**: Multi-seat selection menu with amber indicator underline and status telemetry.
 - **Electric Actuator Adjustments**: Cushion height/tilt, seat track forward/backward sliding, and backrest recline controls.
 
-### 4. Valet Mode Security Lockout System
+### 5. Valet Mode Security Lockout System
 - **PIN-Protected Security**: Full-screen modal overlay preventing unauthorized access to vehicle settings, personal data, and storage compartments.
 - **Secure Keypad HMI**: Automotive touch keypad with PIN confirmation, auto-clearing masked digits, and tactile click feedback.
 - **System Lockout State**: Dynamic status broadcasting to all IVI pages and lock confirmation indicators.
 
-### 5. Automotive OEM Settings Architecture & Multi-Category Navigation
+### 6. Automotive OEM Settings Architecture & Multi-Category Navigation
 - **Top Header Bar**: Dual-column header featuring standalone circular sliders logo, bold "Settings" title, standard `←` return navigation, and dynamic section titles.
 - **7-Category Navigation Rail**: Full automotive OEM settings hierarchy:
   - **Connectivity**: Wi-Fi network scanning, connection status, Bluetooth device pairing, and Mobile Hotspot management.
@@ -129,13 +161,13 @@ The architecture strictly decouples the QML presentation layer from deterministi
 - **Cruise Control Suite**: Mutually exclusive Normal vs. Adaptive Cruise Control with amber radio indicators, plus Lane Centering ("Hands-Free Available") and In-Lane Repositioning toggles.
 - **Contextual Help**: Integrated `ⓘ` circular info dialogs explaining individual subsystem mechanics.
 
-### 6. Vehicle Telemetry and CAN Bus Simulator
+### 7. Vehicle Telemetry and CAN Bus Simulator
 - **Dynamic Cruising Loop**: Periodic 500 ms simulation timer modeling realistic highway driving conditions.
 - **Powertrain Metrics**: Real-time calculation of vehicle cruising speed (64 to 72 km/h) and correlated engine/motor RPM (1900 to 2200 RPM).
 - **Tire Pressure Monitoring (TPMS)**: Real-time 4-wheel independent pressure sensor monitoring with blue/amber warning states.
 - **Oil Life Telemetry**: Fluid health percentage tracking with maintenance alert triggers.
 
-### 7. Media Player, Audio, and Acoustic Soundstage Architecture
+### 8. Media Player, Audio, and Acoustic Soundstage Architecture
 - **Acoustic Balance & Fade Soundstage**:
   - **Zoomed Cabin Geometry**: Focused interior cabin layout showcasing driver, passenger, and second-row seating with metallic roof contours.
   - **Theme-Blended Alpha Dissolve**: Vehicle top-view renders with a smooth cubic alpha gradient, blending effortlessly into active wallpapers (**Inspire**, **Constellation**, **Tranquil**, **Voyage**) without harsh bounding boxes.
@@ -144,12 +176,9 @@ The architecture strictly decouples the QML presentation layer from deterministi
 - **Dynamic Tone Controls**:
   - **13-Point Discrete Sliders**: Bass, Midrange, and Treble frequency bands stepping from `-6` to `+6`.
   - **Floating Teardrop Level Tooltips**: Real-time elevated badge pops up above the slider thumb on touch/drag, displaying signed numeric levels (`+1`, `0`, `-3`).
-- **Playback Telemetry**: Track title, artist, album, elapsed track time, total track duration, and album artwork.
-- **Interactive Timeline**: Dynamic progress bar with scrubbing and 500 ms position tracking.
-- **Audio Controls**: Previous track, play/pause toggle, next track, and audio source selection.
-- **Waveform Visualizer**: Animated audio spectrum visualization reflecting active media streaming states.
+- **Digital Radio Tuner & Frequency Keypad**: Multi-band AM, FM, and SiriusXM tuner with numeric frequency entry, preset bookmarking, and live waveform monitor.
 
-### 8. Lane-Keeping Assist 3D Real-Time Visualizer
+### 9. Lane-Keeping Assist 3D Real-Time Visualizer
 - **Interactive Chassis Rendering**: 3D vehicle perspective demonstrating lane positioning and steering guidance.
 - **Dynamic Lane Boundaries**: Real-time animated track boundaries displaying active lane keeping (Aid) and departure warnings (Alert) with color-coded alerts.
 
@@ -180,7 +209,11 @@ Apex_Vision_IVI/
 │       ├── 05_valet_security_lock.png
 │       ├── 06_acoustic_soundstage_balance_fade.png
 │       ├── 07_connectivity_network_settings.png
-│       └── 08_voice_assistant_settings.png
+│       ├── 08_voice_assistant_settings.png
+│       ├── 09_youtube_video_feed.png
+│       ├── 10_youtube_player_upnext.png
+│       ├── 11_navigation_map.png
+│       └── 12_radio_media_center.png
 ├── backend/                      # C++20 backend engines
 │   ├── VehicleSimulator.h/.cpp   # Vehicle physics and telemetry simulator
 │   ├── VehicleBackend.h/.cpp     # Vehicle status and lighting controller
@@ -188,7 +221,8 @@ Apex_Vision_IVI/
 │   ├── MediaBackend.h/.cpp       # Audio and media playback state machine
 │   ├── NavigationBackend.h/.cpp  # Live GPS, reverse geocoding, and map bridge
 │   ├── PhoneBackend.h/.cpp       # Telephony and call management
-│   └── SystemBackend.h/.cpp      # System status and display controller
+│   ├── SystemBackend.h/.cpp      # System status and display controller
+│   └── VideoBackend.h/.cpp       # Native YouTube scraping and video player controller
 ├── main.cpp                      # Application entry point and QML runtime init
 ├── qml/                          # Qt Quick presentation layer
 │   ├── Main.qml                  # Root window and viewport coordinator
@@ -219,7 +253,11 @@ Apex_Vision_IVI/
 │       ├── VehiclePage.qml       # Vehicle settings and status display
 │       ├── PhonePage.qml         # Telephony interface
 │       ├── AppsPage.qml          # Application drawer
-│       └── SettingsPage.qml      # Automotive settings suite with 7-category slider navigation
+│       ├── SettingsPage.qml      # Automotive settings suite with 7-category slider navigation
+│       ├── VideoPage.qml         # Native YouTube video streaming hub
+│       ├── RadioPage.qml         # Multi-band digital radio tuner
+│       ├── NewsPage.qml          # Live automotive news reader
+│       └── TowingPage.qml        # Towing & trailer management
 └── web/                          # Embedded 3D navigation web assets
     ├── map.html                  # MapLibre GL 3D perspective navigation view
     ├── osm_logo.png              # OpenStreetMap attribution logo mark
@@ -315,6 +353,23 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 
 ## Release History & Highlights
 
+### [v2.2.0] - Native YouTube Video Streaming Suite, Infinite Feed, Instant Up Next Queue & Enhanced OSM Navigation
+- **Native YouTube Video Streaming Hub**:
+  - Integrated `VideoBackend` for key-less, quota-free YouTube network searching and categorical content fetching.
+  - 7 automotive category chips: `All`, `Trending`, `Music`, `Gaming`, `Movies`, `Podcasts`, and `Live`.
+  - Infinite scroll drag pagination dynamically buffering and appending additional video sets.
+  - Modern borderless card layout with crisp typography, channel badges, view counts, and time duration badges.
+  - Touch-friendly on-screen keyboard with backspace, space, and shift controls for direct cockpit searches.
+- **Cinematic Embedded Video Player & Up Next Queue**:
+  - Hardware-accelerated 16:9 embedded player with auto-hiding controls and `--autoplay-policy=no-user-gesture-required`.
+  - Instant Up Next recommendations queue using YouTube's iframe API (`loadVideoById`) for seamless, zero-latency transitions.
+  - Clean divider lines separating Up Next queue items.
+  - Fullscreen workspace mode preserving the left navigation rail, right status/slider bar, and bottom climate control dock.
+- **Official OpenStreetMap Cartography**:
+  - Migrated map raster tile endpoints to official OpenStreetMap servers (`tile.openstreetmap.de` & `tile.openstreetmap.fr`), eliminating "API Key Required" and "Restricted" watermarks.
+- **Digital Radio Tuner & Apps Hub**:
+  - Full AM/FM/SiriusXM radio tuner with direct numeric keypad, bookmarkable presets, and animated audio waveforms.
+
 ### [v2.1.0] - Acoustic Soundstage Wave Ripples, Zoomed Cabin Fade, Tone Tooltips & 7-Category OEM Settings Suite
 - **Acoustic Balance & Fade Soundstage**:
   - Zoomed vehicle cabin geometry focusing on passenger seating and silver roof structure.
@@ -329,8 +384,6 @@ We gratefully acknowledge the following open-source projects, tools, and researc
   - Multi-tiered settings stack with persistent breadcrumb headers and fluid back transitions.
 - **Lane-Keeping Assist 3D Real-Time Visualizer**:
   - Interactive vehicle chassis rendering with dynamic lane tracking boundaries and Aid/Alert state visualizers.
-- **Cleaned & Optimized Assets**:
-  - Purged intermediate scratch assets and test scripts; optimized bundled resources in `CMakeLists.txt`.
 
 ### [v2.0.0] - 3D Cabin & Seat Studio, Valet Lock Mode, and OEM Settings Suite
 - 3D interactive multi-contour massage seats and cabin airflow studio.

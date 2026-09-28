@@ -15,13 +15,13 @@ Rectangle {
     width: 84
     color: "#070A0F" // Deep automotive cockpit black, matching main theme
 
-    // Permanent 1px vertical right divider - exact same border in normal and climate modes
+    // Seamless vertical right divider matching cockpit aesthetic
     Rectangle {
         anchors.right: parent.right
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 1
-        color: Qt.rgba(255, 255, 255, 0.08)
+        color: Qt.rgba(255, 255, 255, 0.025)
         z: 100
     }
 

@@ -69,6 +69,25 @@ void VehicleBackend::cycleDriveMode()
     }
 }
 
+void VehicleBackend::setDriverProfile(const QString &profile)
+{
+    if (m_driverProfile != profile) {
+        m_driverProfile = profile;
+        emit driverProfileChanged();
+    }
+}
+
+void VehicleBackend::cycleDriverProfile()
+{
+    if (m_driverProfile == "P1") {
+        setDriverProfile("P2");
+    } else if (m_driverProfile == "P2") {
+        setDriverProfile("Guest");
+    } else {
+        setDriverProfile("P1");
+    }
+}
+
 void VehicleBackend::setHeadlights(bool on)
 {
     if (m_headlights != on) {

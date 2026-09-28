@@ -63,7 +63,7 @@ Window {
             anchors.bottom: climateBar.top
             z: 30
             opacity: (climate3DPanel.airQualityMenuOpen && climate3DPanel.opacity > 0.001) ? 0.0 : 1.0
-            enabled: (!climate3DPanel.airQualityMenuOpen || climate3DPanel.opacity <= 0.001) && !climateBar.climate3DOpen
+            enabled: (!climate3DPanel.airQualityMenuOpen || climate3DPanel.opacity <= 0.001)
             Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.InOutQuad } }
             climateActive: climateBar.climate3DOpen
             isRearView: climate3DPanel.isRearView
@@ -81,6 +81,17 @@ Window {
                 // Reset Vehicle page overlays to initial screen
                 if (vehiclePage && typeof vehiclePage.resetToInitialScreen === "function") {
                     vehiclePage.resetToInitialScreen();
+                }
+
+                if (appLoadingOverlay && appLoadingOverlay.opacity > 0.001) {
+                    appLoadingOverlay.cancel();
+                }
+
+                if (pageStack.currentIndex === 8 && idx !== 8) {
+                    if (videoPage) {
+                        videoPage.stopVideo();
+                    }
+                    VideoBackend.closePlayer();
                 }
 
                 pageStack.currentIndex = idx;
@@ -137,26 +148,67 @@ Window {
                 id: pageStack
                 objectName: "pageStack"
                 anchors.fill: parent
-                property int currentIndex: 4
+                property int currentIndex: 0
                 z: 1
+
+                onCurrentIndexChanged: {
+                    if (currentIndex !== 8) {
+                        if (videoPage) {
+                            videoPage.stopVideo();
+                        }
+                        VideoBackend.closePlayer();
+                    }
+                }
 
                 // Page 0: Home (Navigation + Media)
                 HomePage {
                     id: homePage
+                    objectName: "homePage"
                     anchors.fill: parent
                     climateOpen: climateBar.climate3DOpen
-                    visible: pageStack.currentIndex === 0
+                    visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 0 ? 1.0 : 0.0
-                    enabled: pageStack.currentIndex === 0
+                    x: pageStack.currentIndex === 0 ? 0 : (pageStack.currentIndex > 0 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 0 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onOpenPlayerRequested: {
+                        if (MediaBackend.source === "AM" || MediaBackend.source === "FM") {
+                            pageStack.currentIndex = 7;
+                        }
+                    }
                 }
 
                 // Page 1: Vehicle (3D Exterior Studio & Control Menu)
                 VehiclePage {
                     id: vehiclePage
                     anchors.fill: parent
-                    visible: pageStack.currentIndex === 1 || (pageStack.currentIndex === 4 && settingsPage.opacity < 0.99)
+                    visible: opacity > 0.001 || (pageStack.currentIndex === 4 && settingsPage.opacity < 0.99)
                     opacity: pageStack.currentIndex === 1 ? 1.0 : (pageStack.currentIndex === 4 ? 1.0 : 0.0)
-                    enabled: pageStack.currentIndex === 1
+                    x: (pageStack.currentIndex === 1 || pageStack.currentIndex === 4) ? 0 : (pageStack.currentIndex > 1 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 1 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
                     onOpenSettingsRequested: {
                         pageStack.currentIndex = 4;
                     }
@@ -166,22 +218,53 @@ Window {
                 AppsPage {
                     id: appsPage
                     anchors.fill: parent
-                    visible: pageStack.currentIndex === 2
+                    visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 2 ? 1.0 : 0.0
-                    enabled: pageStack.currentIndex === 2
-                    onAppSelected: function(name) {
-                        if (name === "Settings") {
-                            pageStack.currentIndex = 4;
-                        } else if (name === "Navigation" || name === "Media Player") {
-                            pageStack.currentIndex = 0;
+                    x: pageStack.currentIndex === 2 ? 0 : (pageStack.currentIndex > 2 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 2 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onAppSelected: function(name, icon) {
+                        var targetIdx = -1;
+                        if (name === "Settings" || name === "Bluetooth") {
+                            targetIdx = 4;
+                        } else if (name === "AM" || name === "RadioAM") {
+                            MediaBackend.setSource("AM");
+                            targetIdx = 7;
+                        } else if (name === "FM" || name === "RadioFM") {
+                            MediaBackend.setSource("FM");
+                            targetIdx = 7;
+                        } else if (name === "Navigation" || name === "Media Player" || name === "Media" || name === "SatelliteRadio" || name === "CarPlay" || name === "AndroidAuto" || name === "Assistant") {
+                            targetIdx = 0;
                         } else if (name === "Vehicle Status") {
-                            pageStack.currentIndex = 1;
+                            targetIdx = 1;
                             if (vehiclePage) {
                                 vehiclePage.vehicleStatusPageOpen = true;
                             }
-                        } else if (name === "Phone") {
-                            pageStack.currentIndex = 3;
+                        } else if (name === "Towing" || name === "Trailer") {
+                            targetIdx = 5;
+                        } else if (name === "News") {
+                            targetIdx = 6;
+                        } else if (name === "Video" || name === "YouTube") {
+                            targetIdx = 8;
+                        } else if (name === "Phone" || name === "Messages") {
+                            targetIdx = 3;
+                        } else if (name === "Manual" || name === "Updates") {
+                            targetIdx = 4;
                         }
+
+                        var iconPath = (icon && icon !== "") ? icon : "qrc:/ApexVision/qml/assets/icons/app_trailer.svg";
+                        appLoadingOverlay.launch(iconPath, targetIdx, name);
                     }
                 }
 
@@ -189,9 +272,22 @@ Window {
                 PhonePage {
                     id: phonePage
                     anchors.fill: parent
-                    visible: pageStack.currentIndex === 3
+                    visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 3 ? 1.0 : 0.0
-                    enabled: pageStack.currentIndex === 3
+                    x: pageStack.currentIndex === 3 ? 0 : (pageStack.currentIndex > 3 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 3 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
                 }
 
                 // Page 4: Settings (Smooth fade transition on open & close)
@@ -200,16 +296,239 @@ Window {
                     anchors.fill: parent
                     visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 4 ? 1.0 : 0.0
+                    x: pageStack.currentIndex === 4 ? 0 : (pageStack.currentIndex > 4 ? -36 : 36)
                     enabled: pageStack.currentIndex === 4 && opacity > 0.90
                     Behavior on opacity {
                         NumberAnimation {
-                            duration: 250
-                            easing.type: Easing.InOutQuad
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
                         }
                     }
                     onBackRequested: {
                         pageStack.currentIndex = 1;
                     }
+                }
+
+                // Page 5: Towing & Trailers (Matching Screenshot 2)
+                TowingPage {
+                    id: towingPage
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 5 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 5 ? 1.0 : 0.0
+                    x: pageStack.currentIndex === 5 ? 0 : (pageStack.currentIndex > 5 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 5 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onOpenSettingsRequested: {
+                        pageStack.currentIndex = 4;
+                    }
+                    onBackRequested: {
+                        pageStack.currentIndex = 2;
+                    }
+                }
+
+                // Page 6: Live News Feed (Free News API)
+                NewsPage {
+                    id: newsPage
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 6 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 6 ? 1.0 : 0.0
+                    x: pageStack.currentIndex === 6 ? 0 : (pageStack.currentIndex > 6 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 6 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onBackRequested: {
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                }
+
+                // Page 7: AM/FM Radio (Matching Reference Screenshot 1)
+                RadioPage {
+                    id: radioPage
+                    objectName: "radioPage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 7 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 7 ? 1.0 : 0.0
+                    x: pageStack.currentIndex === 7 ? 0 : (pageStack.currentIndex > 7 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 7 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onBackRequested: {
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                    onOpenSettingsRequested: {
+                        pageStack.currentIndex = 4;
+                    }
+                    onOpenAppsRequested: {
+                        pageStack.currentIndex = 2;
+                    }
+                }
+
+                // Page 8: YouTube Video (Native Tabbed Interface)
+                VideoPage {
+                    id: videoPage
+                    objectName: "videoPage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 8 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 8 ? 1.0 : 0.0
+                    x: pageStack.currentIndex === 8 ? 0 : (pageStack.currentIndex > 8 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 8 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onBackRequested: {
+                        if (videoPage) {
+                            videoPage.stopVideo();
+                        }
+                        VideoBackend.closePlayer();
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                }
+            }
+
+            // 6. APP LAUNCH SPLASH / LOADING SCREEN (Solid Black 1s Screen with Centered Icon)
+            Rectangle {
+                id: appLoadingOverlay
+                anchors.fill: parent
+                color: "#000000" // Pure solid cockpit black
+                z: 100
+                visible: opacity > 0.001
+                opacity: 0.0
+
+                property string iconSource: "qrc:/ApexVision/qml/assets/icons/app_trailer.svg"
+                property int targetIndex: 5
+
+                Behavior on opacity {
+                    id: overlayFadeBehavior
+                    NumberAnimation {
+                        duration: 360
+                        easing.type: Easing.InOutCubic
+                    }
+                }
+
+                // Centered frosted ice-blue card with app icon (matching screenshot 3)
+                Rectangle {
+                    id: splashCard
+                    anchors.centerIn: parent
+                    width: 108
+                    height: 108
+                    radius: 22
+                    color: "#DDEAF8"
+                    border.color: Qt.rgba(255, 255, 255, 0.45)
+                    border.width: 1
+                    scale: 1.0
+
+                    Behavior on scale {
+                        id: cardScaleBehavior
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 1.15
+                        }
+                    }
+
+                    Image {
+                        id: splashIcon
+                        anchors.centerIn: parent
+                        width: 74
+                        height: 74
+                        source: appLoadingOverlay.iconSource
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                    }
+                }
+
+                // 1-second hold timer then smooth dissolve to reveal Towing page
+                Timer {
+                    id: splashTimer
+                    interval: 1000 // Exactly 1 second
+                    repeat: false
+                    onTriggered: {
+                        appLoadingOverlay.opacity = 0.0;
+                    }
+                }
+
+                function launch(icon, targetIdx, name) {
+                    iconSource = icon;
+                    targetIndex = (targetIdx !== undefined) ? targetIdx : -1;
+
+                    // Immediately pop solid black without delay to eliminate any 1-frame flicker
+                    overlayFadeBehavior.enabled = false;
+                    appLoadingOverlay.opacity = 1.0;
+                    overlayFadeBehavior.enabled = true;
+
+                    // Spring card animation
+                    cardScaleBehavior.enabled = false;
+                    splashCard.scale = 0.82;
+                    cardScaleBehavior.enabled = true;
+                    splashCard.scale = 1.0;
+
+                    // Switch pageStack underneath the solid black overlay (if valid target)
+                    if (targetIndex >= 0) {
+                        if (pageStack.currentIndex === 8 && targetIndex !== 8) {
+                            if (videoPage) {
+                                videoPage.stopVideo();
+                            }
+                            VideoBackend.closePlayer();
+                        }
+                        pageStack.currentIndex = targetIndex;
+                    }
+
+                    // Run the 1-second splash timer
+                    splashTimer.restart();
+                }
+
+                function cancel() {
+                    splashTimer.stop();
+                    overlayFadeBehavior.enabled = false;
+                    appLoadingOverlay.opacity = 0.0;
+                    overlayFadeBehavior.enabled = true;
                 }
             }
         }

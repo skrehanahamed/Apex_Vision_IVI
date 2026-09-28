@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <circle cx="40" cy="40" r="39" fill="#FFFFFF"/>
+  <!-- Folded Newspaper Base -->
+  <rect x="23" y="23" width="34" height="34" rx="4" fill="#007AFF"/>
+  <rect x="25" y="25" width="30" height="30" rx="3" fill="#FFFFFF"/>
+  <!-- Header Bar -->
+  <rect x="29" y="29" width="22" height="4" rx="1" fill="#007AFF"/>
+  <!-- Image block on right -->
+  <rect x="42" y="36" width="9" height="13" rx="1.5" fill="#34C759"/>
+  <!-- News text lines on left -->
+  <rect x="29" y="36" width="10" height="2" rx="1" fill="#8E8E93"/>
+  <rect x="29" y="40" width="11" height="2" rx="1" fill="#8E8E93"/>
+  <rect x="29" y="44" width="8" height="2" rx="1" fill="#8E8E93"/>
+  <rect x="29" y="48" width="10" height="2" rx="1" fill="#8E8E93"/>
+</svg>

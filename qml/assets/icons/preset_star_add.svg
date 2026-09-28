@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 38 32" fill="none">
+  <!-- 5-pointed star outline matching Lincoln/Ford IVI crop -->
+  <path d="M14.5 3.5L17.5 10L24.5 10.8L19.2 15.6L20.8 22.5L14.5 19L8.2 22.5L9.8 15.6L4.5 10.8L11.5 10L14.5 3.5Z" stroke="#E2E8F0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Plus sign attached at top-right of star -->
+  <path d="M25 7V13M22 10H28" stroke="#E2E8F0" stroke-width="2.4" stroke-linecap="round"/>
+</svg>

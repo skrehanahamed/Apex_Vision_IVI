@@ -157,10 +157,16 @@ void SystemBackend::setPointerSpeed(int speed)
 void SystemBackend::playTtsSample(const QString &text, double rate, double pitch)
 {
     Q_UNUSED(pitch);
+    stopTts();
     int wpm = static_cast<int>(110 + (rate / 100.0) * 140);
     QStringList args;
     args << text << "-r" << QString::number(wpm);
     QProcess::startDetached("say", args);
+}
+
+void SystemBackend::stopTts()
+{
+    QProcess::startDetached("killall", QStringList() << "say");
 }
 
 void SystemBackend::setUnitsTemperature(const QString &unit)

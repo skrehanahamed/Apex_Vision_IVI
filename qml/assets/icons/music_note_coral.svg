@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100" fill="none">
+  <defs>
+    <linearGradient id="coralGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF8A65"/>
+      <stop offset="50%" stop-color="#FF7043"/>
+      <stop offset="100%" stop-color="#F4511E"/>
+    </linearGradient>
+  </defs>
+  <!-- Double eighth notes with connecting beam -->
+  <path d="M38 68 A10 7 0 1 1 28 61 A10 7 0 0 1 38 68 Z" fill="none" stroke="url(#coralGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M78 58 A10 7 0 1 1 68 51 A10 7 0 0 1 78 58 Z" fill="none" stroke="url(#coralGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 68 V26 L78 18 V58" fill="none" stroke="url(#coralGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M38 28 L78 20" fill="none" stroke="url(#coralGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

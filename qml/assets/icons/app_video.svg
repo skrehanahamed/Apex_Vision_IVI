@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <defs>
+    <filter id="videoShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  <!-- Red Rounded Screen Container with Drop Shadow -->
+  <rect x="15" y="22" width="50" height="36" rx="10" fill="#E53935" filter="url(#videoShadow)"/>
+  <!-- Crisp Centered Play Triangle -->
+  <polygon points="36,31 51,40 36,49" fill="#FFFFFF"/>
+</svg>

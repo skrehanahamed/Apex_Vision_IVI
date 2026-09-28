@@ -48,6 +48,7 @@ public:
     Q_INVOKABLE void setSelectedAutofill(const QString &af);
     Q_INVOKABLE void setPointerSpeed(int speed);
     Q_INVOKABLE void playTtsSample(const QString &text, double rate, double pitch);
+    Q_INVOKABLE void stopTts();
     Q_INVOKABLE void setManualTime(int hour, int minute);
     Q_INVOKABLE void setManualDate(int year, int month, int day);
     Q_INVOKABLE void setWifiConnected(bool connected);

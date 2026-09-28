@@ -8,13 +8,13 @@ Rectangle {
     implicitHeight: 120
     color: "#070A0F"
 
-    // 1px vertical left divider matching left navigation rail
+    // Seamless vertical left divider matching left navigation rail
     Rectangle {
         anchors.left: parent.left
         anchors.top: parent.top
         anchors.bottom: parent.bottom
         width: 1
-        color: Qt.rgba(255, 255, 255, 0.08)
+        color: Qt.rgba(255, 255, 255, 0.025)
         z: 10
     }
 

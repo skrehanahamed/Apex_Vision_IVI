@@ -29,6 +29,7 @@ class VehicleBackend : public QObject
     Q_PROPERTY(int tirePressureRR READ tirePressureRR NOTIFY tirePressureChanged)
     Q_PROPERTY(int recPressureFront READ recPressureFront CONSTANT)
     Q_PROPERTY(int recPressureRear READ recPressureRear CONSTANT)
+    Q_PROPERTY(QString driverProfile READ driverProfile WRITE setDriverProfile NOTIFY driverProfileChanged)
 
 public:
     explicit VehicleBackend(VehicleSimulator *simulator, QObject *parent = nullptr);
@@ -54,10 +55,13 @@ public:
     int tirePressureRR() const { return m_tirePressureRR; }
     int recPressureFront() const { return m_recPressureFront; }
     int recPressureRear() const { return m_recPressureRear; }
+    QString driverProfile() const { return m_driverProfile; }
 
     Q_INVOKABLE void setGear(const QString &gear);
     Q_INVOKABLE void setDriveMode(const QString &mode);
     Q_INVOKABLE void cycleDriveMode();
+    Q_INVOKABLE void setDriverProfile(const QString &profile);
+    Q_INVOKABLE void cycleDriverProfile();
     Q_INVOKABLE void setHeadlights(bool on);
     Q_INVOKABLE void setAutoHold(bool on);
     Q_INVOKABLE void toggleAutoHold();
@@ -89,11 +93,13 @@ signals:
     void trunkOpenChanged();
     void oilLifeChanged();
     void tirePressureChanged();
+    void driverProfileChanged();
 
 private slots:
     void onTelemetryUpdated(double speed, double rpm, const QString &gear, double temp, int battery);
 
 private:
+    QString m_driverProfile{"P1"};
     int m_vehicleSpeed{68};
     int m_engineRpm{1900};
     QString m_gear{"D"};

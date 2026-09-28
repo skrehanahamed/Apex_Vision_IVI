@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80">
+  <circle cx="40" cy="40" r="39" fill="#1E88E5"/>
+  <!-- Media / Audio Circle with Play Symbol -->
+  <circle cx="40" cy="40" r="18" fill="none" stroke="#FFFFFF" stroke-width="3"/>
+  <polygon points="36,32 48,40 36,48" fill="#FFFFFF"/>
+</svg>

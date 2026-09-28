@@ -13,6 +13,7 @@
 #include "backend/NavigationBackend.h"
 #include "backend/PhoneBackend.h"
 #include "backend/SystemBackend.h"
+#include "backend/VideoBackend.h"
 #include <QtWebEngineQuick/qtwebenginequickglobal.h>
 #include <QDir>
 #include <QFileInfo>
@@ -21,12 +22,21 @@
 #include <QTimer>
 #include <QImage>
 
+#include <QLoggingCategory>
+
 int main(int argc, char *argv[])
 {
+    // Silence benign CoreText / HarfBuzz OpenType script probing warnings on macOS
+    qputenv("QT_LOGGING_RULES", "qt.text.font.db=false;qt.text.font.db.warning=false;qt.text.font.*=false");
+    QLoggingCategory::setFilterRules("qt.text.font.db.warning=false\nqt.text.font.db=false\nqt.text.font.*=false");
+
     // High DPI and performance flags for Raspberry Pi / desktop
     QGuiApplication::setApplicationName("APEX VISION IVI");
     QGuiApplication::setOrganizationName("APEX");
     QGuiApplication::setOrganizationDomain("apex.vision");
+
+    // Autoplay policy for embedded IVI media playback
+    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--autoplay-policy=no-user-gesture-required");
 
     QGuiApplication app(argc, argv);
     QtWebEngineQuick::initialize();
@@ -57,6 +67,7 @@ int main(int argc, char *argv[])
     auto navigationBackend = std::make_unique<NavigationBackend>(simulator.get());
     auto phoneBackend = std::make_unique<PhoneBackend>();
     auto systemBackend = std::make_unique<SystemBackend>();
+    auto videoBackend = std::make_unique<VideoBackend>();
 
     QQmlApplicationEngine engine;
 
@@ -68,6 +79,7 @@ int main(int argc, char *argv[])
     rootContext->setContextProperty("NavigationBackend", navigationBackend.get());
     rootContext->setContextProperty("PhoneBackend", phoneBackend.get());
     rootContext->setContextProperty("SystemBackend", systemBackend.get());
+    rootContext->setContextProperty("VideoBackend", videoBackend.get());
 
     // Register 3D Climate Cabin import paths and QML source URL
     QString appDir = QCoreApplication::applicationDirPath();
@@ -146,18 +158,22 @@ int main(int argc, char *argv[])
     rootContext->setContextProperty("LaneKeeping3DCarUrl", laneKeeping3dUrl);
 
     const QUrl url(QStringLiteral("qrc:/ApexVision/qml/Main.qml"));
+    qInfo() << "[APEX IVI] Calling engine.load()...";
     QObject::connect(
         &engine,
         &QQmlApplicationEngine::objectCreated,
         &app,
         [url](QObject *obj, const QUrl &objUrl) {
+            qInfo() << "[APEX IVI] objectCreated signal received. obj:" << obj << "url:" << objUrl;
             if (!obj && url == objUrl) {
+                qCritical() << "[APEX IVI] FATAL: Failed to load root QML object!";
                 QCoreApplication::exit(-1);
             }
         },
         Qt::QueuedConnection);
 
     engine.load(url);
+    qInfo() << "[APEX IVI] engine.load() returned. rootObjects count:" << engine.rootObjects().count();
 
     if (!engine.rootObjects().isEmpty()) {
         QObject *rootObj = engine.rootObjects().first();
@@ -220,6 +236,57 @@ int main(int argc, char *argv[])
             if (pageStack) {
                 pageStack->setProperty("currentIndex", 1);
             }
+        }
+
+        if (app.arguments().contains("--page-video")) {
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 8);
+            }
+        }
+
+        if (app.arguments().contains("--video-search")) {
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 8);
+            }
+            QObject *videoPage = rootObj->findChild<QObject*>("videoPage");
+            if (videoPage) {
+                videoPage->setProperty("searchActive", true);
+                videoPage->setProperty("showTouchKeyboard", true);
+            }
+        }
+
+        if (app.arguments().contains("--open-video")) {
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 8);
+            }
+            QTimer::singleShot(600, [vb = videoBackend.get()]() {
+                QVariantList list = vb->videos();
+                if (!list.isEmpty()) {
+                    vb->selectVideo(list.first().toMap());
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-video-fs")) {
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 8);
+            }
+            QTimer::singleShot(600, [vb = videoBackend.get()]() {
+                QVariantList list = vb->videos();
+                if (!list.isEmpty()) {
+                    vb->selectVideo(list.first().toMap());
+                }
+            });
+            QTimer::singleShot(1500, [rootObj]() {
+                QObject *videoPage = rootObj->findChild<QObject*>("videoPage");
+                if (videoPage) {
+                    QMetaObject::invokeMethod(videoPage, "enterFullScreen");
+                }
+            });
         }
 
         if (app.arguments().contains("--seats")) {
@@ -422,6 +489,75 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (app.arguments().contains("--am-source")) {
+            mediaBackend->setSource("AM");
+        }
+
+        if (app.arguments().contains("--save-preset")) {
+            mediaBackend->setSource("AM");
+            mediaBackend->saveCurrentAsPreset();
+        }
+
+        if (app.arguments().contains("--page-radio")) {
+            mediaBackend->setSource("AM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+        }
+
+        if (app.arguments().contains("--open-source-menu")) {
+            mediaBackend->setSource("AM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(400, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *menu = radioPage->findChild<QObject*>("sourceDropdownMenu");
+                    if (menu) {
+                        menu->setProperty("visible", true);
+                    }
+                }
+            });
+        }
+
+        if (app.arguments().contains("--open-keypad")) {
+            mediaBackend->setSource("AM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(400, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *modal = radioPage->findChild<QObject*>("keypadModal");
+                    if (modal) {
+                        modal->setProperty("opacity", 1.0);
+                        modal->setProperty("enteredFreq", "530");
+                    }
+                }
+            });
+        }
+
+        if (app.arguments().contains("--open-card-menu")) {
+            mediaBackend->setSource("AM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 0);
+            }
+            QTimer::singleShot(400, [rootObj]() {
+                QObject *homePage = rootObj->findChild<QObject*>("homePage");
+                if (homePage) {
+                    QObject *menu = homePage->findChild<QObject*>("cardSourceDropdown");
+                    if (menu) {
+                        menu->setProperty("visible", true);
+                    }
+                }
+            });
+        }
+
         if (app.arguments().contains("--rear-feet")) {
             climateBackend->setRearAirflowMode(1);
         }
@@ -454,17 +590,45 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (app.arguments().contains("--page")) {
+            int pIdx = app.arguments().indexOf("--page");
+            if (pIdx + 1 < app.arguments().size()) {
+                int pageNum = app.arguments().at(pIdx + 1).toInt();
+                QObject *stack = rootObj->findChild<QObject*>("pageStack");
+                if (stack) {
+                    stack->setProperty("currentIndex", pageNum);
+                }
+            }
+        }
+
+        if (app.arguments().contains("--test-player")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 8);
+            }
+            QTimer::singleShot(1500, [vb = videoBackend.get()]() {
+                if (vb && !vb->videos().isEmpty()) {
+                    vb->selectVideo(vb->videos().first().toMap());
+                }
+            });
+        }
+
+        qInfo() << "[APEX IVI] Root setup complete. Checking screenshot flag:" << app.arguments().contains("--screenshot");
         if (app.arguments().contains("--screenshot")) {
             int idx = app.arguments().indexOf("--screenshot");
             QString outPath = (idx + 1 < app.arguments().size()) ? app.arguments().at(idx + 1) : "apex_screenshot.png";
             QQuickWindow *win = qobject_cast<QQuickWindow*>(rootObj);
+            qInfo() << "[APEX IVI] --screenshot requested. win:" << win << "outPath:" << outPath;
             if (win) {
-                QTimer::singleShot(3000, [win, outPath, &app]() {
+                int delay = (app.arguments().contains("--page") || app.arguments().contains("--test-player")) ? 5000 : 3000;
+                QTimer::singleShot(delay, [win, outPath, &app]() {
                     QImage img = win->grabWindow();
                     img.save(outPath);
                     qInfo() << "Saved verification screenshot to:" << outPath;
                     app.quit();
                 });
+            } else {
+                qWarning() << "[APEX IVI] Could not cast rootObj to QQuickWindow!";
             }
         }
     }

@@ -10,7 +10,7 @@ Item {
     signal backRequested()
 
     // Default category matching user photo ("connectivity")
-    property string activeCategory: "connectivity"
+    property string activeCategory: "sound"
     property string activeInfoText: ""
 
     // Driver assistance settings states (matching hierarchical user photos)
@@ -255,7 +255,7 @@ Item {
     property int notifSlideDir: 1
 
     // Sound sub-screens and audio tuning (Matching OEM reference photos)
-    property string soundCurrentScreen: "main" // "main" | "tone" | "balance_fade" | "speed_volume" | "quantum_logic" | "revel_experience"
+    property string soundCurrentScreen: "main" // "main" | "tone" | "balance_fade" | "speed_volume" | "quantum_logic" | "revel_experience" | "volume_settings" | "ringtones" | "notification_sounds"
     property int soundSlideDir: 1
     property string soundMode: "Audience"
     property string quantumLogicMode: "Audience"
@@ -268,6 +268,12 @@ Item {
     property real soundQuantumLogic: 75
     property string speedCompVolume: "Medium"
     property bool isPlayingRevelDemo: false
+    property int soundVolumeAudio: 1
+    property int soundVolumePrompts: 10
+    property int soundVolumePhone: 30
+    property int soundVolumeCallRing: 10
+    property string soundRingtone: "Default ringtone"
+    property string soundNotificationSound: "Default notification"
 
     // Privacy sub-screens (Matching OEM photo 1 & 2)
     property string privCurrentScreen: "main" // "main" | "microphone" | "location" | "app_permissions" | "infotainment_data" | "ads" | "data_sharing"
@@ -988,6 +994,9 @@ Item {
                                     if (root.soundCurrentScreen === "speed_volume") return "Speed-compensated volume";
                                     if (root.soundCurrentScreen === "quantum_logic") return "QuantumLogic® Surround";
                                     if (root.soundCurrentScreen === "revel_experience") return "Play Revel® Experience";
+                                    if (root.soundCurrentScreen === "volume_settings") return "Volume settings";
+                                    if (root.soundCurrentScreen === "ringtones") return "Ringtones";
+                                    if (root.soundCurrentScreen === "notification_sounds") return "Notification sounds";
                                     return (root.selectedLanguage.indexOf("Hindi") !== -1 ? "ध्वनि" : "Sound");
                                 case "bluetooth": return "Bluetooth";
                                 case "system":
@@ -3799,7 +3808,7 @@ Item {
                     x: root.soundCurrentScreen === "main" ? 0 : -parent.width * 0.4
                     opacity: root.soundCurrentScreen === "main" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "main"
-                    visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
+                    visible: opacity > 0.001
 
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
@@ -3816,7 +3825,7 @@ Item {
                             width: parent.width
                             spacing: 0
 
-                            // 1. Tone (Chevron only - Photo 1)
+                            // 1. Tone (Photo 1)
                             SettingRowChevron {
                                 title: "Tone"
                                 onClicked: {
@@ -3825,7 +3834,7 @@ Item {
                                 }
                             }
 
-                            // 2. Balance and fade (Chevron only - Photo 1)
+                            // 2. Balance and fade (Photo 1)
                             SettingRowChevron {
                                 title: "Balance and fade"
                                 onClicked: {
@@ -3834,7 +3843,7 @@ Item {
                                 }
                             }
 
-                            // 3. Speed-compensated volume (Subtitle + Chevron + Info - Photo 1)
+                            // 2. Speed-compensated volume (Subtitle + Chevron + Info - Photo 1)
                             SettingRowChevron {
                                 title: "Speed-compensated volume"
                                 subtitle: root.speedCompVolume
@@ -3846,7 +3855,7 @@ Item {
                                 onInfoClicked: root.activeInfoText = infoText
                             }
 
-                            // 4. QuantumLogic® Surround (Subtitle + Chevron + Info - Photo 1)
+                            // 3. QuantumLogic® Surround (Subtitle + Chevron + Info - Photo 1 & 2)
                             SettingRowChevron {
                                 title: "QuantumLogic® Surround"
                                 subtitle: root.quantumLogicMode
@@ -3858,7 +3867,7 @@ Item {
                                 onInfoClicked: root.activeInfoText = infoText
                             }
 
-                            // 5. Play Revel® Experience (Chevron + Info - Photo 1)
+                            // 4. Play Revel® Experience (Chevron + Info - Photo 1 & 2)
                             SettingRowChevron {
                                 title: "Play Revel® Experience"
                                 infoText: "Experience the acoustic excellence of Revel Ultima audio with a curated demonstration."
@@ -3867,6 +3876,34 @@ Item {
                                     root.soundCurrentScreen = "revel_experience";
                                 }
                                 onInfoClicked: root.activeInfoText = infoText
+                            }
+
+                            // 5. Volume settings (Photo 1 & 2)
+                            SettingRowChevron {
+                                title: "Volume settings"
+                                onClicked: {
+                                    root.soundSlideDir = 1;
+                                    root.soundCurrentScreen = "volume_settings";
+                                }
+                            }
+
+                            // 6. Ringtones (Subtitle + Chevron - Photo 2)
+                            SettingRowChevron {
+                                title: "Ringtones"
+                                subtitle: root.soundRingtone
+                                onClicked: {
+                                    root.soundSlideDir = 1;
+                                    root.soundCurrentScreen = "ringtones";
+                                }
+                            }
+
+                            // 7. Notification sounds (Chevron - Photo 2)
+                            SettingRowChevron {
+                                title: "Notification sounds"
+                                onClicked: {
+                                    root.soundSlideDir = 1;
+                                    root.soundCurrentScreen = "notification_sounds";
+                                }
                             }
                         }
                     }
@@ -3884,7 +3921,7 @@ Item {
                     x: root.soundCurrentScreen === "tone" ? 0 : parent.width
                     opacity: root.soundCurrentScreen === "tone" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "tone"
-                    visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
+                    visible: opacity > 0.001
 
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
@@ -4434,7 +4471,7 @@ Item {
                     x: root.soundCurrentScreen === "balance_fade" ? 0 : parent.width
                     opacity: root.soundCurrentScreen === "balance_fade" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "balance_fade"
-                    visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
+                    visible: opacity > 0.001
 
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
@@ -4446,24 +4483,24 @@ Item {
                         width: Math.min(parent.width - 40, 720)
                         height: Math.min(parent.height - 20, 540)
 
-                        // Car Cabin Container (Cropped & heavily zoomed so ONLY the seat part of the car is shown, matching OEM 18:51–18:55)
+                        // Car Cabin Container (Natural unclipped top-down view with smooth hood gradient fade)
                         Item {
                             id: carCabinCropContainer
                             anchors.verticalCenter: parent.verticalCenter
                             anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.horizontalCenterOffset: -28
-                            width: 440
-                            height: 500
-                            clip: true
+                            anchors.horizontalCenterOffset: -36
+                            width: 400
+                            height: 520
+                            clip: false
 
-                            // Top-Down Car Image - Zoomed in to prominently display cabin seats, center console & silver roof rails
+                            // Top-Down Car Image - Perfectly scaled to show full front hood gradient and full cabin seats
                             Image {
                                 id: carTopImg
-                                width: 640
-                                height: width * (1536.0 / 1024.0) // 960px
+                                width: 520
+                                height: width * (1536.0 / 1024.0) // 780px
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.verticalCenter: parent.verticalCenter
-                                anchors.verticalCenterOffset: 10
+                                anchors.verticalCenterOffset: -12
                                 source: "qrc:/ApexVision/qml/assets/icons/car_top_balance_fade.png"
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
@@ -4473,9 +4510,9 @@ Item {
 
                         // Cabin Boundary calculations:
                         readonly property real cabinCenterX: carCabinCropContainer.x + carCabinCropContainer.width * 0.5
-                        readonly property real cabinCenterY: carCabinCropContainer.y + carCabinCropContainer.height * 0.5 + 10
-                        readonly property real cabinHalfW: 86
-                        readonly property real cabinHalfH: 106
+                        readonly property real cabinCenterY: carCabinCropContainer.y + carCabinCropContainer.height * 0.5 - 6
+                        readonly property real cabinHalfW: 72
+                        readonly property real cabinHalfH: 90
 
                         readonly property real focalX: cabinCenterX + (root.soundFadeX / 7.0) * cabinHalfW
                         readonly property real focalY: cabinCenterY - (root.soundFadeY / 7.0) * cabinHalfH
@@ -4673,7 +4710,7 @@ Item {
                     x: root.soundCurrentScreen === "speed_volume" ? 0 : parent.width
                     opacity: root.soundCurrentScreen === "speed_volume" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "speed_volume"
-                    visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
+                    visible: opacity > 0.001
 
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
@@ -4721,7 +4758,7 @@ Item {
                     x: root.soundCurrentScreen === "quantum_logic" ? 0 : parent.width
                     opacity: root.soundCurrentScreen === "quantum_logic" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "quantum_logic"
-                    visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
+                    visible: opacity > 0.001
 
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
@@ -4791,7 +4828,7 @@ Item {
                     x: root.soundCurrentScreen === "revel_experience" ? 0 : parent.width
                     opacity: root.soundCurrentScreen === "revel_experience" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "revel_experience"
-                    visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
+                    visible: opacity > 0.001
 
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
@@ -4911,6 +4948,662 @@ Item {
                                 subtitle: "Acoustically calibrated 20-channel DSP amplification"
                                 infoText: "Precision engineered speaker arrays including headliner ceiling speakers to create custom listening heights and true 3D spatial staging."
                                 showChevron: false
+                            }
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // LEVEL 2F: Volume settings Sub-screen (Matching OEM Photo 3)
+                // -------------------------------------------------------------
+                Item {
+                    id: soundVolumeSettingsView
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    x: root.soundCurrentScreen === "volume_settings" ? 0 : parent.width
+                    opacity: root.soundCurrentScreen === "volume_settings" ? 1.0 : 0.0
+                    enabled: root.soundCurrentScreen === "volume_settings"
+                    visible: opacity > 0.001
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+
+                    Flickable {
+                        anchors.fill: parent
+                        contentHeight: volumeSettingsCol.height + 60
+                        clip: true
+                        boundsBehavior: Flickable.DragAndOvershootBounds
+
+                        Column {
+                            id: volumeSettingsCol
+                            width: parent.width
+                            spacing: 32
+                            topPadding: 16
+                            bottomPadding: 32
+
+                            // 1. Audio Slider (Dragger matching QuantumLogic 3D)
+                            Item {
+                                width: parent.width
+                                height: 76
+
+                                Item {
+                                    id: audioHeaderRow
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 24
+                                    anchors.top: parent.top
+                                    height: 28
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 12
+
+                                        Image {
+                                            width: 22
+                                            height: 22
+                                            source: "qrc:/ApexVision/qml/assets/icons/sound_vol_audio.svg"
+                                            fillMode: Image.PreserveAspectFit
+                                            smooth: true
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text {
+                                            text: "Audio"
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 18
+                                            font.weight: Font.Medium
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: root.soundVolumeAudio <= 0 ? "Min" : (root.soundVolumeAudio >= 30 ? "Max" : ("" + root.soundVolumeAudio))
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 16
+                                        font.weight: Font.Medium
+                                    }
+                                }
+
+                                Slider {
+                                    id: audioSlider
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 24
+                                    anchors.top: audioHeaderRow.bottom
+                                    anchors.topMargin: 10
+                                    height: 36
+                                    padding: 0
+                                    from: 0
+                                    to: 30
+                                    stepSize: 1
+                                    value: root.soundVolumeAudio
+                                    onMoved: root.soundVolumeAudio = Math.round(value)
+
+                                    background: Item {
+                                        x: audioSlider.leftPadding
+                                        y: audioSlider.topPadding + audioSlider.availableHeight / 2 - height / 2
+                                        width: audioSlider.availableWidth
+                                        height: 12
+
+                                        // 1. Inactive base groove
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: 6
+                                            color: Qt.rgba(255, 255, 255, 0.14)
+                                        }
+
+                                        // 2. Active filled gradient portion
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: audioSlider.value > 0 ? Math.max(height, audioSlider.visualPosition * parent.width) : 0
+                                            radius: 6
+                                            visible: audioSlider.value > 0
+                                            gradient: Gradient {
+                                                orientation: Gradient.Horizontal
+                                                GradientStop { position: 0.0; color: "#E08365" }
+                                                GradientStop { position: 0.5; color: "#F0B594" }
+                                                GradientStop { position: 1.0; color: "#F7D5BC" }
+                                            }
+                                        }
+
+                                        // 3. 5 discrete notch dots along track
+                                        Row {
+                                            id: audioNotchDotsRow
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 20
+                                            anchors.rightMargin: 20
+                                            spacing: Math.max(0, (width - 5 * 5) / 4)
+
+                                            Repeater {
+                                                model: 5
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 5
+                                                    height: 5
+                                                    radius: 2.5
+                                                    color: (20 + index * (audioNotchDotsRow.spacing + 5) + 2.5) <= (audioSlider.visualPosition * audioSlider.availableWidth) ?
+                                                           "#6E2A18" : Qt.rgba(255, 255, 255, 0.35)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    handle: Rectangle {
+                                        x: audioSlider.leftPadding + audioSlider.visualPosition * (audioSlider.availableWidth - width)
+                                        y: audioSlider.topPadding + audioSlider.availableHeight / 2 - height / 2
+                                        implicitWidth: 30
+                                        implicitHeight: 30
+                                        radius: 15
+                                        color: "#0F172A"
+                                        border.color: "#FFFFFF"
+                                        border.width: 3.5
+
+                                        scale: audioSlider.pressed ? 1.15 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 100 } }
+                                    }
+                                }
+                            }
+
+                            // 2. Prompts Slider (Dragger matching QuantumLogic 3D)
+                            Item {
+                                width: parent.width
+                                height: 80
+
+                                Item {
+                                    id: promptsHeaderRow
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 24
+                                    anchors.top: parent.top
+                                    height: 28
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 12
+
+                                        Image {
+                                            width: 22
+                                            height: 22
+                                            source: "qrc:/ApexVision/qml/assets/icons/sound_vol_prompts.svg"
+                                            fillMode: Image.PreserveAspectFit
+                                            smooth: true
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text {
+                                            text: "Prompts"
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 18
+                                            font.weight: Font.Medium
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: root.soundVolumePrompts <= 0 ? "Min" : (root.soundVolumePrompts >= 30 ? "Max" : ("" + root.soundVolumePrompts))
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 16
+                                        font.weight: Font.Medium
+                                    }
+                                }
+
+                                Slider {
+                                    id: promptsSlider
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 24
+                                    anchors.top: promptsHeaderRow.bottom
+                                    anchors.topMargin: 10
+                                    height: 36
+                                    padding: 0
+                                    from: 0
+                                    to: 30
+                                    stepSize: 1
+                                    value: root.soundVolumePrompts
+                                    onMoved: root.soundVolumePrompts = Math.round(value)
+
+                                    background: Item {
+                                        x: promptsSlider.leftPadding
+                                        y: promptsSlider.topPadding + promptsSlider.availableHeight / 2 - height / 2
+                                        width: promptsSlider.availableWidth
+                                        height: 12
+
+                                        // 1. Inactive base groove
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: 6
+                                            color: Qt.rgba(255, 255, 255, 0.14)
+                                        }
+
+                                        // 2. Active filled gradient portion
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: promptsSlider.value > 0 ? Math.max(height, promptsSlider.visualPosition * parent.width) : 0
+                                            radius: 6
+                                            visible: promptsSlider.value > 0
+                                            gradient: Gradient {
+                                                orientation: Gradient.Horizontal
+                                                GradientStop { position: 0.0; color: "#E08365" }
+                                                GradientStop { position: 0.5; color: "#F0B594" }
+                                                GradientStop { position: 1.0; color: "#F7D5BC" }
+                                            }
+                                        }
+
+                                        // 3. 5 discrete notch dots along track
+                                        Row {
+                                            id: promptsNotchDotsRow
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 20
+                                            anchors.rightMargin: 20
+                                            spacing: Math.max(0, (width - 5 * 5) / 4)
+
+                                            Repeater {
+                                                model: 5
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 5
+                                                    height: 5
+                                                    radius: 2.5
+                                                    color: (20 + index * (promptsNotchDotsRow.spacing + 5) + 2.5) <= (promptsSlider.visualPosition * promptsSlider.availableWidth) ?
+                                                           "#6E2A18" : Qt.rgba(255, 255, 255, 0.35)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    handle: Rectangle {
+                                        x: promptsSlider.leftPadding + promptsSlider.visualPosition * (promptsSlider.availableWidth - width)
+                                        y: promptsSlider.topPadding + promptsSlider.availableHeight / 2 - height / 2
+                                        implicitWidth: 30
+                                        implicitHeight: 30
+                                        radius: 15
+                                        color: "#0F172A"
+                                        border.color: "#FFFFFF"
+                                        border.width: 3.5
+
+                                        scale: promptsSlider.pressed ? 1.15 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 100 } }
+                                    }
+                                }
+                            }
+
+                            // 3. Phone Slider (Dragger matching QuantumLogic 3D)
+                            Item {
+                                width: parent.width
+                                height: 80
+
+                                Item {
+                                    id: phoneHeaderRow
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 24
+                                    anchors.top: parent.top
+                                    height: 28
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 12
+
+                                        Image {
+                                            width: 22
+                                            height: 22
+                                            source: "qrc:/ApexVision/qml/assets/icons/sound_vol_phone.svg"
+                                            fillMode: Image.PreserveAspectFit
+                                            smooth: true
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text {
+                                            text: "Phone"
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 18
+                                            font.weight: Font.Medium
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: root.soundVolumePhone <= 0 ? "Min" : (root.soundVolumePhone >= 30 ? "Max" : ("" + root.soundVolumePhone))
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 16
+                                        font.weight: Font.Medium
+                                    }
+                                }
+
+                                Slider {
+                                    id: phoneSlider
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 24
+                                    anchors.top: phoneHeaderRow.bottom
+                                    anchors.topMargin: 10
+                                    height: 36
+                                    padding: 0
+                                    from: 0
+                                    to: 30
+                                    stepSize: 1
+                                    value: root.soundVolumePhone
+                                    onMoved: root.soundVolumePhone = Math.round(value)
+
+                                    background: Item {
+                                        x: phoneSlider.leftPadding
+                                        y: phoneSlider.topPadding + phoneSlider.availableHeight / 2 - height / 2
+                                        width: phoneSlider.availableWidth
+                                        height: 12
+
+                                        // 1. Inactive base groove
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: 6
+                                            color: Qt.rgba(255, 255, 255, 0.14)
+                                        }
+
+                                        // 2. Active filled gradient portion
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: phoneSlider.value > 0 ? Math.max(height, phoneSlider.visualPosition * parent.width) : 0
+                                            radius: 6
+                                            visible: phoneSlider.value > 0
+                                            gradient: Gradient {
+                                                orientation: Gradient.Horizontal
+                                                GradientStop { position: 0.0; color: "#E08365" }
+                                                GradientStop { position: 0.5; color: "#F0B594" }
+                                                GradientStop { position: 1.0; color: "#F7D5BC" }
+                                            }
+                                        }
+
+                                        // 3. 5 discrete notch dots along track
+                                        Row {
+                                            id: phoneNotchDotsRow
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 20
+                                            anchors.rightMargin: 20
+                                            spacing: Math.max(0, (width - 5 * 5) / 4)
+
+                                            Repeater {
+                                                model: 5
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 5
+                                                    height: 5
+                                                    radius: 2.5
+                                                    color: (20 + index * (phoneNotchDotsRow.spacing + 5) + 2.5) <= (phoneSlider.visualPosition * phoneSlider.availableWidth) ?
+                                                           "#6E2A18" : Qt.rgba(255, 255, 255, 0.35)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    handle: Rectangle {
+                                        x: phoneSlider.leftPadding + phoneSlider.visualPosition * (phoneSlider.availableWidth - width)
+                                        y: phoneSlider.topPadding + phoneSlider.availableHeight / 2 - height / 2
+                                        implicitWidth: 30
+                                        implicitHeight: 30
+                                        radius: 15
+                                        color: "#0F172A"
+                                        border.color: "#FFFFFF"
+                                        border.width: 3.5
+
+                                        scale: phoneSlider.pressed ? 1.15 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 100 } }
+                                    }
+                                }
+                            }
+
+                            // 4. Call ring Slider (Dragger matching QuantumLogic 3D)
+                            Item {
+                                width: parent.width
+                                height: 80
+
+                                Item {
+                                    id: callRingHeaderRow
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 24
+                                    anchors.top: parent.top
+                                    height: 28
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 12
+
+                                        Image {
+                                            width: 22
+                                            height: 22
+                                            source: "qrc:/ApexVision/qml/assets/icons/sound_vol_call_ring.svg"
+                                            fillMode: Image.PreserveAspectFit
+                                            smooth: true
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text {
+                                            text: "Call ring"
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 18
+                                            font.weight: Font.Medium
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.right: parent.right
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        text: root.soundVolumeCallRing <= 0 ? "Min" : (root.soundVolumeCallRing >= 30 ? "Max" : ("" + root.soundVolumeCallRing))
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 16
+                                        font.weight: Font.Medium
+                                    }
+                                }
+
+                                Slider {
+                                    id: callRingSlider
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.leftMargin: 12
+                                    anchors.rightMargin: 24
+                                    anchors.top: callRingHeaderRow.bottom
+                                    anchors.topMargin: 10
+                                    height: 36
+                                    padding: 0
+                                    from: 0
+                                    to: 30
+                                    stepSize: 1
+                                    value: root.soundVolumeCallRing
+                                    onMoved: root.soundVolumeCallRing = Math.round(value)
+
+                                    background: Item {
+                                        x: callRingSlider.leftPadding
+                                        y: callRingSlider.topPadding + callRingSlider.availableHeight / 2 - height / 2
+                                        width: callRingSlider.availableWidth
+                                        height: 12
+
+                                        // 1. Inactive base groove
+                                        Rectangle {
+                                            anchors.fill: parent
+                                            radius: 6
+                                            color: Qt.rgba(255, 255, 255, 0.14)
+                                        }
+
+                                        // 2. Active filled gradient portion
+                                        Rectangle {
+                                            anchors.left: parent.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            width: callRingSlider.value > 0 ? Math.max(height, callRingSlider.visualPosition * parent.width) : 0
+                                            radius: 6
+                                            visible: callRingSlider.value > 0
+                                            gradient: Gradient {
+                                                orientation: Gradient.Horizontal
+                                                GradientStop { position: 0.0; color: "#E08365" }
+                                                GradientStop { position: 0.5; color: "#F0B594" }
+                                                GradientStop { position: 1.0; color: "#F7D5BC" }
+                                            }
+                                        }
+
+                                        // 3. 5 discrete notch dots along track
+                                        Row {
+                                            id: callRingNotchDotsRow
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 20
+                                            anchors.rightMargin: 20
+                                            spacing: Math.max(0, (width - 5 * 5) / 4)
+
+                                            Repeater {
+                                                model: 5
+                                                Rectangle {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    width: 5
+                                                    height: 5
+                                                    radius: 2.5
+                                                    color: (20 + index * (callRingNotchDotsRow.spacing + 5) + 2.5) <= (callRingSlider.visualPosition * callRingSlider.availableWidth) ?
+                                                           "#6E2A18" : Qt.rgba(255, 255, 255, 0.35)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    handle: Rectangle {
+                                        x: callRingSlider.leftPadding + callRingSlider.visualPosition * (callRingSlider.availableWidth - width)
+                                        y: callRingSlider.topPadding + callRingSlider.availableHeight / 2 - height / 2
+                                        implicitWidth: 30
+                                        implicitHeight: 30
+                                        radius: 15
+                                        color: "#0F172A"
+                                        border.color: "#FFFFFF"
+                                        border.width: 3.5
+
+                                        scale: callRingSlider.pressed ? 1.15 : 1.0
+                                        Behavior on scale { NumberAnimation { duration: 100 } }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // LEVEL 2G: Ringtones Sub-screen
+                // -------------------------------------------------------------
+                Item {
+                    id: soundRingtonesView
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    x: root.soundCurrentScreen === "ringtones" ? 0 : parent.width
+                    opacity: root.soundCurrentScreen === "ringtones" ? 1.0 : 0.0
+                    enabled: root.soundCurrentScreen === "ringtones"
+                    visible: opacity > 0.001
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+
+                    Flickable {
+                        anchors.fill: parent
+                        contentHeight: ringtonesCol.height + 40
+                        clip: true
+                        boundsBehavior: Flickable.DragAndOvershootBounds
+
+                        Column {
+                            id: ringtonesCol
+                            width: parent.width
+                            spacing: 0
+
+                            Repeater {
+                                model: [
+                                    "Default ringtone",
+                                    "Apex Chime",
+                                    "Lincoln Elegance",
+                                    "Digital Horizon",
+                                    "Acoustic Melody"
+                                ]
+
+                                SettingRowRadio {
+                                    title: modelData
+                                    selected: root.soundRingtone === modelData
+                                    onSelectedRequested: {
+                                        root.soundRingtone = modelData;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // -------------------------------------------------------------
+                // LEVEL 2H: Notification sounds Sub-screen
+                // -------------------------------------------------------------
+                Item {
+                    id: soundNotificationSoundsView
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    x: root.soundCurrentScreen === "notification_sounds" ? 0 : parent.width
+                    opacity: root.soundCurrentScreen === "notification_sounds" ? 1.0 : 0.0
+                    enabled: root.soundCurrentScreen === "notification_sounds"
+                    visible: opacity > 0.001
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+
+                    Flickable {
+                        anchors.fill: parent
+                        contentHeight: notifSoundsCol.height + 40
+                        clip: true
+                        boundsBehavior: Flickable.DragAndOvershootBounds
+
+                        Column {
+                            id: notifSoundsCol
+                            width: parent.width
+                            spacing: 0
+
+                            Repeater {
+                                model: [
+                                    "Default notification",
+                                    "Gentle Bell",
+                                    "Soft Chime",
+                                    "Subtle Pulse",
+                                    "Aura Tone"
+                                ]
+
+                                SettingRowRadio {
+                                    title: modelData
+                                    selected: root.soundNotificationSound === modelData
+                                    onSelectedRequested: {
+                                        root.soundNotificationSound = modelData;
+                                    }
+                                }
                             }
                         }
                     }

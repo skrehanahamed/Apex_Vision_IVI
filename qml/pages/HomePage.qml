@@ -1,19 +1,18 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import ApexVision
 import "../components"
 
 Item {
     id: root
 
     property bool climateOpen: false
+    signal openPlayerRequested()
 
     RowLayout {
         anchors.fill: parent
-        anchors.topMargin: 8
-        anchors.bottomMargin: 8
-        anchors.leftMargin: 0
-        anchors.rightMargin: 12
+        anchors.margins: 16
         spacing: 16
 
         // Navigation Area (Left / Center: ~62% width)
@@ -25,9 +24,142 @@ Item {
 
         // Media Card (Right: ~38% width)
         MediaCard {
+            id: mediaCard
             Layout.fillHeight: true
             Layout.fillWidth: true
             Layout.preferredWidth: 38
+            onOpenPlayerRequested: root.openPlayerRequested()
+            onSourceMenuRequested: {
+                sourceMenuModal.visible = true;
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // FULL-SCREEN BLURRED / DIMMED BACKDROP FOR SOURCE MODAL
+    // -------------------------------------------------------------------------
+    Rectangle {
+        id: sourceModalBackdrop
+        anchors.fill: parent
+        color: Qt.rgba(3/255, 7/255, 18/255, 0.74)
+        visible: sourceMenuModal.visible
+        z: 900
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                sourceMenuModal.visible = false;
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // SOURCE MODAL POPUP (Centered in the exact middle of the screen)
+    // NO dragger (all items fit on 1 page), Bigger icons and texts
+    // -------------------------------------------------------------------------
+    Rectangle {
+        id: sourceMenuModal
+        objectName: "cardSourceDropdown"
+        anchors.centerIn: parent
+        width: 360
+        height: sourceMenuCol.implicitHeight + 24
+        radius: 20
+        color: Qt.rgba(11/255, 18/255, 34/255, 0.98)
+        border.color: Qt.rgba(255, 255, 255, 0.20)
+        border.width: 1.5
+        visible: false
+        z: 950
+
+        Column {
+            id: sourceMenuCol
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: 12
+            spacing: 2
+
+            Repeater {
+                model: [
+                    { name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" },
+                    { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
+                    { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
+                    { name: "USB DISK", sourceKey: "USB", icon: "qrc:/ApexVision/qml/assets/icons/usb_source.svg" },
+                    { name: "Bluetooth Audio", sourceKey: "Bluetooth", icon: "qrc:/ApexVision/qml/assets/icons/bluetooth.svg" }
+                ]
+
+                Item {
+                    width: sourceMenuCol.width
+                    height: 60
+
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 12
+                        color: menuMouse.pressed ? Qt.rgba(255, 255, 255, 0.16) :
+                               (menuMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.08) :
+                               (MediaBackend.source === modelData.sourceKey ? Qt.rgba(30/255, 136/255, 229/255, 0.25) : "transparent"))
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                    }
+
+                    Row {
+                        anchors.left: parent.left
+                        anchors.leftMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 18
+
+                        // Bigger circular blue badge
+                        Rectangle {
+                            width: 40
+                            height: 40
+                            radius: 20
+                            color: "#1976D2"
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            // Bigger icon inside badge
+                            Image {
+                                anchors.centerIn: parent
+                                width: 22
+                                height: 22
+                                source: modelData.icon
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                            }
+                        }
+
+                        // Bigger text
+                        Text {
+                            text: modelData.name
+                            color: "#FFFFFF"
+                            font.family: "Inter"
+                            font.pixelSize: 18
+                            font.weight: MediaBackend.source === modelData.sourceKey ? Font.Bold : Font.Medium
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    // Subtle divider line
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.leftMargin: 16
+                        anchors.rightMargin: 16
+                        height: 1
+                        color: Qt.rgba(255, 255, 255, 0.08)
+                        visible: index < 4
+                    }
+
+                    MouseArea {
+                        id: menuMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            MediaBackend.setSource(modelData.sourceKey);
+                            sourceMenuModal.visible = false;
+                        }
+                    }
+                }
+            }
         }
     }
 }

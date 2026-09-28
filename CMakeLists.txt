@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(APEX_VISION_IVI VERSION 2.1.0 LANGUAGES CXX)
+project(APEX_VISION_IVI VERSION 2.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,7 +21,7 @@ if(DEFINED ENV{Qt6_DIR})
 endif()
 
 if(APPLE AND EXISTS "/opt/homebrew/opt/qt")
-    list(PREPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt" "/opt/homebrew/opt/qtwebengine")
+    list(PREPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt" "/opt/homebrew/opt/qtwebengine" "/opt/homebrew/opt/qtmultimedia")
 endif()
 
 find_package(Qt6 REQUIRED COMPONENTS
@@ -31,10 +31,12 @@ find_package(Qt6 REQUIRED COMPONENTS
     Qml
     QuickControls2
     Svg
+    WebEngineCore
     WebEngineQuick
     Network
     Quick3D
     Quick3DHelpers
+    Multimedia
 )
 
 qt_standard_project_setup()
@@ -54,6 +56,8 @@ set(BACKEND_SOURCES
     backend/PhoneBackend.cpp
     backend/SystemBackend.h
     backend/SystemBackend.cpp
+    backend/VideoBackend.h
+    backend/VideoBackend.cpp
 )
 
 qt_add_executable(apex_vision_ivi
@@ -75,6 +79,10 @@ qt_add_qml_module(apex_vision_ivi
         qml/pages/AppsPage.qml
         qml/pages/PhonePage.qml
         qml/pages/SettingsPage.qml
+        qml/pages/TowingPage.qml
+        qml/pages/NewsPage.qml
+        qml/pages/RadioPage.qml
+        qml/pages/VideoPage.qml
         qml/components/SideNavigation.qml
         qml/components/StatusBar.qml
         qml/components/MediaCard.qml
@@ -146,7 +154,30 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/skip_next.svg
         qml/assets/icons/skip_prev.svg
         qml/assets/icons/radio_source.svg
+        qml/assets/icons/radio_keypad.svg
+        qml/assets/icons/preset_star_add.svg
+        qml/assets/icons/preset_star_arrow.svg
+        qml/assets/icons/star_glow_filled.svg
+        qml/assets/icons/music_note_coral.svg
+        qml/assets/icons/usb_source.svg
         qml/assets/icons/phone_add.svg
+
+        # YouTube & Video Icons
+        qml/assets/icons/yt_cat_all.svg
+        qml/assets/icons/yt_cat_trending.svg
+        qml/assets/icons/yt_cat_music.svg
+        qml/assets/icons/yt_cat_gaming.svg
+        qml/assets/icons/yt_cat_movies.svg
+        qml/assets/icons/yt_cat_podcasts.svg
+        qml/assets/icons/yt_cat_live.svg
+        qml/assets/icons/yt_cat_search.svg
+        qml/assets/icons/yt_keyboard.svg
+        qml/assets/icons/yt_shift.svg
+        qml/assets/icons/yt_backspace.svg
+        qml/assets/icons/yt_fullscreen.svg
+        qml/assets/icons/yt_close.svg
+        qml/assets/icons/yt_chevron_down.svg
+        qml/assets/icons/yt_play.svg
 
         # Map & Search Controls
         qml/assets/icons/search.svg
@@ -167,6 +198,10 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/setting_sound.png
         qml/assets/icons/setting_sound_white.png
         qml/assets/icons/setting_sound_yellow.png
+        qml/assets/icons/sound_vol_audio.svg
+        qml/assets/icons/sound_vol_prompts.svg
+        qml/assets/icons/sound_vol_phone.svg
+        qml/assets/icons/sound_vol_call_ring.svg
         qml/assets/icons/setting_bluetooth.png
         qml/assets/icons/setting_bluetooth_white.png
         qml/assets/icons/setting_bluetooth_yellow.png
@@ -186,6 +221,28 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/setting_profile_yellow.png
         qml/assets/icons/setting_sliders_logo.svg
         qml/assets/icons/setting_sliders_logo.png
+        qml/assets/icons/setting_sliders_white.svg
+        qml/assets/icons/app_navigation.svg
+        qml/assets/icons/app_store.svg
+        qml/assets/icons/app_assistant.svg
+        qml/assets/icons/app_rejuvenate.svg
+        qml/assets/icons/app_phone.svg
+        qml/assets/icons/app_am.svg
+        qml/assets/icons/app_fm.svg
+        qml/assets/icons/app_siriusxm.svg
+        qml/assets/icons/app_satellite_radio.svg
+        qml/assets/icons/app_bluetooth.svg
+        qml/assets/icons/app_messages.svg
+        qml/assets/icons/app_media.svg
+        qml/assets/icons/app_trailer.svg
+        qml/assets/icons/app_carplay.svg
+        qml/assets/icons/app_hotspot.svg
+        qml/assets/icons/app_manual.svg
+        qml/assets/icons/app_updates.svg
+        qml/assets/icons/app_games.svg
+        qml/assets/icons/app_news.svg
+        qml/assets/icons/app_video.svg
+        qml/assets/icons/app_projection.svg
         qml/assets/icons/icon_globe.svg
         qml/assets/icons/icon_units_speedo.svg
         qml/assets/icons/icon_time_clock.svg
@@ -324,6 +381,30 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/icon_right_max_ac.png
         qml/assets/icons/icon_right_refresh.png
 
+        # Automotive News Vector Icons
+        qml/assets/icons/news_car.svg
+        qml/assets/icons/news_globe.svg
+        qml/assets/icons/news_cpu.svg
+        qml/assets/icons/news_trending.svg
+        qml/assets/icons/news_zap.svg
+        qml/assets/icons/news_speaker.svg
+        qml/assets/icons/news_speaker_mute.svg
+        qml/assets/icons/news_radio.svg
+        qml/assets/icons/news_paper.svg
+        qml/assets/icons/news_refresh.svg
+        qml/assets/icons/news_play.svg
+        qml/assets/icons/news_pause.svg
+        qml/assets/icons/news_skip_back.svg
+        qml/assets/icons/news_skip_forward.svg
+        qml/assets/icons/news_clock.svg
+        qml/assets/icons/news_sparkles.svg
+        qml/assets/icons/news_rss.svg
+        qml/assets/icons/news_mic.svg
+        qml/assets/icons/news_waveform.svg
+        qml/assets/icons/news_arrow_left.svg
+        qml/assets/icons/news_bookmark.svg
+        qml/assets/icons/news_bookmark_filled.svg
+
         # Web & Live 3D Map
         web/map.html
         web/osm_logo.png
@@ -349,10 +430,12 @@ target_link_libraries(apex_vision_ivi PRIVATE
     Qt6::Qml
     Qt6::QuickControls2
     Qt6::Svg
+    Qt6::WebEngineCore
     Qt6::WebEngineQuick
     Qt6::Network
     Qt6::Quick3D
     Qt6::Quick3DHelpers
+    Qt6::Multimedia
 )
 
 # Custom target to keep 3D model meshes, textures, and assets in sync with build directory
