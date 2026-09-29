@@ -151,13 +151,13 @@ graph TD
     Main --> RejView
     Main --> ManualView
 
-    NavView <==> NavB
-    ClimateView <==> ClimB
-    VehicleView <==> VehB
-    VehicleView <==> SeatB
-    RejView <==> RejC
-    VideoView <==> VidB
-    SettingsView <==> MedB
+    NavView <--> NavB
+    ClimateView <--> ClimB
+    VehicleView <--> VehB
+    VehicleView <--> SeatB
+    RejView <--> RejC
+    VideoView <--> VidB
+    SettingsView <--> MedB
 
     RejC -.-> ClimB
     RejC -.-> SeatB
@@ -166,7 +166,7 @@ graph TD
     NavB --> OSM
     NavB --> GEO
     VidB --> YT
-    VehB <== CAN
+    CAN --> VehB
 ```
 
 ---
