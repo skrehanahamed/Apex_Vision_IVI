@@ -1,7 +1,7 @@
-# Apex VISION IVI - Digital Cockpit v2.2.0 Release Notes
+# Apex VISION IVI - Digital Cockpit v2.3.0 Release Notes
 
-**Release**: `v2.2.0`  
-**Target Architecture**: Modern Automotive In-Vehicle Infotainment (HMI / Cockpit Head Unit)  
+**Release**: `v2.3.0`  
+**Target Architecture**: Modern Connected Automotive In-Vehicle Infotainment (HMI / Cockpit Head Unit)  
 **Supported Platforms**: Linux (Ubuntu 22.04 / 24.04 LTS), macOS (Apple Silicon / Intel), Windows (MSVC 2022)  
 **Framework**: Qt 6.5+ (C++20, Qt Quick / QML, QtWebEngine, QtQuick3D, QtMultimedia)  
 
@@ -9,30 +9,44 @@
 
 ## 🌟 Major Highlights & New Capabilities
 
-### 1. 🎬 Native YouTube Video Streaming Suite & Categorical Browser
-- **`VideoBackend` Asynchronous Web Scraper**: High-performance C++20 network backend interacting directly with YouTube endpoints via `QNetworkAccessManager`, parsing and extracting video streams, channel logos, subscriber counts, view metrics, and duration badges without third-party API keys or quota limits.
+### 1. 🧘 APEX Rejuvenate™ Multi-Sensory Stationary Wellness Suite
+- **Multi-Sensory Vehicle Actuator Synchronization (`RejuvenateController`)**: State machine orchestrating automated transitions across vehicle comfort subsystems when parked:
+  - **Motorized Ergonomic Seating (`SeatBackend`)**: Automatic seat transition to **Relax Mode** (45° ergonomic recline) upon start, activating continuous pneumatic wave massage at Level 2, and automatic restoration to standard upright position upon completion.
+  - **Micro-Climate Comfort (`ClimateBackend`)**: Automated thermal regulation to 22.0°C with gentle cabin airflow (`AUTO` mode, A/C engaged).
+  - **Spatial Ambient Lighting (`AmbientLightBackend`)**: Synchronized theme-matching colors (e.g. Cyan Blue `#24D9FF` for Aurora, Deep Aqua for Ocean) with breathing brightness modulation.
+- **Calm Audio/Visual Integration**: Integrated high-definition looping nature videos, soothing binaural audio streams, and synchronized timeline milestones (*Preparing*, *Active*, *Concluding*).
+- **Automotive Safety Park Interlock**: Mandatory transmission Park (`P`) monitor. Shifting gears into Drive (`D`) or Reverse (`R`) immediately pauses the immersion, triggers an elevated safety modal, and safely halts motorized actuators.
+
+### 2. 📖 Digital Owner's Manual & Visual Hotspot Navigation
+- **3-Mode Tabbed Navigation**: Seamless switching between **Categories**, **Visual search**, and **Bookmarks** with sliding amber indicator underline.
+- **2-Page Visual Search (Cockpit & Exterior SUV)**:
+  - **Page 1 (Luxury Cockpit Interior)**: Interactive touch pins for Steering Controls, Digital Cockpit Cluster, 15.6" Infotainment Display, Center Console, Ambient Air Vents, and Seat Memory.
+  - **Page 2 (Exterior SUV Perspective)**: Touch pins for Matrix LED Headlights, Front Radar & LiDAR sensors, Smart Keyless Mirrors, Power Charge Port, and Hands-Free Power Liftgate.
+  - **Adaptive Hover Tooltips**: Responsive tooltips that automatically detect viewport boundaries to prevent edge clipping.
+- **Fluid Horizontal Navigation Stack**:
+  - Decoupled header layout with bidirectional horizontal slide animations for category breadcrumb titles (`0 → -60px` / `60px → 0`).
+  - True off-screen content transitions (`100% viewport width → 0`) eliminating view overlap during drill-down into topics and articles.
+- **Real-Time Touch Keyboard Search**: Live query filtering across all manual chapters and subtopics with built-in automotive on-screen touch keyboard.
+- **Interactive Capsule Dragger**: Custom touch-target draggable capsule thumb synchronized bidirectionally with `Flickable.contentY`.
+
+### 3. 🎬 Native YouTube Video Streaming Suite & Categorical Browser
+- **`VideoBackend` Asynchronous Web Scraper**: High-performance C++20 network backend interacting directly with YouTube endpoints via `QNetworkAccessManager`, parsing and extracting video streams without third-party API keys or quota limits.
 - **7 Automotive Category Tabs**: Seamless one-touch filtering across **All**, **Trending**, **Music**, **Gaming**, **Movies**, **Podcasts**, and **Live**.
-- **Infinite Drag-Scroll Feed**: Dynamic scroll depth detection that pre-fetches and buffers subsequent video sets automatically for infinite, lag-free browsing.
-- **On-Screen Touch Keyboard**: Automotive-sized touch keyboard with full alphabet, numbers, space, backspace, and shift toggles for instant in-cabin searches.
-- **Modern Borderless Card Layout**: Clean frosted glass aesthetics with crisp typography, channel identity avatars, view counts, and time duration badges.
+- **Infinite Drag-Scroll Feed**: Dynamic scroll depth detection that pre-fetches and buffers subsequent video sets automatically for infinite browsing.
+- **Instant Up Next Queue**: Tap-to-play recommendations queue using YouTube's iframe API (`loadVideoById`), switching videos seamlessly in-place.
 
-### 2. 📺 Cinematic Embedded Player & Instant Up Next Recommendations
-- **Hardware-Accelerated Embedded Sandbox**: 16:9 embedded player powered by `QtWebEngineQuick` with `--autoplay-policy=no-user-gesture-required` and auto-hiding controls.
-- **Instant Up Next Queue**: Tap-to-play recommendations queue using YouTube's iframe API (`loadVideoById`), switching videos seamlessly in-place without reload flicker or latency.
-- **Cockpit-Preserving Fullscreen**: Full-bleed workspace expansion that keeps the left navigation rail, right status/slider bar, and bottom climate control dock visible and interactive at all times.
+### 4. 🗺️ Official OpenStreetMap 3D Cartography & Navigation
+- **Zero Watermarks**: Running on official OSM tile infrastructure (`tile.openstreetmap.de` & `tile.openstreetmap.fr`).
+- **3D Vector Extruded Buildings**: Hardware-accelerated WebGL 3D perspective with 56-degree forward-looking pitch, live GPS coordinate acquisition, and reverse geocoding via Nominatim.
 
-### 3. 🗺️ Official OpenStreetMap Navigation (Zero Watermarks)
-- **Official OpenStreetMap Tile Infrastructure**: Migrated raster tile services to official OSM endpoints (`tile.openstreetmap.de` & `tile.openstreetmap.fr`), completely resolving "API Key Required" and "Restricted" watermarks.
-- **3D Vector Extruded Buildings**: Hardware-accelerated WebGL 3D perspective with 56-degree forward-looking pitch, live GPS coordinate acquisition, reverse geocoding via Nominatim, and dynamic street name badges.
+### 5. 🎛️ Acoustic Soundstage, 3D Cabin Studio, and Valet Security
+- **Acoustic Balance & Fade**: Draggable reticle with real-time radiating concentric sound wave ripples, 13-point tone controls, and wallpaper-dissolved cabin geometry.
+- **Interactive 3D Multi-Contour Seats & Airflow**: Independent multi-intensity pneumatic massage, lumbar actuators, and PM2.5 air purification gauge with one-touch cabin air refresh.
+- **Full-Screen PIN Valet Lock**: Automotive security overlay with masked PIN keypad and storage compartment lockout.
 
-### 4. 📻 Digital Radio Tuner & Media Center
-- **Multi-Band Tuner**: Integrated AM, FM, and SiriusXM tuner interface with direct numeric keypad, bookmarkable presets, and animated audio waveforms.
-- **Dual-Card Home Interface**: Split-view dashboard pairing the 3D navigation card with the media player.
-
-### 5. 🛠️ CI/CD & Build Pipeline Updates
-- Added `qtmultimedia` across all GitHub Actions build workflows (`build.yml`, `build-macos.yml`, `build-windows.yml`, `release.yml`).
-- Bumped project version to `v2.2.0` in `CMakeLists.txt` and `README.md`.
-- Added high-resolution screenshots in `docs/screenshots/` showcasing the new YouTube hub, player, OSM navigation, and radio media center.
+### 6. 🚀 Repository Hardening & Complete 17-Screenshot Showcase
+- Pruned redundant/mock assets, optimized looping nature MP4 backdrops to fast-loading H.264 formats under 30MB.
+- Updated system architecture, directory trees, and complete 17-screenshot subsystem gallery.
 
 ---
 
