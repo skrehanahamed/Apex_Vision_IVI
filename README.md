@@ -36,81 +36,6 @@ The architecture strictly decouples the QML presentation layer from deterministi
 
 The software architecture strictly adheres to automotive digital cockpit best practices, decoupling the declarative presentation layer from deterministic, thread-safe C++20 backend controllers:
 
-### PlantUML Architecture Diagram
-
-```plantuml
-@startuml Apex_Vision_Architecture
-!theme plain
-skinparam backgroundColor transparent
-skinparam componentStyle uml2
-skinparam roundCorner 10
-skinparam defaultFontName "Inter, Helvetica, Arial, sans-serif"
-skinparam defaultFontSize 12
-
-package "Presentation Layer (Qt Quick / QML)" as QML {
-  [Main.qml\nViewport Coordinator] as Main
-  [HomePage\nSplit Dashboard] as Home
-  [NavigationPanel\n3D WebEngine Map] as NavView
-  [ClimateBar & 3D Cabin\nHVAC & Air Refresh] as ClimateView
-  [Vehicle & Seats\n3D Studio & Valet] as VehicleView
-  [VideoPage\nYouTube Streamer] as VideoView
-  [RejuvenatePage\nWellness Immersion] as RejView
-  [ManualPage\n2-Page Visual Search] as ManualView
-  [Settings & Radio\nOEM Audio Suite] as SettingsView
-}
-
-package "Core Backend Controllers (C++20)" as Backend {
-  [NavigationBackend] as NavB
-  [ClimateBackend] as ClimB
-  [VehicleBackend & Valet] as VehB
-  [SeatBackend] as SeatB
-  [AmbientLightBackend] as LightB
-  [VideoBackend] as VidB
-  [RejuvenateController] as RejC
-  [MediaBackend] as MedB
-  [SystemBackend] as SysB
-}
-
-package "Hardware Simulation & External Services" as External {
-  [VehicleSimulator\nCAN Bus Telemetry] as CAN
-  [OpenStreetMap / MapLibre\n3D Vector Planet Tiles] as OSM
-  [YouTube Endpoint Streamer\nNo-Key Media Scraper] as YT
-  [IP Geolocation & Nominatim\nLive Street Geocoder] as GEO
-}
-
-' View to Subsystems
-Main -down-> Home
-Main -down-> ClimateView
-Main -down-> VehicleView
-Main -down-> VideoView
-Main -down-> RejView
-Main -down-> ManualView
-
-' QML to Backend IPC
-NavView <--> NavB : Q_PROPERTY / Qt Signals
-ClimateView <--> ClimB : Dual-Zone & Air Quality
-VehicleView <--> VehB : CAN Telemetry & PIN Lock
-VehicleView <--> SeatB : 3D Actuators & Massage
-RejView <--> RejC : Immersion Timeline
-VideoView <--> VidB : Video Feed & UpNext
-SettingsView <--> MedB : Tone & Presets
-
-' Wellness Actuator Synchronization
-RejC -right-> ClimB : 22°C Auto Airflow
-RejC -right-> SeatB : 45° Recline & Wave Massage
-RejC -right-> LightB : Cyan/Amber Ambience
-
-' External Services
-NavB --> OSM : WebChannel Integration
-NavB --> GEO : HTTPS Reverse Geocoding
-VidB --> YT : Asynchronous QNetworkAccessManager
-VehB <-- CAN : 500ms CAN Simulation Loop
-
-@enduml
-```
-
-### Interactive Architecture Flow (Mermaid)
-
 ```mermaid
 graph TD
     subgraph QML["Presentation Layer (Qt Quick / QML)"]
@@ -168,6 +93,78 @@ graph TD
     VidB --> YT
     CAN --> VehB
 ```
+
+<details>
+<summary><b>📄 Click to expand PlantUML Architecture Specification</b></summary>
+
+```plantuml
+@startuml Apex_Vision_Architecture
+!theme plain
+skinparam backgroundColor transparent
+skinparam componentStyle uml2
+skinparam roundCorner 10
+skinparam defaultFontName "Inter, Helvetica, Arial, sans-serif"
+skinparam defaultFontSize 12
+
+package "Presentation Layer (Qt Quick / QML)" as QML {
+  [Main.qml\nViewport Coordinator] as Main
+  [HomePage\nSplit Dashboard] as Home
+  [NavigationPanel\n3D WebEngine Map] as NavView
+  [ClimateBar & 3D Cabin\nHVAC & Air Refresh] as ClimateView
+  [Vehicle & Seats\n3D Studio & Valet] as VehicleView
+  [VideoPage\nYouTube Streamer] as VideoView
+  [RejuvenatePage\nWellness Immersion] as RejView
+  [ManualPage\n2-Page Visual Search] as ManualView
+  [Settings & Radio\nOEM Audio Suite] as SettingsView
+}
+
+package "Core Backend Controllers (C++20)" as Backend {
+  [NavigationBackend] as NavB
+  [ClimateBackend] as ClimB
+  [VehicleBackend & Valet] as VehB
+  [SeatBackend] as SeatB
+  [AmbientLightBackend] as LightB
+  [VideoBackend] as VidB
+  [RejuvenateController] as RejC
+  [MediaBackend] as MedB
+  [SystemBackend] as SysB
+}
+
+package "Hardware Simulation & External Services" as External {
+  [VehicleSimulator\nCAN Bus Telemetry] as CAN
+  [OpenStreetMap / MapLibre\n3D Vector Planet Tiles] as OSM
+  [YouTube Endpoint Streamer\nNo-Key Media Scraper] as YT
+  [IP Geolocation & Nominatim\nLive Street Geocoder] as GEO
+}
+
+Main -down-> Home
+Main -down-> ClimateView
+Main -down-> VehicleView
+Main -down-> VideoView
+Main -down-> RejView
+Main -down-> ManualView
+
+NavView <--> NavB : Q_PROPERTY / Qt Signals
+ClimateView <--> ClimB : Dual-Zone & Air Quality
+VehicleView <--> VehB : CAN Telemetry & PIN Lock
+VehicleView <--> SeatB : 3D Actuators & Massage
+RejView <--> RejC : Immersion Timeline
+VideoView <--> VidB : Video Feed & UpNext
+SettingsView <--> MedB : Tone & Presets
+
+RejC -right-> ClimB : 22°C Auto Airflow
+RejC -right-> SeatB : 45° Recline & Wave Massage
+RejC -right-> LightB : Cyan/Amber Ambience
+
+NavB --> OSM : WebChannel Integration
+NavB --> GEO : HTTPS Reverse Geocoding
+VidB --> YT : Asynchronous QNetworkAccessManager
+CAN --> VehB : 500ms CAN Simulation Loop
+
+@enduml
+```
+
+</details>
 
 ---
 
