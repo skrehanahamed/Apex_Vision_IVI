@@ -36,6 +36,15 @@ The architecture strictly decouples the QML presentation layer from deterministi
 
 The software architecture strictly adheres to automotive digital cockpit best practices, decoupling the declarative presentation layer from deterministic, thread-safe C++20 backend controllers:
 
+<div align="center">
+
+![Apex Vision IVI System Architecture](docs/architecture_diagram.png)
+
+</div>
+
+<details>
+<summary><b>📊 Click to expand Interactive Mermaid Flowchart</b></summary>
+
 ```mermaid
 graph TD
     subgraph QML["Presentation Layer (Qt Quick / QML)"]
@@ -93,6 +102,8 @@ graph TD
     VidB --> YT
     CAN --> VehB
 ```
+
+</details>
 
 <details>
 <summary><b>📄 Click to expand PlantUML Architecture Specification</b></summary>
