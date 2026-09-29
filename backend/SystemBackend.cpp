@@ -10,6 +10,11 @@ SystemBackend::SystemBackend(QObject *parent)
     m_clockTimer.start(1000);
 }
 
+SystemBackend::~SystemBackend()
+{
+    stopTts();
+}
+
 void SystemBackend::updateClock()
 {
     QDateTime now = QDateTime::currentDateTime();
@@ -158,15 +163,37 @@ void SystemBackend::playTtsSample(const QString &text, double rate, double pitch
 {
     Q_UNUSED(pitch);
     stopTts();
-    int wpm = static_cast<int>(110 + (rate / 100.0) * 140);
+
+    // Natural speech rate: ~175 WPM (or adjusted if rate specified)
+    int wpm = (rate > 10.0) ? static_cast<int>(110 + (rate / 100.0) * 140) : 175;
+
+    m_ttsProcess = new QProcess(this);
+    connect(m_ttsProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int exitCode, QProcess::ExitStatus exitStatus) {
+        Q_UNUSED(exitCode);
+        if (m_ttsProcess) {
+            m_ttsProcess->deleteLater();
+            m_ttsProcess = nullptr;
+        }
+        if (exitStatus == QProcess::NormalExit) {
+            emit ttsFinished();
+        }
+    });
+
     QStringList args;
-    args << text << "-r" << QString::number(wpm);
-    QProcess::startDetached("say", args);
+    args << "-r" << QString::number(wpm) << text;
+    m_ttsProcess->start("say", args);
 }
 
 void SystemBackend::stopTts()
 {
-    QProcess::startDetached("killall", QStringList() << "say");
+    if (m_ttsProcess) {
+        m_ttsProcess->disconnect(this);
+        m_ttsProcess->kill();
+        m_ttsProcess->waitForFinished(300);
+        m_ttsProcess->deleteLater();
+        m_ttsProcess = nullptr;
+    }
 }
 
 void SystemBackend::setUnitsTemperature(const QString &unit)

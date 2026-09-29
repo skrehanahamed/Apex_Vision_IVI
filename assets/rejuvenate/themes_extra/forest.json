@@ -1,0 +1,26 @@
+{
+    "id": "forest",
+    "name": "Forest",
+    "description": "Be closer to nature",
+    "longDescription": "A 10-minute immersive experience that synchronizes ambient lighting, soothing audio, comfortable seating and cabin climate to help you relax and recharge.",
+    "thumbnail": "assets/rejuvenate/images/thumb_forest.jpg",
+    "previewImage": "assets/rejuvenate/images/preview_forest.jpg",
+    "video": "assets/rejuvenate/video/forest.mp4",
+    "audio": "assets/rejuvenate/audio/forest.mp3",
+    "duration": 600,
+    "soundName": "Nature Mix",
+    "climate": {
+        "temperature": 20.5,
+        "fanMode": "AUTO",
+        "ac": true
+    },
+    "ambient": {
+        "name": "Emerald Canopy",
+        "color": "#00E575",
+        "brightness": 65
+    },
+    "seat": {
+        "position": "Relax",
+        "massageLevel": 2
+    }
+}

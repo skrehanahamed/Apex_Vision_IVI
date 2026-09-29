@@ -47,9 +47,59 @@ Item {
         }
     }
 
+    // Automatic transition to next video when current video completes
+    function playNextVideo() {
+        if (!VideoBackend.isPlayerOpen) return
+        console.log("[VideoPage] Advancing to next video automatically...")
+        VideoBackend.playNextRelated()
+    }
+
+    Timer {
+        id: videoEndDebounceTimer
+        interval: 350
+        repeat: false
+        onTriggered: {
+            videoPage.playNextVideo()
+        }
+    }
+
+    // Proactive background monitor to detect when video finishes
+    Timer {
+        id: videoPlaybackMonitor
+        interval: 1000
+        running: VideoBackend.isPlayerOpen && videoPage.activeVideoId !== "" && !loadingOverlay.visible
+        repeat: true
+        onTriggered: {
+            ytWebEngine.runJavaScript(
+                "(function() {" +
+                "  if (window.__ytVideoEnded) {" +
+                "    window.__ytVideoEnded = false;" +
+                "    return true;" +
+                "  }" +
+                "  try {" +
+                "    var ifr = document.getElementById('ytIframe');" +
+                "    if (ifr && ifr.contentDocument) {" +
+                "      var v = ifr.contentDocument.querySelector('video');" +
+                "      if (v && (v.ended || (v.duration > 0 && v.currentTime > 0 && (v.duration - v.currentTime <= 0.8)))) {" +
+                "        return true;" +
+                "      }" +
+                "    }" +
+                "  } catch(e) {}" +
+                "  return false;" +
+                "})();",
+                function(isEnded) {
+                    if (isEnded) {
+                        videoEndDebounceTimer.restart()
+                    }
+                }
+            )
+        }
+    }
+
     function playVideo(videoId) {
         if (!videoId || videoId.length === 0) return
         activeVideoId = videoId
+        videoEndDebounceTimer.stop()
         loadingOverlay.visible = true
         loadingOverlayTimeout.restart()
         ytWebEngine.audioMuted = false
@@ -58,6 +108,7 @@ Item {
         // Try direct iframe update first for seamless instant switching (like YouTube)
         var jsCmd = 
             "(function() {" +
+            "  if (window.resetVideoEnded) window.resetVideoEnded();" +
             "  var ifr = document.getElementById('ytIframe');" +
             "  if (ifr) {" +
             "    ifr.src = 'https://www.youtube-nocookie.com/embed/' + " + JSON.stringify(videoId) + " + '?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&fs=1';" +
@@ -79,11 +130,13 @@ Item {
                     + '<meta charset="utf-8">'
                     + '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
                     + '<meta name="referrer" content="strict-origin-when-cross-origin">'
+                    + '<title>YouTube</title>'
                     + '<style>'
                     + '* { margin: 0; padding: 0; box-sizing: border-box; }'
                     + 'html, body { width: 100%; height: 100%; background: #000000; overflow: hidden; }'
                     + 'iframe { width: 100%; height: 100%; border: 0; display: block; }'
                     + '</style>'
+                    + '<script src="https://www.youtube.com/iframe_api"></script>'
                     + '</head><body>'
                     + '<iframe id="ytIframe" src="https://www.youtube-nocookie.com/embed/' + videoId + '?autoplay=1&controls=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&fs=1"'
                     + ' frameborder="0"'
@@ -93,6 +146,68 @@ Item {
                     + ' mozallowfullscreen="true"'
                     + ' webkitallowfullscreen="true">'
                     + '</iframe>'
+                    + '<script>'
+                    + 'window.__ytVideoEnded = false;'
+                    + 'function triggerVideoEnded() {'
+                    + '  if (window.__ytVideoEnded) return;'
+                    + '  window.__ytVideoEnded = true;'
+                    + '  document.title = "YT_VIDEO_ENDED_" + Date.now();'
+                    + '}'
+                    + 'window.resetVideoEnded = function() {'
+                    + '  window.__ytVideoEnded = false;'
+                    + '  document.title = "YouTube";'
+                    + '};'
+                    + 'var ytPlayer = null;'
+                    + 'function onYouTubeIframeAPIReady() {'
+                    + '  try {'
+                    + '    ytPlayer = new YT.Player("ytIframe", {'
+                    + '      events: {'
+                    + '        "onStateChange": function(event) {'
+                    + '          if (event && event.data === 0) {'
+                    + '            triggerVideoEnded();'
+                    + '          }'
+                    + '        }'
+                    + '      }'
+                    + '    });'
+                    + '  } catch(e) {}'
+                    + '}'
+                    + 'window.addEventListener("message", function(event) {'
+                    + '  try {'
+                    + '    var data = event.data;'
+                    + '    if (typeof data === "string") { data = JSON.parse(data); }'
+                    + '    if (!data) return;'
+                    + '    var isEnded = false;'
+                    + '    if (data.event === "onStateChange" && (data.info === 0 || data.data === 0)) {'
+                    + '      isEnded = true;'
+                    + '    } else if (data.event === "infoDelivery" && data.info && data.info.playerState === 0) {'
+                    + '      isEnded = true;'
+                    + '    }'
+                    + '    if (isEnded) {'
+                    + '      triggerVideoEnded();'
+                    + '    }'
+                    + '  } catch(err) {}'
+                    + '});'
+                    + 'setInterval(function() {'
+                    + '  try {'
+                    + '    var ifr = document.getElementById("ytIframe");'
+                    + '    if (ifr && ifr.contentWindow) {'
+                    + '      ifr.contentWindow.postMessage(JSON.stringify({ event: "command", func: "addEventListener", args: ["onStateChange"] }), "*");'
+                    + '      ifr.contentWindow.postMessage(JSON.stringify({ event: "listening" }), "*");'
+                    + '    }'
+                    + '  } catch(e) {}'
+                    + '}, 1500);'
+                    + 'setInterval(function() {'
+                    + '  try {'
+                    + '    var ifr = document.getElementById("ytIframe");'
+                    + '    if (ifr && ifr.contentDocument) {'
+                    + '      var v = ifr.contentDocument.querySelector("video");'
+                    + '      if (v && (v.ended || (v.duration > 0 && v.currentTime > 0 && (v.duration - v.currentTime <= 0.8)))) {'
+                    + '        triggerVideoEnded();'
+                    + '      }'
+                    + '    }'
+                    + '  } catch(e) {}'
+                    + '}, 800);'
+                    + '</script>'
                     + '</body></html>'
                 ytWebEngine.loadHtml(html, "https://www.youtube-nocookie.com")
             }
@@ -100,6 +215,7 @@ Item {
     }
 
     function stopVideo() {
+        videoEndDebounceTimer.stop()
         if (isFullScreen) {
             exitFullScreen()
         }
@@ -192,19 +308,10 @@ Item {
     }
 
     // =====================================================================
-    //  BACKGROUND (Automotive IVI Cockpit Theme)
+    //  BACKGROUND (Pure Default IVI Cockpit Background - Zero darkening)
     // =====================================================================
-    Rectangle {
-        anchors.fill: parent
-        color: "#070A0F"
-    }
+    // The master default_background.png shines through from Main.qml with zero dimming
 
-    Image {
-        anchors.fill: parent
-        source: "qrc:/ApexVision/qml/assets/default_background.png"
-        fillMode: Image.PreserveAspectCrop
-        opacity: 0.18
-    }
 
     // =====================================================================
     //  TOP HEADER BAR (VehiclePage Styling)
@@ -226,7 +333,7 @@ Item {
             color: Qt.rgba(255, 255, 255, 0.08)
         }
 
-        // ── Back Button (Signature IVI Circular "←" Button from VehiclePage) ──
+        // ── Back Button (Signature IVI Circular "←" Button: Zero border on hover, radiant glow on press) ──
         Item {
             id: backBtn
             width: 44
@@ -235,24 +342,16 @@ Item {
             anchors.leftMargin: 24
             anchors.verticalCenter: parent.verticalCenter
 
-            Rectangle {
-                anchors.fill: parent
-                radius: 22
-                color: backMouse.pressed ? Qt.rgba(255, 255, 255, 0.16) :
-                       (backMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.08) : "transparent")
-                border.color: backMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.25) : "transparent"
-                border.width: 1
-                scale: backMouse.pressed ? 0.92 : 1.0
-                Behavior on scale { NumberAnimation { duration: 80 } }
-            }
-
             Text {
                 anchors.centerIn: parent
                 text: "←"
-                color: "#FFFFFF"
+                color: backMouse.pressed ? "#00D2FF" : (backMouse.containsMouse ? "#FFFFFF" : "#E2E8F0")
                 font.family: "Inter"
                 font.pixelSize: 28
                 font.weight: Font.DemiBold
+                scale: backMouse.pressed ? 0.90 : 1.0
+                Behavior on scale { NumberAnimation { duration: 80 } }
+                Behavior on color { ColorAnimation { duration: 100 } }
             }
 
             MouseArea {
@@ -284,29 +383,22 @@ Item {
             anchors.left: backBtn.right
             anchors.leftMargin: 16
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 8
+            spacing: 10
 
-            Rectangle {
+            Image {
                 width: 32
                 height: 22
-                radius: 6
-                color: "#CC0000"
+                source: "qrc:/ApexVision/qml/assets/icons/app_video.svg"
+                fillMode: Image.PreserveAspectFit
+                smooth: true
                 anchors.verticalCenter: parent.verticalCenter
-
-                Image {
-                    anchors.centerIn: parent
-                    source: "qrc:/ApexVision/qml/assets/icons/yt_play.svg"
-                    width: 10
-                    height: 10
-                    sourceSize: Qt.size(10, 10)
-                }
             }
 
             Text {
                 text: "YouTube"
                 color: "#FFFFFF"
                 font.family: "Inter"
-                font.pixelSize: 18
+                font.pixelSize: 19
                 font.weight: Font.Bold
                 anchors.verticalCenter: parent.verticalCenter
             }
@@ -1588,6 +1680,13 @@ Item {
                             } else if (loadRequest.status === WebEngineView.LoadFailedStatus) {
                                 loadingOverlay.visible = false
                                 console.log("[VideoPage] Load failed:", loadRequest.errorString)
+                            }
+                        }
+
+                        onTitleChanged: {
+                            if (ytWebEngine.title.indexOf("YT_VIDEO_ENDED") !== -1) {
+                                ytWebEngine.runJavaScript("if (window.resetVideoEnded) window.resetVideoEnded();")
+                                videoEndDebounceTimer.restart()
                             }
                         }
 

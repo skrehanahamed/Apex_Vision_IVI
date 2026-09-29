@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(APEX_VISION_IVI VERSION 2.2.0 LANGUAGES CXX)
+project(APEX_VISION_IVI VERSION 2.3.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -58,6 +58,14 @@ set(BACKEND_SOURCES
     backend/SystemBackend.cpp
     backend/VideoBackend.h
     backend/VideoBackend.cpp
+    backend/RejuvenateTheme.h
+    backend/RejuvenateTheme.cpp
+    backend/AmbientLightBackend.h
+    backend/AmbientLightBackend.cpp
+    backend/SeatBackend.h
+    backend/SeatBackend.cpp
+    backend/RejuvenateController.h
+    backend/RejuvenateController.cpp
 )
 
 qt_add_executable(apex_vision_ivi
@@ -68,6 +76,8 @@ qt_add_executable(apex_vision_ivi
 set_source_files_properties(qml/Typography.qml PROPERTIES
     QT_QML_SINGLETON_TYPE TRUE
 )
+
+file(GLOB NEWS_IMAGE_ASSETS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/news_images/*.jpg")
 
 qt_add_qml_module(apex_vision_ivi
     URI ApexVision
@@ -83,6 +93,9 @@ qt_add_qml_module(apex_vision_ivi
         qml/pages/NewsPage.qml
         qml/pages/RadioPage.qml
         qml/pages/VideoPage.qml
+        qml/pages/RejuvenatePage.qml
+        qml/pages/RejuvenateSession.qml
+        qml/pages/ManualPage.qml
         qml/components/SideNavigation.qml
         qml/components/StatusBar.qml
         qml/components/MediaCard.qml
@@ -94,6 +107,9 @@ qt_add_qml_module(apex_vision_ivi
         qml/components/TemperatureControl.qml
         qml/components/ValetLockOverlay.qml
         qml/components/LaneKeepingVisualizer.qml
+        qml/components/RejuvenateThemeCard.qml
+        qml/components/RejuvenateStatusCard.qml
+        qml/components/RejuvenateProgress.qml
         qml/Typography.qml
     RESOURCES
         # Fonts
@@ -181,6 +197,7 @@ qt_add_qml_module(apex_vision_ivi
 
         # Map & Search Controls
         qml/assets/icons/search.svg
+        qml/assets/icons/icon_search_white.svg
         qml/assets/icons/plus.svg
         qml/assets/icons/minus.svg
 
@@ -195,6 +212,8 @@ qt_add_qml_module(apex_vision_ivi
         "qml/assets/icons/image copy 5.png"
         "qml/assets/icons/image copy 6.png"
         "qml/assets/icons/image copy 7.png"
+        "qml/assets/icons/image copy 9.png"
+        "qml/assets/icons/image copy 10.png"
         qml/assets/icons/setting_sound.png
         qml/assets/icons/setting_sound_white.png
         qml/assets/icons/setting_sound_yellow.png
@@ -226,6 +245,32 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/app_store.svg
         qml/assets/icons/app_assistant.svg
         qml/assets/icons/app_rejuvenate.svg
+        qml/assets/icons/calm_wordmark.svg
+        qml/assets/icons/rej_seat_recline.svg
+        qml/assets/icons/rej_head_airflow.svg
+        qml/assets/icons/rej_thermometer.svg
+        qml/assets/icons/rej_seat_heat.svg
+        qml/assets/icons/rej_seat_cushion.svg
+        qml/assets/icons/rej_fragrance.svg
+        qml/assets/icons/rej_seat_upright.svg
+        qml/assets/icons/rej_seat_massage.svg
+        qml/assets/icons/rej_sparkle.svg
+        qml/assets/icons/rejuvenate_icons_4k.png
+        qml/assets/icons/rejuvenate_timeline_icons.png
+        qml/assets/icons/rejuvenate_icons_relax.png
+        qml/assets/icons/rejuvenate_icons_invigorate.png
+        qml/assets/icons/rejuvenate_ico_0.png
+        qml/assets/icons/rejuvenate_ico_1.png
+        qml/assets/icons/rejuvenate_ico_2.png
+        qml/assets/icons/rejuvenate_ico_3.png
+        qml/assets/icons/rejuvenate_ico_4.png
+        qml/assets/icons/rejuvenate_ico_5.png
+        qml/assets/icons/rejuvenate_ico_6.png
+        qml/assets/icons/rejuvenate_ico_7.png
+        qml/assets/icons/rejuvenate_ico_8.png
+        qml/assets/icons/rejuvenate_ico_9.png
+        qml/assets/icons/rejuvenate_ico_10.png
+        qml/assets/icons/rejuvenate_ico_11.png
         qml/assets/icons/app_phone.svg
         qml/assets/icons/app_am.svg
         qml/assets/icons/app_fm.svg
@@ -402,8 +447,11 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/news_mic.svg
         qml/assets/icons/news_waveform.svg
         qml/assets/icons/news_arrow_left.svg
+        qml/assets/icons/news_chevron_left.svg
+        qml/assets/icons/news_chevron_right.svg
         qml/assets/icons/news_bookmark.svg
         qml/assets/icons/news_bookmark_filled.svg
+        ${NEWS_IMAGE_ASSETS}
 
         # Web & Live 3D Map
         web/map.html
@@ -446,4 +494,13 @@ add_custom_target(DeployClimate3DAssets
     COMMENT "Deploying 3D Climate assets to build directory"
 )
 add_dependencies(apex_vision_ivi DeployClimate3DAssets)
+
+# Custom target to keep Rejuvenate assets in sync with build directory
+add_custom_target(DeployRejuvenateAssets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/assets/rejuvenate
+        ${CMAKE_CURRENT_BINARY_DIR}/assets/rejuvenate
+    COMMENT "Deploying Rejuvenate video, audio, and theme assets to build directory"
+)
+add_dependencies(apex_vision_ivi DeployRejuvenateAssets)
 

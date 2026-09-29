@@ -1,0 +1,26 @@
+{
+    "id": "ocean",
+    "name": "Ocean Waves",
+    "description": "Drift into tranquil shores with rhythmic ocean swells and refreshing sea breeze climate ambiance.",
+    "longDescription": "Drift into tranquil shores with rhythmic ocean swells and refreshing sea breeze climate ambiance.",
+    "thumbnail": "assets/rejuvenate/images/thumb_ocean.jpg",
+    "previewImage": "assets/rejuvenate/images/preview_ocean.jpg",
+    "video": "assets/rejuvenate/video/ocean.mp4",
+    "audio": "assets/rejuvenate/audio/ocean.mp3",
+    "duration": 600,
+    "soundName": "Ocean Waves",
+    "climate": {
+        "temperature": 21.5,
+        "fanMode": "AUTO",
+        "ac": true
+    },
+    "ambient": {
+        "name": "Deep Aqua",
+        "color": "#00A3FF",
+        "brightness": 70
+    },
+    "seat": {
+        "position": "Relax",
+        "massageLevel": 1
+    }
+}

@@ -504,11 +504,36 @@ void VideoBackend::updateRelatedVideos()
 {
     m_relatedVideos.clear();
     QString curId = m_currentVideo["videoId"].toString();
+    const QVariantList &sourceList = (!m_searchResults.isEmpty() && !m_searchQuery.trimmed().isEmpty()) ? m_searchResults : m_videos;
+    if (sourceList.isEmpty()) {
+        emit relatedVideosChanged();
+        return;
+    }
 
-    for (const QVariant &item : m_videos) {
-        QVariantMap v = item.toMap();
-        if (v["videoId"].toString() != curId) {
-            m_relatedVideos.append(v);
+    int curIdx = -1;
+    for (int i = 0; i < sourceList.size(); ++i) {
+        if (sourceList[i].toMap()["videoId"].toString() == curId) {
+            curIdx = i;
+            break;
+        }
+    }
+
+    if (curIdx >= 0) {
+        // Upcoming videos in sequence starting immediately after current video
+        for (int i = curIdx + 1; i < sourceList.size(); ++i) {
+            m_relatedVideos.append(sourceList[i]);
+        }
+        // Wrap around to beginning of playlist (excluding current)
+        for (int i = 0; i < curIdx; ++i) {
+            m_relatedVideos.append(sourceList[i]);
+        }
+    } else {
+        // Fallback if current video is not in source list
+        for (const QVariant &item : sourceList) {
+            QVariantMap v = item.toMap();
+            if (v["videoId"].toString() != curId) {
+                m_relatedVideos.append(v);
+            }
         }
     }
     emit relatedVideosChanged();
@@ -518,6 +543,8 @@ void VideoBackend::playNextRelated()
 {
     if (!m_relatedVideos.isEmpty()) {
         selectVideo(m_relatedVideos.first().toMap());
+    } else if (!m_videos.isEmpty()) {
+        selectVideo(m_videos.first().toMap());
     }
 }
 
@@ -525,5 +552,8 @@ void VideoBackend::playPrevRelated()
 {
     if (!m_relatedVideos.isEmpty()) {
         selectVideo(m_relatedVideos.last().toMap());
+    } else if (!m_videos.isEmpty()) {
+        selectVideo(m_videos.last().toMap());
     }
 }
+

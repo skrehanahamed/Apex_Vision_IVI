@@ -43,6 +43,10 @@ Window {
             }
         }
 
+        // Rejuvenate sliding bars properties
+        readonly property bool rejuvenateSessionActive: typeof RejuvenateController !== "undefined" && (RejuvenateController.active || RejuvenateController.paused)
+        readonly property bool rejuvenateBarsVisible: !rejuvenateSessionActive || (typeof fullScreenRejuvenateSession !== "undefined" && fullScreenRejuvenateSession.hudVisible)
+
         // 1. BOTTOM CLIMATE CONTROL BAR (Permanent: Full-width, covers entire bottom with zero space)
         ClimateBar {
             id: climateBar
@@ -51,7 +55,14 @@ Window {
             anchors.right: parent.right
             anchors.bottom: parent.bottom
             height: 72
-            z: 40
+            z: mainRoot.rejuvenateSessionActive ? 105 : 40
+
+            transform: Translate {
+                y: (mainRoot.rejuvenateSessionActive && !mainRoot.rejuvenateBarsVisible) ? 72 : 0
+                Behavior on y {
+                    NumberAnimation { duration: 380; easing.type: Easing.InOutQuad }
+                }
+            }
         }
 
         // 2. LEFT GLOBAL NAVIGATION RAIL (Stops at climateBar.top)
@@ -61,7 +72,15 @@ Window {
             anchors.left: parent.left
             anchors.top: parent.top
             anchors.bottom: climateBar.top
-            z: 30
+            z: mainRoot.rejuvenateSessionActive ? 105 : 30
+
+            transform: Translate {
+                x: (mainRoot.rejuvenateSessionActive && !mainRoot.rejuvenateBarsVisible) ? -80 : 0
+                Behavior on x {
+                    NumberAnimation { duration: 380; easing.type: Easing.InOutQuad }
+                }
+            }
+
             opacity: (climate3DPanel.airQualityMenuOpen && climate3DPanel.opacity > 0.001) ? 0.0 : 1.0
             enabled: (!climate3DPanel.airQualityMenuOpen || climate3DPanel.opacity <= 0.001)
             Behavior on opacity { NumberAnimation { duration: 350; easing.type: Easing.InOutQuad } }
@@ -110,7 +129,14 @@ Window {
             anchors.top: parent.top
             anchors.bottom: climateBar.top
             width: 44
-            z: 50
+            z: mainRoot.rejuvenateSessionActive ? 105 : 50
+
+            transform: Translate {
+                x: (mainRoot.rejuvenateSessionActive && !mainRoot.rejuvenateBarsVisible) ? 44 : 0
+                Behavior on x {
+                    NumberAnimation { duration: 380; easing.type: Easing.InOutQuad }
+                }
+            }
         }
 
         // 4. MAIN WORKSPACE (Between Navigation Rail and Right Status Bar, above ClimateBar)
@@ -157,6 +183,11 @@ Window {
                             videoPage.stopVideo();
                         }
                         VideoBackend.closePlayer();
+                    }
+                    if (currentIndex !== 9) {
+                        if (typeof RejuvenateController !== "undefined" && (RejuvenateController.active || RejuvenateController.paused)) {
+                            RejuvenateController.endSession(true);
+                        }
                     }
                 }
 
@@ -259,8 +290,12 @@ Window {
                             targetIdx = 8;
                         } else if (name === "Phone" || name === "Messages") {
                             targetIdx = 3;
-                        } else if (name === "Manual" || name === "Updates") {
+                        } else if (name === "Manual") {
+                            targetIdx = 10;
+                        } else if (name === "Updates") {
                             targetIdx = 4;
+                        } else if (name === "Rejuvenate") {
+                            targetIdx = 9;
                         }
 
                         var iconPath = (icon && icon !== "") ? icon : "qrc:/ApexVision/qml/assets/icons/app_trailer.svg";
@@ -429,6 +464,61 @@ Window {
                         pageStack.currentIndex = 2; // Return to Apps page
                     }
                 }
+
+                // Page 9: APEX VISION Rejuvenate (Stationary Wellness Experience)
+                RejuvenatePage {
+                    id: rejuvenatePage
+                    objectName: "rejuvenatePage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 9 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 9 ? 1.0 : 0.0
+                    x: pageStack.currentIndex === 9 ? 0 : (pageStack.currentIndex > 9 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 9 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onBackRequested: {
+                        if (typeof RejuvenateController !== "undefined" && (RejuvenateController.active || RejuvenateController.paused)) {
+                            RejuvenateController.endSession(true);
+                        }
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                }
+
+                // Page 10: Digital Owner's Manual
+                ManualPage {
+                    id: manualPage
+                    objectName: "manualPage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 10 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 10 ? 1.0 : 0.0
+                    x: pageStack.currentIndex === 10 ? 0 : (pageStack.currentIndex > 10 ? -36 : 36)
+                    enabled: pageStack.currentIndex === 10 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    Behavior on x {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.OutCubic
+                        }
+                    }
+                    onBackRequested: {
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                }
             }
 
             // 6. APP LAUNCH SPLASH / LOADING SCREEN (Solid Black 1s Screen with Centered Icon)
@@ -442,6 +532,7 @@ Window {
 
                 property string iconSource: "qrc:/ApexVision/qml/assets/icons/app_trailer.svg"
                 property int targetIndex: 5
+                property string appName: ""
 
                 Behavior on opacity {
                     id: overlayFadeBehavior
@@ -451,16 +542,17 @@ Window {
                     }
                 }
 
-                // Centered frosted ice-blue card with app icon (matching screenshot 3)
+                // Centered frosted ice-blue card with app icon (or clean borderless official logo for YouTube)
                 Rectangle {
                     id: splashCard
                     anchors.centerIn: parent
-                    width: 108
-                    height: 108
-                    radius: 22
-                    color: "#DDEAF8"
-                    border.color: Qt.rgba(255, 255, 255, 0.45)
-                    border.width: 1
+                    readonly property bool isYouTube: appLoadingOverlay.appName === "YouTube" || appLoadingOverlay.targetIndex === 8
+                    width: isYouTube ? 140 : 108
+                    height: isYouTube ? 98 : 108
+                    radius: isYouTube ? 0 : 22
+                    color: isYouTube ? "transparent" : "#DDEAF8"
+                    border.color: isYouTube ? "transparent" : Qt.rgba(255, 255, 255, 0.45)
+                    border.width: isYouTube ? 0 : 1
                     scale: 1.0
 
                     Behavior on scale {
@@ -475,12 +567,13 @@ Window {
                     Image {
                         id: splashIcon
                         anchors.centerIn: parent
-                        width: 74
-                        height: 74
+                        width: splashCard.isYouTube ? 130 : 74
+                        height: splashCard.isYouTube ? 91 : 74
                         source: appLoadingOverlay.iconSource
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                         mipmap: true
+                        sourceSize: Qt.size(512, 512)
                     }
                 }
 
@@ -495,6 +588,7 @@ Window {
                 }
 
                 function launch(icon, targetIdx, name) {
+                    appName = (name !== undefined) ? name : "";
                     iconSource = icon;
                     targetIndex = (targetIdx !== undefined) ? targetIdx : -1;
 
@@ -560,6 +654,44 @@ Window {
             onUnlocked: {
                 if (vehiclePage) {
                     vehiclePage.isValetLocked = false;
+                }
+            }
+        }
+
+        // 7. FULL-SCREEN REJUVENATE IMMERSION SESSION (True Edge-to-Edge 1920x1200 Display)
+        RejuvenateSession {
+            id: fullScreenRejuvenateSession
+            anchors.fill: parent
+            z: 95
+            visible: typeof RejuvenateController !== "undefined" && (RejuvenateController.active || RejuvenateController.paused || RejuvenateController.isCompleted)
+            onExitSessionRequested: {
+                if (typeof RejuvenateController !== "undefined") {
+                    RejuvenateController.endSession(true);
+                }
+            }
+        }
+
+        // Stop background sound/music/video when Rejuvenate experience is running
+        Connections {
+            target: typeof RejuvenateController !== "undefined" ? RejuvenateController : null
+            function onActiveChanged() {
+                if (RejuvenateController.active || RejuvenateController.isPreparing) {
+                    if (typeof MediaBackend !== "undefined" && MediaBackend.isPlaying) {
+                        MediaBackend.setIsPlaying(false);
+                    }
+                    if (typeof VideoBackend !== "undefined" && VideoBackend.playerVisible) {
+                        VideoBackend.closePlayer();
+                    }
+                }
+            }
+            function onIsPreparingChanged() {
+                if (RejuvenateController.isPreparing) {
+                    if (typeof MediaBackend !== "undefined" && MediaBackend.isPlaying) {
+                        MediaBackend.setIsPlaying(false);
+                    }
+                    if (typeof VideoBackend !== "undefined" && VideoBackend.playerVisible) {
+                        VideoBackend.closePlayer();
+                    }
                 }
             }
         }

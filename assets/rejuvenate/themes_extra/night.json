@@ -1,0 +1,26 @@
+{
+    "id": "night",
+    "name": "Night Drive",
+    "description": "A quiet journey within",
+    "longDescription": "A 10-minute immersive experience that synchronizes ambient lighting, soothing audio, comfortable seating and cabin climate to help you relax and recharge.",
+    "thumbnail": "assets/rejuvenate/images/thumb_night.jpg",
+    "previewImage": "assets/rejuvenate/images/preview_night.jpg",
+    "video": "assets/rejuvenate/video/night.mp4",
+    "audio": "assets/rejuvenate/audio/night.mp3",
+    "duration": 600,
+    "soundName": "Nature Mix",
+    "climate": {
+        "temperature": 21.5,
+        "fanMode": "AUTO",
+        "ac": true
+    },
+    "ambient": {
+        "name": "Celestial Starlight",
+        "color": "#7B42FF",
+        "brightness": 60
+    },
+    "seat": {
+        "position": "Relax",
+        "massageLevel": 1
+    }
+}

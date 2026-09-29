@@ -14,6 +14,9 @@
 #include "backend/PhoneBackend.h"
 #include "backend/SystemBackend.h"
 #include "backend/VideoBackend.h"
+#include "backend/AmbientLightBackend.h"
+#include "backend/SeatBackend.h"
+#include "backend/RejuvenateController.h"
 #include <QtWebEngineQuick/qtwebenginequickglobal.h>
 #include <QDir>
 #include <QFileInfo>
@@ -68,6 +71,14 @@ int main(int argc, char *argv[])
     auto phoneBackend = std::make_unique<PhoneBackend>();
     auto systemBackend = std::make_unique<SystemBackend>();
     auto videoBackend = std::make_unique<VideoBackend>();
+    auto ambientLightBackend = std::make_unique<AmbientLightBackend>();
+    auto seatBackend = std::make_unique<SeatBackend>();
+    auto rejuvenateController = std::make_unique<RejuvenateController>(
+        climateBackend.get(),
+        ambientLightBackend.get(),
+        seatBackend.get(),
+        vehicleBackend.get()
+    );
 
     QQmlApplicationEngine engine;
 
@@ -80,6 +91,9 @@ int main(int argc, char *argv[])
     rootContext->setContextProperty("PhoneBackend", phoneBackend.get());
     rootContext->setContextProperty("SystemBackend", systemBackend.get());
     rootContext->setContextProperty("VideoBackend", videoBackend.get());
+    rootContext->setContextProperty("AmbientLightBackend", ambientLightBackend.get());
+    rootContext->setContextProperty("SeatBackend", seatBackend.get());
+    rootContext->setContextProperty("RejuvenateController", rejuvenateController.get());
 
     // Register 3D Climate Cabin import paths and QML source URL
     QString appDir = QCoreApplication::applicationDirPath();
@@ -609,6 +623,61 @@ int main(int argc, char *argv[])
             QTimer::singleShot(1500, [vb = videoBackend.get()]() {
                 if (vb && !vb->videos().isEmpty()) {
                     vb->selectVideo(vb->videos().first().toMap());
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-rejuvenate")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 9);
+            }
+            QTimer::singleShot(800, [rc = rejuvenateController.get()]() {
+                if (rc) {
+                    rc->startSession();
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-safety-alert")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 9);
+            }
+            QTimer::singleShot(800, [rc = rejuvenateController.get()]() {
+                if (rc) {
+                    rc->startSession();
+                }
+            });
+            QTimer::singleShot(2500, [rc = rejuvenateController.get()]() {
+                if (rc) {
+                    rc->simulateDriveMotion(true);
+                }
+            });
+        }
+
+        if (app.arguments().contains("--manual-visual")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 10);
+            }
+            QTimer::singleShot(600, [rootObj]() {
+                QObject *manualPage = rootObj->findChild<QObject*>("manualPage");
+                if (manualPage) {
+                    manualPage->setProperty("currentTab", "visual");
+                }
+            });
+        }
+
+        if (app.arguments().contains("--manual-topics")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 10);
+            }
+            QTimer::singleShot(600, [rootObj]() {
+                QObject *manualPage = rootObj->findChild<QObject*>("manualPage");
+                if (manualPage) {
+                    manualPage->setProperty("activeCategory", "General Information");
                 }
             });
         }

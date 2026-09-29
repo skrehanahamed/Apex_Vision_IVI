@@ -1,0 +1,26 @@
+{
+    "id": "waterfall",
+    "name": "Waterfall Meditation",
+    "description": "Find peace at the base of a waterfall and get immersed in a meditation to provide immediate relief when overwhelmed or stressed.",
+    "longDescription": "Find peace at the base of a waterfall and get immersed in a meditation to provide immediate relief when overwhelmed or stressed.",
+    "thumbnail": "assets/rejuvenate/images/thumb_waterfall.jpg",
+    "previewImage": "assets/rejuvenate/images/preview_waterfall.jpg",
+    "video": "assets/rejuvenate/video/waterfall.mp4",
+    "audio": "assets/rejuvenate/audio/waterfall.mp3",
+    "duration": 600,
+    "soundName": "Cascading Falls",
+    "climate": {
+        "temperature": 21.0,
+        "fanMode": "AUTO",
+        "ac": true
+    },
+    "ambient": {
+        "name": "Mist Blue",
+        "color": "#38BDF8",
+        "brightness": 70
+    },
+    "seat": {
+        "position": "Relax",
+        "massageLevel": 2
+    }
+}

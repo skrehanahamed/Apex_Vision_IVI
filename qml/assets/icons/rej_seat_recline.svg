@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Reclined car seat backrest & cushion -->
+  <line x1="5" y1="7" x2="11" y2="17" />
+  <line x1="11" y1="17" x2="19" y2="17" />
+  <!-- Headrest tilted back -->
+  <circle cx="4" cy="4" r="1.5" fill="#FFFFFF" />
+</svg>

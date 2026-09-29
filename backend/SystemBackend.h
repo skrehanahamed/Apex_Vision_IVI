@@ -3,6 +3,7 @@
 #include <QObject>
 #include <QTimer>
 #include <QDateTime>
+#include <QProcess>
 
 class SystemBackend : public QObject
 {
@@ -24,6 +25,7 @@ class SystemBackend : public QObject
 
 public:
     explicit SystemBackend(QObject *parent = nullptr);
+    ~SystemBackend() override;
 
     QString currentTime() const { return m_currentTime; }
     QString currentDate() const { return m_currentDate; }
@@ -68,6 +70,7 @@ signals:
     void wifiConnectedChanged();
     void brightnessChanged();
     void unitsTemperatureChanged();
+    void ttsFinished();
 
 private slots:
     void updateClock();
@@ -89,5 +92,6 @@ private:
     bool m_wifiConnected{true};
     int m_brightness{85};
     QString m_unitsTemperature{"Celsius (°C)"};
+    QProcess *m_ttsProcess{nullptr};
 };
 

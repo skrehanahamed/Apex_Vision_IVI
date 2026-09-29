@@ -306,8 +306,8 @@ Item {
                         icon: "qrc:/ApexVision/qml/assets/icons/app_news.svg"
                     },
                     {
-                        name: "Video",
-                        action: "Video",
+                        name: "YouTube",
+                        action: "YouTube",
                         icon: "qrc:/ApexVision/qml/assets/icons/app_video.svg"
                     },
                     {
@@ -342,24 +342,13 @@ Item {
                                 }
                             }
 
-                            // Glow effect on hover
-                            Rectangle {
-                                anchors.centerIn: parent
-                                width: parent.width + 12
-                                height: parent.height + 12
-                                radius: width / 2
-                                color: Qt.rgba(70/255, 160/255, 255/255, 0.22)
-                                visible: appItemMouse.containsMouse
-                                opacity: appItemMouse.containsMouse ? 1.0 : 0.0
-                                Behavior on opacity { NumberAnimation { duration: 150 } }
-                            }
-
                             Image {
                                 anchors.fill: parent
                                 source: modelData.icon
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
                                 mipmap: true
+                                sourceSize: Qt.size(256, 256)
                             }
                         }
 

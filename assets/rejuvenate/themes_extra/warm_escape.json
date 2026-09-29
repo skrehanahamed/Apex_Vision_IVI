@@ -1,0 +1,26 @@
+{
+    "id": "warm_escape",
+    "name": "Warm Escape",
+    "description": "A cozy and peaceful cabin experience",
+    "longDescription": "A 10-minute immersive experience that synchronizes ambient lighting, soothing audio, comfortable seating and cabin climate to help you relax and recharge.",
+    "thumbnail": "assets/rejuvenate/images/thumb_warm_escape.jpg",
+    "previewImage": "assets/rejuvenate/images/preview_warm_escape.jpg",
+    "video": "assets/rejuvenate/video/warm_escape.mp4",
+    "audio": "assets/rejuvenate/audio/warm_escape.mp3",
+    "duration": 600,
+    "soundName": "Nature Mix",
+    "climate": {
+        "temperature": 23.5,
+        "fanMode": "AUTO",
+        "ac": false
+    },
+    "ambient": {
+        "name": "Amber Hearth",
+        "color": "#FF8A00",
+        "brightness": 80
+    },
+    "seat": {
+        "position": "Relax",
+        "massageLevel": 3
+    }
+}

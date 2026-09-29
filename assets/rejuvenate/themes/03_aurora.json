@@ -1,0 +1,26 @@
+{
+    "id": "aurora",
+    "name": "Aurora Borealis",
+    "description": "Calm your mind under shimmering polar lights with ambient cyan-blue illumination and spatial soundscapes.",
+    "longDescription": "Calm your mind under shimmering polar lights with ambient cyan-blue illumination and spatial soundscapes.",
+    "thumbnail": "assets/rejuvenate/images/thumb_aurora.jpg",
+    "previewImage": "assets/rejuvenate/images/preview_aurora.jpg",
+    "video": "assets/rejuvenate/video/aurora.mp4",
+    "audio": "assets/rejuvenate/audio/aurora.mp3",
+    "duration": 600,
+    "soundName": "Polar Serenity",
+    "climate": {
+        "temperature": 22.0,
+        "fanMode": "AUTO",
+        "ac": true
+    },
+    "ambient": {
+        "name": "Blue Aurora",
+        "color": "#24D9FF",
+        "brightness": 75
+    },
+    "seat": {
+        "position": "Relax",
+        "massageLevel": 2
+    }
+}
