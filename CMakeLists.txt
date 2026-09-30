@@ -459,7 +459,6 @@ qt_add_qml_module(apex_vision_ivi
         web/maplibre-gl.css
         web/three.min.js
         web/GLTFLoader.js
-        web/lincoln_zephyr.glb
 )
 
 target_include_directories(apex_vision_ivi PRIVATE
@@ -506,4 +505,13 @@ add_custom_target(DeployRejuvenateAssets
     COMMENT "Deploying Rejuvenate video, audio, and theme assets to build directory"
 )
 add_dependencies(apex_vision_ivi DeployRejuvenateAssets)
+
+# Custom target to keep Web & Live 3D Map assets in sync with build directory
+add_custom_target(DeployWebAssets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/web
+        ${CMAKE_CURRENT_BINARY_DIR}/web
+    COMMENT "Deploying Web & Live 3D Map assets to build directory"
+)
+add_dependencies(apex_vision_ivi DeployWebAssets)
 

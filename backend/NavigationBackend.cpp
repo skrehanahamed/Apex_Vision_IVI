@@ -40,8 +40,11 @@ NavigationBackend::NavigationBackend(VehicleSimulator *simulator, QObject *paren
 
 QUrl NavigationBackend::mapUrl() const
 {
-    // Try local filesystem web/map.html first if running in dev mode
+    // Try local filesystem web/map.html first if running in dev or deployed mode
     QString appDir = QCoreApplication::applicationDirPath();
+    if (QFileInfo::exists(appDir + "/web/map.html")) {
+        return QUrl::fromLocalFile(QFileInfo(appDir + "/web/map.html").canonicalFilePath());
+    }
     QString localPath = appDir + "/../web/map.html";
     if (QFileInfo::exists(localPath)) {
         return QUrl::fromLocalFile(QFileInfo(localPath).canonicalFilePath());

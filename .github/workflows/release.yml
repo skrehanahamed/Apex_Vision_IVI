@@ -71,6 +71,7 @@ jobs:
           cp build/apex_vision_ivi package/ApexVisionIVI-Ubuntu-x86_64/
           cp -r web package/ApexVisionIVI-Ubuntu-x86_64/
           if [ -d build/qml ]; then cp -r build/qml package/ApexVisionIVI-Ubuntu-x86_64/; fi
+          if [ -d assets ]; then cp -r assets package/ApexVisionIVI-Ubuntu-x86_64/; fi
           chmod +x package/ApexVisionIVI-Ubuntu-x86_64/apex_vision_ivi
           echo '#!/bin/bash' > package/ApexVisionIVI-Ubuntu-x86_64/run.sh
           echo 'DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"' >> package/ApexVisionIVI-Ubuntu-x86_64/run.sh
@@ -115,6 +116,7 @@ jobs:
           cp build/apex_vision_ivi package/ApexVisionIVI-macOS/
           cp -r web package/ApexVisionIVI-macOS/
           if [ -d build/qml ]; then cp -r build/qml package/ApexVisionIVI-macOS/; fi
+          if [ -d assets ]; then cp -r assets package/ApexVisionIVI-macOS/; fi
           chmod +x package/ApexVisionIVI-macOS/apex_vision_ivi
           echo '#!/bin/bash' > package/ApexVisionIVI-macOS/run.sh
           echo 'DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"' >> package/ApexVisionIVI-macOS/run.sh
