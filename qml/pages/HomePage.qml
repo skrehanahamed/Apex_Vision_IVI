@@ -8,30 +8,114 @@ Item {
     id: root
 
     property bool climateOpen: false
+    property bool navExpanded: false
+    property bool inNavTransition: false
     signal openPlayerRequested()
+
+    function triggerNavToggle(openSearch) {
+        if (inNavTransition) return;
+        navFadeAnimation.openSearchOnExpand = (openSearch === true);
+        navFadeAnimation.start();
+    }
+
+    SequentialAnimation {
+        id: navFadeAnimation
+        property bool openSearchOnExpand: false
+        running: false
+        alwaysRunToEnd: true
+
+        ScriptAction {
+            script: {
+                root.inNavTransition = true;
+            }
+        }
+
+        // 1. Fade out current view (fade to dark cockpit tone)
+        NumberAnimation {
+            target: navFadeOverlay
+            property: "opacity"
+            to: 1.0
+            duration: 180
+            easing.type: Easing.InOutQuad
+        }
+
+        // 2. Switch state while concealed by the dark overlay
+        ScriptAction {
+            script: {
+                root.navExpanded = !root.navExpanded;
+                navPanel.isExpanded = root.navExpanded;
+                if (root.navExpanded && navFadeAnimation.openSearchOnExpand) {
+                    navPanel.openSearch();
+                }
+            }
+        }
+
+        // 3. Brief hold to let layout and WebEngine geometry settle cleanly
+        PauseAnimation {
+            duration: 40
+        }
+
+        // 4. Fade back in smoothly revealing the new state
+        NumberAnimation {
+            target: navFadeOverlay
+            property: "opacity"
+            to: 0.0
+            duration: 220
+            easing.type: Easing.OutQuad
+        }
+
+        ScriptAction {
+            script: {
+                root.inNavTransition = false;
+            }
+        }
+    }
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+        anchors.margins: root.navExpanded ? 0 : 16
+        spacing: root.navExpanded ? 0 : 16
 
-        // Navigation Area (Left / Center: ~62% width)
+        // Navigation Area (Left / Center: ~62% width or full width when expanded)
         NavigationPanel {
+            id: navPanel
             Layout.fillHeight: true
             Layout.fillWidth: true
-            Layout.preferredWidth: 62
+            Layout.preferredWidth: root.navExpanded ? 100 : 62
+            isExpanded: root.navExpanded
+            onToggleExpandRequested: function(openSearch) {
+                root.triggerNavToggle(openSearch);
+            }
         }
 
-        // Media Card (Right: ~38% width)
+        // Media Card (Right: ~38% width, collapsed when navigation is expanded)
         MediaCard {
             id: mediaCard
             Layout.fillHeight: true
-            Layout.fillWidth: true
-            Layout.preferredWidth: 38
+            Layout.fillWidth: !root.navExpanded
+            Layout.preferredWidth: root.navExpanded ? 0 : 38
+            visible: !root.navExpanded
             onOpenPlayerRequested: root.openPlayerRequested()
             onSourceMenuRequested: {
                 sourceMenuModal.visible = true;
             }
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // FADE TRANSITION OVERLAY: Smooth crossfade between Homescreen & Fullscreen Map
+    // -------------------------------------------------------------------------
+    Rectangle {
+        id: navFadeOverlay
+        anchors.fill: parent
+        color: "#070A0F"
+        opacity: 0.0
+        visible: opacity > 0.001
+        z: 9999
+
+        MouseArea {
+            anchors.fill: parent
+            enabled: navFadeOverlay.visible
         }
     }
 

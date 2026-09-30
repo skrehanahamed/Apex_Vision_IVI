@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(APEX_VISION_IVI VERSION 2.3.0 LANGUAGES CXX)
+project(APEX_VISION_IVI VERSION 2.4.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -455,8 +455,11 @@ qt_add_qml_module(apex_vision_ivi
 
         # Web & Live 3D Map
         web/map.html
-        web/osm_logo.png
-        web/osm_logo_with_name.png
+        web/maplibre-gl.js
+        web/maplibre-gl.css
+        web/three.min.js
+        web/GLTFLoader.js
+        web/lincoln_zephyr.glb
 )
 
 target_include_directories(apex_vision_ivi PRIVATE

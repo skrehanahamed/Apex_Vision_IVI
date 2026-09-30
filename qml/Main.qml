@@ -106,11 +106,15 @@ Window {
                     appLoadingOverlay.cancel();
                 }
 
-                if (pageStack.currentIndex === 8 && idx !== 8) {
-                    if (videoPage) {
-                        videoPage.stopVideo();
+                if (idx === 0) {
+                    if (pageStack.currentIndex === 0 && homePage && homePage.navExpanded) {
+                        homePage.triggerNavToggle(false);
+                        return;
                     }
-                    VideoBackend.closePlayer();
+                } else {
+                    if (homePage && homePage.navExpanded) {
+                        homePage.navExpanded = false;
+                    }
                 }
 
                 pageStack.currentIndex = idx;
@@ -275,7 +279,12 @@ Window {
                         } else if (name === "FM" || name === "RadioFM") {
                             MediaBackend.setSource("FM");
                             targetIdx = 7;
-                        } else if (name === "Navigation" || name === "Media Player" || name === "Media" || name === "SatelliteRadio" || name === "CarPlay" || name === "AndroidAuto" || name === "Assistant") {
+                        } else if (name === "Navigation") {
+                            if (homePage) {
+                                homePage.navExpanded = true;
+                            }
+                            targetIdx = 0;
+                        } else if (name === "Media Player" || name === "Media" || name === "SatelliteRadio" || name === "CarPlay" || name === "AndroidAuto" || name === "Assistant") {
                             targetIdx = 0;
                         } else if (name === "Vehicle Status") {
                             targetIdx = 1;

@@ -1,52 +1,41 @@
-# Apex VISION IVI - Digital Cockpit v2.3.0 Release Notes
+# Apex VISION IVI - Digital Cockpit v2.4.0 Release Notes
 
-**Release**: `v2.3.0`  
+**Release**: `v2.4.0`  
 **Target Architecture**: Modern Connected Automotive In-Vehicle Infotainment (HMI / Cockpit Head Unit)  
 **Supported Platforms**: Linux (Ubuntu 22.04 / 24.04 LTS), macOS (Apple Silicon / Intel), Windows (MSVC 2022)  
 **Framework**: Qt 6.5+ (C++20, Qt Quick / QML, QtWebEngine, QtQuick3D, QtMultimedia)  
 
 ---
 
-## 🌟 Major Highlights & New Capabilities
+## 🌟 Major Highlights & New Capabilities in v2.4.0
 
-### 1. 🧘 APEX Rejuvenate™ Multi-Sensory Stationary Wellness Suite
-- **Multi-Sensory Vehicle Actuator Synchronization (`RejuvenateController`)**: State machine orchestrating automated transitions across vehicle comfort subsystems when parked:
-  - **Motorized Ergonomic Seating (`SeatBackend`)**: Automatic seat transition to **Relax Mode** (45° ergonomic recline) upon start, activating continuous pneumatic wave massage at Level 2, and automatic restoration to standard upright position upon completion.
-  - **Micro-Climate Comfort (`ClimateBackend`)**: Automated thermal regulation to 22.0°C with gentle cabin airflow (`AUTO` mode, A/C engaged).
-  - **Spatial Ambient Lighting (`AmbientLightBackend`)**: Synchronized theme-matching colors (e.g. Cyan Blue `#24D9FF` for Aurora, Deep Aqua for Ocean) with breathing brightness modulation.
-- **Calm Audio/Visual Integration**: Integrated high-definition looping nature videos, soothing binaural audio streams, and synchronized timeline milestones (*Preparing*, *Active*, *Concluding*).
-- **Automotive Safety Park Interlock**: Mandatory transmission Park (`P`) monitor. Shifting gears into Drive (`D`) or Reverse (`R`) immediately pauses the immersion, triggers an elevated safety modal, and safely halts motorized actuators.
+### 1. 🏎️ Authentic Lincoln Zephyr 3D Model with Pearl White Automotive Finish
+- **Three.js WebGL CustomLayer Integration**: Direct integration into MapLibre GL 3D perspective pipeline, rendering the high-fidelity **Lincoln Zephyr luxury sedan** (`lincoln_zephyr.glb`) at runtime.
+- **Custom Automotive Paint Shader**: Multi-layer pearl white metallic finish with specular gloss clearcoat, tinted panoramic black glass roof, and chrome trim accents.
+- **True Road Elevation & Dynamic Scaling**: Accurately centered bounding chassis sitting flush with the road surface at `Y = 0` with dynamic Mercator elevation and heading synchronization.
 
-### 2. 📖 Digital Owner's Manual & Visual Hotspot Navigation
-- **3-Mode Tabbed Navigation**: Seamless switching between **Categories**, **Visual search**, and **Bookmarks** with sliding amber indicator underline.
-- **2-Page Visual Search (Cockpit & Exterior SUV)**:
-  - **Page 1 (Luxury Cockpit Interior)**: Interactive touch pins for Steering Controls, Digital Cockpit Cluster, 15.6" Infotainment Display, Center Console, Ambient Air Vents, and Seat Memory.
-  - **Page 2 (Exterior SUV Perspective)**: Touch pins for Matrix LED Headlights, Front Radar & LiDAR sensors, Smart Keyless Mirrors, Power Charge Port, and Hands-Free Power Liftgate.
-  - **Adaptive Hover Tooltips**: Responsive tooltips that automatically detect viewport boundaries to prevent edge clipping.
-- **Fluid Horizontal Navigation Stack**:
-  - Decoupled header layout with bidirectional horizontal slide animations for category breadcrumb titles (`0 → -60px` / `60px → 0`).
-  - True off-screen content transitions (`100% viewport width → 0`) eliminating view overlap during drill-down into topics and articles.
-- **Real-Time Touch Keyboard Search**: Live query filtering across all manual chapters and subtopics with built-in automotive on-screen touch keyboard.
-- **Interactive Capsule Dragger**: Custom touch-target draggable capsule thumb synchronized bidirectionally with `Flickable.contentY`.
+### 2. 🎯 Dynamic 3D Screen Bounding Projection for Street Labels
+- **8-Corner 3D Bounding Box Projection**: Real-time projection of all 8 vertices of the Lincoln Zephyr 3D model into 2D screen coordinates on every frame.
+- **Collision-Free Positioning**: Automatically computes `maxY + 18px` so the current street pill label remains positioned cleanly beneath the vehicle, eliminating any visual overlap or clipping under any camera pitch, zoom level, heading angle, or display aspect ratio.
 
-### 3. 🎬 Native YouTube Video Streaming Suite & Categorical Browser
-- **`VideoBackend` Asynchronous Web Scraper**: High-performance C++20 network backend interacting directly with YouTube endpoints via `QNetworkAccessManager`, parsing and extracting video streams without third-party API keys or quota limits.
-- **7 Automotive Category Tabs**: Seamless one-touch filtering across **All**, **Trending**, **Music**, **Gaming**, **Movies**, **Podcasts**, and **Live**.
-- **Infinite Drag-Scroll Feed**: Dynamic scroll depth detection that pre-fetches and buffers subsequent video sets automatically for infinite browsing.
-- **Instant Up Next Queue**: Tap-to-play recommendations queue using YouTube's iframe API (`loadVideoById`), switching videos seamlessly in-place.
+### 3. ⏱️ Google Automotive Circular HUD Speedometer & Physics
+- **Integrated Speedometer Cluster**: Dual-ring circular HUD cluster with live digital vehicle speed readout (`km/h`), speed limit warning sign, and animated dial accent.
+- **Realistic Telemetry Physics**: Synchronized with vehicle acceleration and braking physics from the backend simulator.
+- **Optimized UI Clearance**: Re-positioned 32px above the Google badge to maintain balanced cockpit ergonomics.
 
-### 4. 🗺️ Official OpenStreetMap 3D Cartography & Navigation
-- **Zero Watermarks**: Running on official OSM tile infrastructure (`tile.openstreetmap.de` & `tile.openstreetmap.fr`).
-- **3D Vector Extruded Buildings**: Hardware-accelerated WebGL 3D perspective with 56-degree forward-looking pitch, live GPS coordinate acquisition, and reverse geocoding via Nominatim.
+### 4. 🧭 3-in-1 Cockpit View Mode Switcher
+- **Perspective 3D Mode**: 58° forward-looking driving angle locked to the vehicle's heading with extruded 3D vector buildings.
+- **North-Up 2D Mode**: 0° top-down flat cartography aligned to true geographic North with animated compass needle orientation.
+- **Route Overview Mode**: High-altitude macroscopic camera framing the active turn-by-turn route geometry.
 
-### 5. 🎛️ Acoustic Soundstage, 3D Cabin Studio, and Valet Security
-- **Acoustic Balance & Fade**: Draggable reticle with real-time radiating concentric sound wave ripples, 13-point tone controls, and wallpaper-dissolved cabin geometry.
-- **Interactive 3D Multi-Contour Seats & Airflow**: Independent multi-intensity pneumatic massage, lumbar actuators, and PM2.5 air purification gauge with one-touch cabin air refresh.
-- **Full-Screen PIN Valet Lock**: Automotive security overlay with masked PIN keypad and storage compartment lockout.
+### 5. 🏁 Spacious Trip Arrival & Route Summary Card
+- **Automotive Arrival View**: Re-engineered arrival card with generous spatial layout, destination waypoint metadata, trip duration, total distance, and calculated average driving speed.
+- **One-Touch Trip Dismissal**: Primary end-route action button seamlessly resetting route state and returning to free-drive navigation.
 
-### 6. 🚀 Repository Hardening & Complete 17-Screenshot Showcase
-- Pruned redundant/mock assets, optimized looping nature MP4 backdrops to fast-loading H.264 formats under 30MB.
-- Updated system architecture, directory trees, and complete 17-screenshot subsystem gallery.
+### 6. 🔍 Google Automotive Search Pill, POI Discovery & Clean Telemetry
+- **Refactored Search Card**: Modern floating search pill with Google Automotive branding, voice search shortcut, and horizontal category POI carousel (Gas Stations, Restaurants, Groceries, Coffee).
+- **CORS Resolution**: Migrated from blocked third-party reverse geocoding endpoints to reliable OpenStreetMap Nominatim with explicit JSON accept headers.
+- **Streamlined Telemetry & Console Silence**: Filtered informational web messages in QML terminal, purged obsolete mock assets, and bundled all local MapLibre and Three.js runtime assets.
 
 ---
 

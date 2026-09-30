@@ -8,11 +8,11 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.3.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.4.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
 [![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
 [![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.3.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Releases](https://img.shields.io/badge/Release-v2.4.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -26,7 +26,7 @@
 
 ## Executive Overview
 
-Apex VISION IVI is a production-grade automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered with Qt 6 (QML / Qt Quick), WebEngine WebGL 3D acceleration, and modern C++20. Modeled on modern connected electric vehicle (EV) widescreen cockpit architectures, the system features a hardware-accelerated dual-viewport dashboard, live 3D perspective cockpit navigation with vector 3D buildings, an integrated native **YouTube Video Streaming Suite** with infinite feed browsing and seamless Up Next recommendations, the **APEX Rejuvenate™ Stationary Wellness Immersion Suite** synchronized across vehicle climate, motorized seating, and ambient lighting, a **Digital Owner's Manual with 2-Page Visual Search and Hotspot Mapping**, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite.
+Apex VISION IVI is a production-grade automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered with Qt 6 (QML / Qt Quick), WebEngine WebGL 3D acceleration, and modern C++20. Modeled on modern connected electric vehicle (EV) widescreen cockpit architectures, the system features a hardware-accelerated dual-viewport dashboard, live 3D perspective cockpit navigation powered by a custom **Three.js WebGL CustomLayer** rendering an authentic **Lincoln Zephyr luxury sedan in pearl white**, real-time vector 3D building extrusions, a circular **Google Automotive Speedometer Cluster** with live speed physics and speed limit warnings, a **3-in-1 Cockpit View Mode Switcher** (Perspective / North-up / Overview), an integrated native **YouTube Video Streaming Suite** with infinite feed browsing and seamless Up Next recommendations, the **APEX Rejuvenate™ Stationary Wellness Immersion Suite** synchronized across vehicle climate, motorized seating, and ambient lighting, a **Digital Owner's Manual with 2-Page Visual Search and Hotspot Mapping**, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite.
 
 The architecture strictly decouples the QML presentation layer from deterministic C++ backend controllers, establishing an automotive-compliant state machine that manages live telemetry, reverse geocode lookups, thermal comfort states, valet access arbitration, YouTube network extraction, multi-sensory wellness orchestration, and vehicle safety interlocks.
 
@@ -50,7 +50,7 @@ graph TD
     subgraph QML["Presentation Layer (Qt Quick / QML)"]
         Main["Main.qml (Viewport Coordinator)"]
         Home["HomePage (Dual-Card Dashboard)"]
-        NavView["NavigationPanel (3D WebEngine)"]
+        NavView["NavigationPanel (3D WebEngine Map & HUD)"]
         ClimateView["ClimateBar & 3D Cabin (HVAC / PM2.5)"]
         VehicleView["VehiclePage (3D Studio & Valet)"]
         VideoView["VideoPage (YouTube Streamer)"]
@@ -73,7 +73,9 @@ graph TD
 
     subgraph External["Hardware Simulation & Web Services"]
         CAN["VehicleSimulator (CAN Bus 500ms Loop)"]
-        OSM["OpenStreetMap / MapLibre GL 3D"]
+        MAP["MapLibre GL 3D (Extruded Buildings)"]
+        CAR["Three.js / WebGL CustomLayer (Lincoln Zephyr 3D Sedan)"]
+        HUD["Circular Speedometer & Physics HUD"]
         YT["YouTube Media Endpoints"]
         GEO["Nominatim & IP Geolocation"]
     end
@@ -97,7 +99,9 @@ graph TD
     RejC -.-> SeatB
     RejC -.-> LightB
 
-    NavB --> OSM
+    NavB --> MAP
+    NavB --> CAR
+    NavB --> HUD
     NavB --> GEO
     VidB --> YT
     CAN --> VehB
@@ -143,7 +147,9 @@ package "Core Backend Controllers (C++20)" as Backend {
 
 package "Hardware Simulation & External Services" as External {
   [VehicleSimulator\nCAN Bus Telemetry] as CAN
-  [OpenStreetMap / MapLibre\n3D Vector Planet Tiles] as OSM
+  [MapLibre GL 3D\nExtruded Planet Tiles] as OSM
+  [Three.js / WebGL CustomLayer\nLincoln Zephyr 3D White Model] as CAR
+  [Google Automotive UI\nSpeedometer & Search Card] as HUD
   [YouTube Endpoint Streamer\nNo-Key Media Scraper] as YT
   [IP Geolocation & Nominatim\nLive Street Geocoder] as GEO
 }
@@ -168,6 +174,8 @@ RejC -right-> SeatB : 45° Recline & Wave Massage
 RejC -right-> LightB : Cyan/Amber Ambience
 
 NavB --> OSM : WebChannel Integration
+NavB --> CAR : Three.js Heading & Elevation
+NavB --> HUD : Speedometer & Search Integration
 NavB --> GEO : HTTPS Reverse Geocoding
 VidB --> YT : Asynchronous QNetworkAccessManager
 CAN --> VehB : 500ms CAN Simulation Loop
@@ -185,7 +193,7 @@ CAN --> VehB : 500ms CAN Simulation Loop
 
 ### 1. Dual-Card Cockpit Home and Status Chrome
 ![Apex VISION Cockpit Dashboard](docs/screenshots/01_cockpit_dashboard.png)
-*Widescreen digital cockpit head unit featuring live 3D perspective navigation card, media player with waveform visualizer, persistent top status bar, and automotive dock controls.*
+*Widescreen digital cockpit head unit featuring live 3D perspective navigation card with Three.js Lincoln Zephyr sedan in pearl white, media player with waveform visualizer, persistent top status bar, and automotive dock controls.*
 
 <br/>
 
@@ -243,9 +251,9 @@ CAN --> VehB : 500ms CAN Simulation Loop
 
 <br/>
 
-### 11. High-Precision OpenStreetMap Navigation Cartography
+### 11. High-Precision Cockpit 3D Navigation with Pearl White Lincoln Zephyr
 ![Clean OpenStreetMap Navigation](docs/screenshots/11_navigation_map.png)
-*Modern OpenStreetMap navigation integration running on official tile infrastructure without watermarks, API keys, or rate limits.*
+*Modern 3D cockpit perspective navigation powered by MapLibre GL and a custom Three.js WebGL layer rendering the authentic Lincoln Zephyr sedan in pearl white, aligned with dynamic 3D street projection.*
 
 <br/>
 
@@ -282,6 +290,12 @@ CAN --> VehB : 500ms CAN Simulation Loop
 ### 17. Deep-Dive Topics Reader & Emergency Safety Guides
 ![Digital Owner's Manual Topics Detail](docs/screenshots/17_owners_manual_topics_detail.png)
 *Drill-down topic reader with fluid horizontal sliding transitions, contextual safety warning banners, read-time badges, and direct breadcrumb navigation.*
+
+<br/>
+
+### 18. Expanded Full-Bleed 3D Cockpit Navigation & Google Automotive HUD
+![Expanded 3D Cockpit Navigation](docs/screenshots/18_navigation_expanded_3d.png)
+*Full-bleed 3D cockpit perspective navigation featuring Three.js Lincoln Zephyr luxury sedan in pearl white, Google Automotive floating search card with category POI carousel, circular HUD speedometer with live speed physics and speed limit warnings, and 3-in-1 view mode switcher (Perspective / North-up / Overview).*
 
 </div>
 
@@ -320,13 +334,16 @@ CAN --> VehB : 500ms CAN Simulation Loop
 - **Cockpit-Preserving Fullscreen**: Full-bleed workspace expansion with permanent visibility of the left navigation rail, right status/slider bar, and bottom climate control dock.
 
 ### 4. 3D Cockpit Navigation and Geospatial Engine
-- **Rendering Pipeline**: Hardware-accelerated WebGL 3D engine powered by MapLibre GL and QtWebEngineQuick.
-- **3D Perspective**: 56-degree forward-looking driving pitch with vector extruded 3D buildings (OpenFreeMap planet vector tiles).
-- **Base Cartography**: Official OpenStreetMap raster tile infrastructure (`tile.openstreetmap.de` & `tile.openstreetmap.fr`) completely free from watermarks or API key restrictions.
-- **Live GPS Coordinate Acquisition**: Asynchronous startup resolution via network IP geolocation (`https://ipwho.is/` with fallback to `https://ipapi.co/json/`) for immediate global location positioning.
-- **Reverse Geocoding**: Automated OpenStreetMap Nominatim query engine resolving live coordinates to street-level metadata.
-- **Rate-Limited Geocoding Cache**: Distance-delta thresholding preventing redundant Nominatim network calls during cruising.
-- **Navigation Reference Marker**: 3D elliptical ground disc with directional blue chevron rotating 0 to 360 degrees and dynamic street name badge.
+- **Three.js WebGL CustomLayer**: High-performance WebGL layer seamlessly integrated into the MapLibre GL 3D perspective pipeline, rendering the authentic **Lincoln Zephyr luxury sedan in pearl white** with panoramic black glass roof, chrome trim, and high-fidelity chassis geometry.
+- **Dynamic 3D Screen Bounding Corner Projection**: Real-time projection of all 8 3D vehicle vertices to 2D screen coordinates, calculating `max(y) + 18px` so the current street badge never clips or overlaps the car at any pitch, zoom, rotation, or screen dimension.
+- **Circular Google Automotive Speedometer & HUD Physics**: Dual-ring speedometer cluster with live vehicle speed readout (`km/h`), speed limit warning sign, and dynamic vehicle acceleration/braking physics.
+- **3-in-1 Cockpit View Mode Switcher**: Single interactive control switching seamlessly between:
+  - **Perspective 3D**: 58° forward-looking driving pitch following car heading.
+  - **North-Up 2D**: 0° top-down orientation aligned with true geographic North.
+  - **Route Overview**: High-altitude macroscopic zoom framing the entire active journey.
+- **Spacious Trip Arrival & Route Summary Card**: Clean spacious card displaying route destination, total distance, elapsed trip time, and average speed upon waypoint arrival.
+- **Refactored Search & Category POI Navigation**: Floating Google Automotive search bar with inline category carousel (Gas, Restaurant, Grocery, Coffee), distance-sorted POI discovery, and Nominatim reverse geocoding with JSON headers.
+- **Base Cartography & Extruded 3D Buildings**: Hardware-accelerated MapLibre GL vector and raster tiles with vector 3D building extrusions (OpenFreeMap planet tiles) and local offline asset caching.
 
 ### 5. HVAC, Climate, and Cabin Air Purification
 - **Dual-Zone Temperature Control**: Independent driver and passenger thermal regulation ranging from 16.0°C to 28.0°C with fine-grained 0.5°C stepping.
@@ -409,7 +426,8 @@ Apex_Vision_IVI/
 │       ├── 14_rejuvenate_session_active.png
 │       ├── 15_owners_manual_categories.png
 │       ├── 16_owners_manual_visual_search.png
-│       └── 17_owners_manual_topics_detail.png
+│       ├── 17_owners_manual_topics_detail.png
+│       └── 18_navigation_expanded_3d.png
 ├── backend/                      # C++20 backend engines
 │   ├── VehicleSimulator.h/.cpp   # Vehicle physics and telemetry simulator
 │   ├── VehicleBackend.h/.cpp     # Vehicle status and lighting controller
@@ -466,8 +484,11 @@ Apex_Vision_IVI/
 │       └── ManualPage.qml        # Digital Owner's Manual with 2-page visual search
 └── web/                          # Embedded 3D navigation web assets
     ├── map.html                  # MapLibre GL 3D perspective navigation view
-    ├── osm_logo.png              # OpenStreetMap attribution logo mark
-    └── osm_logo_with_name.png    # OpenStreetMap attribution badge with name
+    ├── maplibre-gl.js            # Bundled MapLibre GL engine runtime
+    ├── maplibre-gl.css           # MapLibre stylesheet
+    ├── three.min.js              # Bundled Three.js 3D WebGL engine
+    ├── GLTFLoader.js             # Three.js GLTF/GLB asset loader
+    └── lincoln_zephyr.glb        # Lincoln Zephyr authentic 3D car model
 ```
 
 ---
@@ -559,6 +580,26 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 ---
 
 ## Release History & Highlights
+
+### [v2.4.0] - Lincoln Zephyr 3D White Model, Automotive HUD Speedometer & Map Navigation Polish
+- **Lincoln Zephyr 3D Model with Pearl White Automotive Finish**:
+  - Embedded binary GLTF model (`lincoln_zephyr.glb`) rendered in true 3D perspective via Three.js WebGL CustomLayer.
+  - Pearl white multi-layer metallic paint shader with gloss clearcoat and tinted panoramic glass roof.
+  - Real-time orientation and elevation lock to vehicle heading and road level coordinates.
+- **Dynamic 3D Screen Bounding Projection for Street Labels**:
+  - Full 8-corner 3D bounding box projected continuously into 2D viewport coordinates.
+  - Dynamically computes `maxY + 18px` positioning so the street name pill never overlaps or clips the vehicle body at any zoom, pitch, heading angle, or display aspect ratio.
+- **Google Automotive Circular HUD Speedometer**:
+  - Modern dual-ring circular cluster with live digital speed (`km/h`), warning speed limit sign, and dynamic vehicle speed physics.
+  - Optimized positioning 32px above the Google badge preventing layout collision.
+- **3-in-1 Cockpit View Mode Switcher**:
+  - Seamless single-touch navigation modes: **Perspective 3D** (58° pitch with heading lock), **North-Up 2D** (flat map with compass needle synchronization), and **Route Overview**.
+- **Spacious Trip Arrival & Route Summary Card**:
+  - Clean spacious card displaying destination name, arrival ETA, trip distance, and calculated average speed.
+- **Refactored Search, Categories & CORS Resolution**:
+  - Floating Google Automotive search bar with inline category carousel (Gas, Restaurant, Grocery, Coffee).
+  - Switched from CORS-blocked endpoints to Nominatim reverse geocoding with JSON headers.
+  - Silenced benign web console logging in QML terminal.
 
 ### [v2.3.0] - APEX Rejuvenate™ Multi-Sensory Wellness Suite, Digital Owner's Manual & Visual Search Navigation Stack
 - **APEX Rejuvenate™ Stationary Wellness Immersion Suite**:

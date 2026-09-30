@@ -11,15 +11,18 @@
 #include <QNetworkRequest>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QJsonArray>
 
 NavigationBackend::NavigationBackend(VehicleSimulator *simulator, QObject *parent)
     : QObject(parent)
     , m_simulator(simulator)
 {
-    // Check environment variable for runtime API key override
+    // Check environment variable for runtime API key override or use default
     const char *envKey = std::getenv("GOOGLE_MAPS_API_KEY");
     if (envKey && envKey[0] != '\0') {
         m_apiKey = QString::fromUtf8(envKey);
+    } else {
+        m_apiKey = QStringLiteral("AIzaSyBceQMF1xBiSWOQ4AjdhxCdUnRUIL_eltY");
     }
 
     if (m_simulator) {
@@ -27,11 +30,12 @@ NavigationBackend::NavigationBackend(VehicleSimulator *simulator, QObject *paren
                 this, &NavigationBackend::onGpsUpdated);
     }
 
-    // Automatically detect and acquire the user's real current location via live GPS/IP
-    fetchRealLocation();
-
-    // Initial reverse geocode lookup
-    requestReverseGeocode(m_latitude, m_longitude);
+    // Only auto-override if explicitly requested via environment variable
+    const char *envIpGeo = std::getenv("ENABLE_IP_GEO");
+    if (envIpGeo && (std::strcmp(envIpGeo, "1") == 0 || std::strcmp(envIpGeo, "true") == 0)) {
+        fetchRealLocation();
+        requestReverseGeocode(m_latitude, m_longitude);
+    }
 }
 
 QUrl NavigationBackend::mapUrl() const
@@ -48,7 +52,7 @@ QUrl NavigationBackend::mapUrl() const
         return QUrl::fromLocalFile(QFileInfo("web/map.html").canonicalFilePath());
     }
 
-    // Fallback to embedded resource
+    // Embedded resource fallback
     return QUrl(QStringLiteral("qrc:/ApexVision/web/map.html"));
 }
 
@@ -252,7 +256,7 @@ void NavigationBackend::requestReverseGeocode(double lat, double lon)
     }
     m_lastGeocodedLat = lat;
     m_lastGeocodedLon = lon;
-    QString urlStr = QString("https://nominatim.openstreetmap.org/reverse?lat=%1&lon=%2&format=json&zoom=18&addressdetails=1")
+    QString urlStr = QString("https://photon.komoot.io/reverse?lat=%1&lon=%2")
         .arg(lat, 0, 'f', 6)
         .arg(lon, 0, 'f', 6);
     QNetworkRequest request{QUrl(urlStr)};
@@ -268,14 +272,17 @@ void NavigationBackend::requestReverseGeocode(double lat, double lon)
             QJsonDocument doc = QJsonDocument::fromJson(data);
             if (doc.isObject()) {
                 QJsonObject root = doc.object();
-                QJsonObject addr = root.value("address").toObject();
-                QString street = addr.value("road").toString();
-                if (street.isEmpty()) street = addr.value("pedestrian").toString();
-                if (street.isEmpty()) street = addr.value("suburb").toString();
-                if (street.isEmpty()) street = addr.value("neighbourhood").toString();
-                if (street.isEmpty()) street = root.value("name").toString();
-                if (!street.isEmpty()) {
-                    setCurrentStreet(street);
+                QJsonArray features = root.value("features").toArray();
+                if (!features.isEmpty()) {
+                    QJsonObject props = features.first().toObject().value("properties").toObject();
+                    QString street = props.value("name").toString();
+                    if (street.isEmpty()) street = props.value("street").toString();
+                    if (street.isEmpty()) street = props.value("district").toString();
+                    if (street.isEmpty()) street = props.value("city").toString();
+                    if (!street.isEmpty()) {
+                        setCurrentStreet(street);
+                        return;
+                    }
                 }
             }
         }

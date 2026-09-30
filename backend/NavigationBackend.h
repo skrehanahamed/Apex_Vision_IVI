@@ -18,7 +18,7 @@ class NavigationBackend : public QObject
 
     // Configuration & Map Resources
     Q_PROPERTY(QString apiKey READ apiKey WRITE setApiKey NOTIFY apiKeyChanged)
-    Q_PROPERTY(QUrl mapUrl READ mapUrl CONSTANT)
+    Q_PROPERTY(QUrl mapUrl READ mapUrl NOTIFY mapUrlChanged)
 
     // Street, Routing & Telemetry
     Q_PROPERTY(QString currentStreet READ currentStreet WRITE setCurrentStreet NOTIFY currentStreetChanged)
@@ -75,6 +75,7 @@ signals:
     void remainingDistanceChanged();
     void maneuverInstructionChanged();
     void zoomLevelChanged();
+    void mapUrlChanged();
 
 private slots:
     void onGpsUpdated(double lat, double lon, double heading, double speed);

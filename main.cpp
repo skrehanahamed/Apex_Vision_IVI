@@ -18,6 +18,7 @@
 #include "backend/SeatBackend.h"
 #include "backend/RejuvenateController.h"
 #include <QtWebEngineQuick/qtwebenginequickglobal.h>
+#include <QWebEngineProfile>
 #include <QDir>
 #include <QFileInfo>
 #include <QDebug>
@@ -29,20 +30,25 @@
 
 int main(int argc, char *argv[])
 {
-    // Silence benign CoreText / HarfBuzz OpenType script probing warnings on macOS
-    qputenv("QT_LOGGING_RULES", "qt.text.font.db=false;qt.text.font.db.warning=false;qt.text.font.*=false");
-    QLoggingCategory::setFilterRules("qt.text.font.db.warning=false\nqt.text.font.db=false\nqt.text.font.*=false");
+    // Silence benign CoreText / HarfBuzz OpenType script probing and WebEngine JS console warnings
+    qputenv("QT_LOGGING_RULES", "qt.text.font.db=false;qt.text.font.db.warning=false;qt.text.font.*=false;js.warning=false");
+    QLoggingCategory::setFilterRules("qt.text.font.db.warning=false\nqt.text.font.db=false\nqt.text.font.*=false\njs.warning=false");
 
     // High DPI and performance flags for Raspberry Pi / desktop
     QGuiApplication::setApplicationName("APEX VISION IVI");
     QGuiApplication::setOrganizationName("APEX");
     QGuiApplication::setOrganizationDomain("apex.vision");
 
-    // Autoplay policy for embedded IVI media playback
-    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--autoplay-policy=no-user-gesture-required");
+    // Autoplay policy for embedded IVI media playback & WebGL acceleration for Google Maps
+    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--autoplay-policy=no-user-gesture-required --disable-features=WebGPU --enable-webgl --ignore-gpu-blocklist");
 
     QGuiApplication app(argc, argv);
     QtWebEngineQuick::initialize();
+    // Enable persistent disk caching so Google Maps loads rapidly from local storage
+    QWebEngineProfile::defaultProfile()->setHttpCacheType(QWebEngineProfile::DiskHttpCache);
+    QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(QWebEngineProfile::AllowPersistentCookies);
+    // Modern Chrome desktop user-agent to ensure Google Maps loads in full WebGL 3D mode
+    QWebEngineProfile::defaultProfile()->setHttpUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36");
 
     // Dark style for Controls
     QQuickStyle::setStyle("Basic");
