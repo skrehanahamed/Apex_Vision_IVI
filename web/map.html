@@ -3019,8 +3019,13 @@
         // Stadia Maps API Key (Official Alidade Smooth Light Engine)
         const STADIA_API_KEY = "3c059ba3-0a81-412c-b591-87c6701ab45b";
 
-        // Google Maps Platform API Key (Official Places New, Autocomplete New, Routes API)
-        const GOOGLE_API_KEY = "AIzaSyBceQMF1xBiSWOQ4AjdhxCdUnRUIL_eltY";
+        // Google Maps Platform API Key (provided securely at runtime via NavigationBackend or window.GOOGLE_MAPS_API_KEY)
+        let GOOGLE_API_KEY = (typeof window.GOOGLE_MAPS_API_KEY === "string") ? window.GOOGLE_MAPS_API_KEY : "";
+        window.setGoogleApiKey = function(key) {
+            if (key && typeof key === "string") {
+                GOOGLE_API_KEY = key.trim();
+            }
+        };
 
         function decodeGooglePolyline(encoded) {
             const points = [];

@@ -40,3 +40,8 @@ ui_*.h
 tmp/
 temp/
 *.log
+
+# Local configuration and credentials
+.env
+.env.local
+config.json

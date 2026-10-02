@@ -17,12 +17,24 @@ NavigationBackend::NavigationBackend(VehicleSimulator *simulator, QObject *paren
     : QObject(parent)
     , m_simulator(simulator)
 {
-    // Check environment variable for runtime API key override or use default
+    // Check environment variable for runtime API key or local config.json (git-ignored)
     const char *envKey = std::getenv("GOOGLE_MAPS_API_KEY");
     if (envKey && envKey[0] != '\0') {
         m_apiKey = QString::fromUtf8(envKey);
     } else {
-        m_apiKey = QStringLiteral("AIzaSyBceQMF1xBiSWOQ4AjdhxCdUnRUIL_eltY");
+        QString configPath = QDir::currentPath() + "/config.json";
+        if (!QFileInfo::exists(configPath)) {
+            configPath = QCoreApplication::applicationDirPath() + "/config.json";
+        }
+        if (QFileInfo::exists(configPath)) {
+            QFile configFile(configPath);
+            if (configFile.open(QIODevice::ReadOnly)) {
+                QJsonDocument doc = QJsonDocument::fromJson(configFile.readAll());
+                if (doc.isObject() && doc.object().contains("google_maps_api_key")) {
+                    m_apiKey = doc.object()["google_maps_api_key"].toString().trimmed();
+                }
+            }
+        }
     }
 
     if (m_simulator) {

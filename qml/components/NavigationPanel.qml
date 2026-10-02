@@ -18,6 +18,13 @@ Item {
         }
     }
 
+    function updateApiKeyInMap() {
+        if (!webEngineView.loading && NavigationBackend.apiKey && NavigationBackend.apiKey !== "") {
+            var script = "if (typeof window.setGoogleApiKey === 'function') { window.setGoogleApiKey('" + NavigationBackend.apiKey + "'); }";
+            webEngineView.runJavaScript(script);
+        }
+    }
+
     // Synchronize vehicle position with 3D map engine
     function updateVehiclePositionInMap() {
         if (!webEngineView.loading) {
@@ -74,6 +81,9 @@ Item {
 
     Connections {
         target: NavigationBackend
+        function onApiKeyChanged() {
+            root.updateApiKeyInMap();
+        }
         function onPositionChanged() {
             root.updateVehiclePositionInMap();
         }
@@ -123,6 +133,7 @@ Item {
 
             onLoadingChanged: function(loadRequest) {
                 if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
+                    root.updateApiKeyInMap();
                     root.updateVehiclePositionInMap();
                     root.updateStreetNameInMap();
                     root.updateMapMode();
