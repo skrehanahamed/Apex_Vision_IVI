@@ -25,6 +25,7 @@
 #include <QQuickWindow>
 #include <QTimer>
 #include <QImage>
+#include <QResource>
 
 #include <QLoggingCategory>
 
@@ -52,6 +53,20 @@ int main(int argc, char *argv[])
 
     // Dark style for Controls
     QQuickStyle::setStyle("Basic");
+
+    // Register external binary resource bundle (assets.rcc)
+    const QStringList rccSearchPaths = {
+        QCoreApplication::applicationDirPath() + "/assets.rcc",
+        QCoreApplication::applicationDirPath() + "/../Resources/assets.rcc",
+        QDir::currentPath() + "/assets.rcc",
+        QDir::currentPath() + "/build/assets.rcc"
+    };
+    for (const QString &rccPath : rccSearchPaths) {
+        if (QFileInfo::exists(rccPath) && QResource::registerResource(rccPath)) {
+            qInfo() << "[APEX IVI] Successfully registered binary resource:" << rccPath;
+            break;
+        }
+    }
 
     // Load bundled Inter fonts into Qt application font database
     QFontDatabase::addApplicationFont(":/qt/qml/ApexVision/qml/assets/fonts/Inter-Regular.ttf");
@@ -856,6 +871,21 @@ int main(int argc, char *argv[])
             });
         }
 
+        if (app.arguments().contains("--test-nav-app")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 2);
+            }
+            QTimer::singleShot(1000, [rootObj]() {
+                QObject *appsPage = rootObj->findChild<QObject*>("appsPage");
+                if (appsPage) {
+                    QMetaObject::invokeMethod(appsPage, "appSelected",
+                        Q_ARG(QString, "Navigation"),
+                        Q_ARG(QString, "qrc:/ApexVision/qml/assets/icons/app_navigation.svg"));
+                }
+            });
+        }
+
         qInfo() << "[APEX IVI] Root setup complete. Checking screenshot flag:" << app.arguments().contains("--screenshot");
         if (app.arguments().contains("--screenshot")) {
             int idx = app.arguments().indexOf("--screenshot");
@@ -863,7 +893,7 @@ int main(int argc, char *argv[])
             QQuickWindow *win = qobject_cast<QQuickWindow*>(rootObj);
             qInfo() << "[APEX IVI] --screenshot requested. win:" << win << "outPath:" << outPath;
             if (win) {
-                int delay = (app.arguments().contains("--page") || app.arguments().contains("--test-player")) ? 5000 : 3000;
+                int delay = (app.arguments().contains("--page") || app.arguments().contains("--test-player") || app.arguments().contains("--test-nav-app")) ? 5000 : 3000;
                 QTimer::singleShot(delay, [win, outPath, &app]() {
                     QImage img = win->grabWindow();
                     img.save(outPath);

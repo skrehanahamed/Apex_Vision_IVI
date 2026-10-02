@@ -111,63 +111,22 @@ qt_add_qml_module(apex_vision_ivi
         qml/Typography.qml
 )
 
-file(GLOB ASSETS_FONTS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/fonts/*")
-file(GLOB ASSETS_ROOT RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/*.png")
-file(GLOB ASSETS_AVATARS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/avatars/*")
-file(GLOB ASSETS_NEWS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/news_images/*")
-file(GLOB ASSETS_RADIO RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/radio_logos/*" "qml/assets/station_art/*")
-file(GLOB ASSETS_SOUNDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/sounds/*")
-file(GLOB ASSETS_ICONS_SVG RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/icons/*.svg")
-file(GLOB ASSETS_ICONS_IMG RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/icons/*.png" "qml/assets/icons/*.jpg")
+# Compile raw static assets (images, fonts, sounds) into a lightning-fast binary RCC bundle
+# This eliminates massive C++ source generation and avoids compiler OOM crashes on CI runners
+qt_add_binary_resources(assets_rcc
+    assets.qrc
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/assets.rcc"
+)
+add_dependencies(apex_vision_ivi assets_rcc)
 
-qt_add_resources(apex_vision_ivi "res_fonts"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_FONTS}
-    OPTIONS "--no-compress"
+# Custom target to keep QML static assets in sync with build directory
+add_custom_target(DeployQmlAssets
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/qml/assets
+        ${CMAKE_CURRENT_BINARY_DIR}/qml/assets
+    COMMENT "Deploying QML assets to build directory"
 )
-qt_add_resources(apex_vision_ivi "res_root"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_ROOT}
-    OPTIONS "--no-compress"
-)
-qt_add_resources(apex_vision_ivi "res_avatars"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_AVATARS}
-    OPTIONS "--no-compress"
-)
-qt_add_resources(apex_vision_ivi "res_news"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_NEWS}
-    OPTIONS "--no-compress"
-)
-qt_add_resources(apex_vision_ivi "res_radio"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_RADIO}
-    OPTIONS "--no-compress"
-)
-qt_add_resources(apex_vision_ivi "res_sounds"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_SOUNDS}
-    OPTIONS "--no-compress"
-)
-qt_add_resources(apex_vision_ivi "res_icons_svg"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_ICONS_SVG}
-    OPTIONS "--no-compress"
-)
-qt_add_resources(apex_vision_ivi "res_icons_img"
-    PREFIX "/ApexVision"
-    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
-    FILES ${ASSETS_ICONS_IMG}
-    OPTIONS "--no-compress"
-)
+add_dependencies(apex_vision_ivi DeployQmlAssets)
 
 target_include_directories(apex_vision_ivi PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}

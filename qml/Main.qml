@@ -259,6 +259,7 @@ Window {
                 // Page 2: Apps
                 AppsPage {
                     id: appsPage
+                    objectName: "appsPage"
                     anchors.fill: parent
                     visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 2 ? 1.0 : 0.0
@@ -288,12 +289,11 @@ Window {
                             targetIdx = 7;
                         } else if (name === "SatelliteRadio" || name === "OrbitXM" || name === "SiriusXM") {
                             MediaBackend.setSource("OrbitXM");
-                            targetIdx = 7;
                         } else if (name === "Navigation") {
-                            if (homePage) {
-                                homePage.navExpanded = true;
-                            }
                             targetIdx = 0;
+                            if (homePage) {
+                                homePage.openFullNavigation(false);
+                            }
                         } else if (name === "Media Player" || name === "Media" || name === "CarPlay" || name === "AndroidAuto" || name === "Assistant") {
                             targetIdx = 0;
                         } else if (name === "Vehicle Status") {
@@ -603,6 +603,9 @@ Window {
                     repeat: false
                     onTriggered: {
                         appLoadingOverlay.opacity = 0.0;
+                        if (appLoadingOverlay.appName === "Navigation" && homePage) {
+                            homePage.openFullNavigation(false);
+                        }
                     }
                 }
 
@@ -631,6 +634,9 @@ Window {
                             VideoBackend.closePlayer();
                         }
                         pageStack.currentIndex = targetIndex;
+                        if (targetIndex === 0 && appName === "Navigation" && homePage) {
+                            homePage.openFullNavigation(false);
+                        }
                     }
 
                     // Run the 1-second splash timer

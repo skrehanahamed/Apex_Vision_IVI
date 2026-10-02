@@ -9,6 +9,7 @@ Item {
 
     property bool climateOpen: false
     property bool navExpanded: false
+    property bool pendingNavExpand: false
     property bool inNavTransition: false
     signal openPlayerRequested()
 
@@ -21,7 +22,16 @@ Item {
         }
     }
 
+    function openFullNavigation(openSearch) {
+        root.pendingNavExpand = true;
+        navFadeAnimation.stop();
+        root.inNavTransition = false;
+        navFadeOverlay.opacity = 0.0;
+        setNavExpanded(true, openSearch === true);
+    }
+
     function collapseNav() {
+        root.pendingNavExpand = false;
         navFadeAnimation.stop();
         root.inNavTransition = false;
         navFadeOverlay.opacity = 0.0;
@@ -29,8 +39,15 @@ Item {
     }
 
     onVisibleChanged: {
-        if (!visible && root.navExpanded) {
-            collapseNav();
+        if (visible) {
+            if (root.pendingNavExpand) {
+                root.pendingNavExpand = false;
+                root.setNavExpanded(true, false);
+            }
+        } else {
+            if (!root.pendingNavExpand && root.navExpanded) {
+                collapseNav();
+            }
         }
     }
 

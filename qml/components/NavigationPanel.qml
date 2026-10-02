@@ -54,6 +54,12 @@ Item {
         updateMapMode();
     }
 
+    onWidthChanged: {
+        if (root.isExpanded) {
+            updateMapMode();
+        }
+    }
+
     onVisibleChanged: {
         if (visible) {
             updateMapMode();
