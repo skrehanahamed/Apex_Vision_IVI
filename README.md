@@ -285,9 +285,9 @@ CAN --> VehB : 500ms Simulation Loop
 
 <br/>
 
-### 12. Digital Radio Tuner, Keypad & Presets
-![Digital Radio Media Center](docs/screenshots/12_radio_media_center.png)
-*Multi-band AM/FM/SiriusXM digital tuner with frequency keypad, preset star favorites, and live waveform visualization.*
+### 12. OrbitXM Satellite Radio Suite & 18-Channel Broadcast
+![OrbitXM Satellite Radio Suite](docs/screenshots/12_orbitxm_satellite_radio.png)
+*Full-screen OrbitXM satellite radio suite featuring 18 curated live digital channels, dynamic album artwork showcase, quick-access preset bar with authentic Grand Theft Auto in-game station vectors, and one-touch channel tuning.*
 
 <br/>
 
@@ -324,6 +324,12 @@ CAN --> VehB : 500ms Simulation Loop
 ### 18. Expanded Full-Bleed 3D Cockpit Navigation & Google Automotive HUD
 ![Expanded 3D Cockpit Navigation](docs/screenshots/18_navigation_expanded_3d.png)
 *Full-bleed 3D cockpit perspective navigation featuring Three.js Lincoln Zephyr luxury sedan in pearl white, Google Automotive floating search card with category POI carousel, circular HUD speedometer with live speed physics and speed limit warnings, and 3-in-1 view mode switcher (Perspective / North-up / Overview).*
+
+<br/>
+
+### 19. Dual-Viewport Cockpit with Live Google Vector 3D Map and OrbitXM
+![Cockpit Homescreen OrbitXM](docs/screenshots/19_cockpit_homescreen_orbitxm.png)
+*Dual-card cockpit dashboard with live hardware-accelerated Google 3D perspective vector map, Three.js Lincoln Zephyr sedan, dynamic street projection, and the OrbitXM live streaming card with now-playing artwork.*
 
 </div>
 
@@ -466,7 +472,7 @@ Apex_Vision_IVI/
 │       ├── themes/               # Theme JSON manifests with actuator sync parameters
 │       └── video/                # Hardware-optimized looping nature MP4 backdrops
 ├── docs/                         # System documentation and visual media
-│   └── screenshots/              # Cockpit interface screenshots (01 to 17)
+│   └── screenshots/              # Cockpit interface screenshots (01 to 19)
 │       ├── 01_cockpit_dashboard.png
 │       ├── 02_climate_seat_comfort.png
 │       ├── 03_seat_comfort_massage.png
@@ -478,13 +484,14 @@ Apex_Vision_IVI/
 │       ├── 09_youtube_video_feed.png
 │       ├── 10_youtube_player_upnext.png
 │       ├── 11_navigation_map.png
-│       ├── 12_radio_media_center.png
+│       ├── 12_orbitxm_satellite_radio.png
 │       ├── 13_rejuvenate_wellness_suite.png
 │       ├── 14_rejuvenate_session_active.png
 │       ├── 15_owners_manual_categories.png
 │       ├── 16_owners_manual_visual_search.png
 │       ├── 17_owners_manual_topics_detail.png
-│       └── 18_navigation_expanded_3d.png
+│       ├── 18_navigation_expanded_3d.png
+│       └── 19_cockpit_homescreen_orbitxm.png
 ├── backend/                      # C++20 backend engines
 │   ├── VehicleSimulator.h/.cpp   # Vehicle physics and telemetry simulator
 │   ├── VehicleBackend.h/.cpp     # Vehicle status and lighting controller
