@@ -77,10 +77,6 @@ set_source_files_properties(qml/Typography.qml PROPERTIES
     QT_QML_SINGLETON_TYPE TRUE
 )
 
-file(GLOB NEWS_IMAGE_ASSETS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/news_images/*.jpg")
-file(GLOB RADIO_LOGO_ASSETS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/radio_logos/*")
-file(GLOB STATION_ART_ASSETS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/station_art/*")
-
 qt_add_qml_module(apex_vision_ivi
     URI ApexVision
     VERSION 1.0
@@ -115,8 +111,63 @@ qt_add_qml_module(apex_vision_ivi
         qml/Typography.qml
 )
 
-qt_add_big_resources(APEX_BIG_RESOURCES assets.qrc)
-target_sources(apex_vision_ivi PRIVATE ${APEX_BIG_RESOURCES})
+file(GLOB ASSETS_FONTS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/fonts/*")
+file(GLOB ASSETS_ROOT RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/*.png")
+file(GLOB ASSETS_AVATARS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/avatars/*")
+file(GLOB ASSETS_NEWS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/news_images/*")
+file(GLOB ASSETS_RADIO RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/radio_logos/*" "qml/assets/station_art/*")
+file(GLOB ASSETS_SOUNDS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/sounds/*")
+file(GLOB ASSETS_ICONS_SVG RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/icons/*.svg")
+file(GLOB ASSETS_ICONS_IMG RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/icons/*.png" "qml/assets/icons/*.jpg")
+
+qt_add_resources(apex_vision_ivi "res_fonts"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_FONTS}
+    OPTIONS "--no-compress"
+)
+qt_add_resources(apex_vision_ivi "res_root"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_ROOT}
+    OPTIONS "--no-compress"
+)
+qt_add_resources(apex_vision_ivi "res_avatars"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_AVATARS}
+    OPTIONS "--no-compress"
+)
+qt_add_resources(apex_vision_ivi "res_news"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_NEWS}
+    OPTIONS "--no-compress"
+)
+qt_add_resources(apex_vision_ivi "res_radio"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_RADIO}
+    OPTIONS "--no-compress"
+)
+qt_add_resources(apex_vision_ivi "res_sounds"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_SOUNDS}
+    OPTIONS "--no-compress"
+)
+qt_add_resources(apex_vision_ivi "res_icons_svg"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_ICONS_SVG}
+    OPTIONS "--no-compress"
+)
+qt_add_resources(apex_vision_ivi "res_icons_img"
+    PREFIX "/ApexVision"
+    BASE "${CMAKE_CURRENT_SOURCE_DIR}"
+    FILES ${ASSETS_ICONS_IMG}
+    OPTIONS "--no-compress"
+)
 
 target_include_directories(apex_vision_ivi PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
