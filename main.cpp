@@ -1,3 +1,12 @@
+/**
+ * ==============================================================================
+ * Project: Apex VISION IVI - Digital Cockpit & Infotainment System
+ * File: main.cpp
+ * Author / Developer: Sk Rehan Ahamed
+ * License: MIT
+ * ==============================================================================
+ */
+
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>

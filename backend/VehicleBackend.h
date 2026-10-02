@@ -1,3 +1,12 @@
+/**
+ * ==============================================================================
+ * Project: Apex VISION IVI - Digital Cockpit & Infotainment System
+ * File: VehicleBackend.h
+ * Author / Developer: Sk Rehan Ahamed
+ * License: MIT
+ * ==============================================================================
+ */
+
 #pragma once
 
 #include <QObject>

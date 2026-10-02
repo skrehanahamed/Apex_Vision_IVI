@@ -1,3 +1,9 @@
+# ==============================================================================
+# Project: Apex VISION IVI - Digital Cockpit & Infotainment System
+# Author / Developer: Sk Rehan Ahamed
+# License: MIT
+# ==============================================================================
+
 cmake_minimum_required(VERSION 3.20)
 
 project(APEX_VISION_IVI VERSION 2.5.0 LANGUAGES CXX)

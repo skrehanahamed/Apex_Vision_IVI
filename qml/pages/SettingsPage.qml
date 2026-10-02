@@ -7410,6 +7410,11 @@ Item {
                             }
 
                             SettingRowSimple {
+                                title: "Lead Architect & Developer"
+                                subtitle: "Sk Rehan Ahamed"
+                            }
+
+                            SettingRowSimple {
                                 title: "Operating system"
                                 subtitle: "ApexOS Automotive 2.4 LTS"
                             }
