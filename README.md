@@ -43,7 +43,7 @@ The software architecture strictly adheres to automotive digital cockpit best pr
 </div>
 
 <details>
-<summary><b>📊 Click to expand Interactive Mermaid Flowchart</b></summary>
+<summary><b>Click to expand Interactive Mermaid Flowchart</b></summary>
 
 ```mermaid
 graph TD
@@ -114,7 +114,7 @@ graph TD
 </details>
 
 <details>
-<summary><b>📄 Click to expand PlantUML Architecture Specification</b></summary>
+<summary><b>Click to expand PlantUML Architecture Specification</b></summary>
 
 ```plantuml
 @startuml Apex_Vision_Architecture
@@ -613,6 +613,25 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 ---
 
 ## Release History & Highlights
+
+### [v2.5.0] - OrbitXM Satellite Radio Suite, Direct Full-Screen Navigation, Security Hardening & CI Multi-Platform Stabilization
+- **OrbitXM Satellite Radio Suite & 18-Channel Broadcast**:
+  - Curated 18-channel portfolio across global music, live sports, 24x7 news, and authentic in-game Grand Theft Auto radio stations.
+  - High-definition rotating station art carousel with smooth swipe physics and persistent quick-preset bar.
+  - Authentic vector logos for GTA Flash FM, GTA Los Santos Rock Radio, GTA Non-Stop-Pop FM, and GTA Radio Los Santos.
+- **Direct Full-Screen Cockpit Navigation**:
+  - One-touch direct launch into full-screen 3D Google Vector perspective navigation from the Apps drawer, bypassing compact split layouts.
+  - Viewport-aware vector canvas resizing with automated heading and camera pitch synchronization.
+- **Security Hardening & Secret Scanning Protection**:
+  - Elimination of hardcoded secrets from source code; dynamic API key loading via local git-ignored `config.json` and `.env`.
+  - Added `config.example.json` and `.env.example` templates for streamlined developer configuration.
+  - Runtime WebEngine key injection via `window.setGoogleApiKey(...)`.
+- **High-Performance Multi-Platform CI/CD Optimization**:
+  - Integrated `NO_CACHEGEN` into `qt_add_qml_module`, resolving `qmlcachegen` crashes on Windows MSVC (`0xC0000005`) and Ubuntu (`143`).
+  - Switched asset compilation to high-speed binary `qt_add_binary_resources(assets.rcc)`, slashing build duration from minutes to seconds.
+  - Verified continuous integration across Ubuntu 22.04, Windows 2022, and macOS.
+- **Developer Authorship Attribution**:
+  - Integrated developer attribution banner across C++, QML, and CMake source files, and embedded developer credentials into the Settings > System > About UI.
 
 ### [v2.4.0] - Lincoln Zephyr 3D White Model, Automotive HUD Speedometer & Map Navigation Polish
 - **Lincoln Zephyr 3D Model with Pearl White Automotive Finish**:
