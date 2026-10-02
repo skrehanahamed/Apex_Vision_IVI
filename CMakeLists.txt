@@ -80,6 +80,7 @@ set_source_files_properties(qml/Typography.qml PROPERTIES
 qt_add_qml_module(apex_vision_ivi
     URI ApexVision
     VERSION 1.0
+    NO_CACHEGEN
     QML_FILES
         qml/Main.qml
         qml/pages/HomePage.qml
