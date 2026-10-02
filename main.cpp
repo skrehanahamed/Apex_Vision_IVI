@@ -30,9 +30,9 @@
 
 int main(int argc, char *argv[])
 {
-    // Silence benign CoreText / HarfBuzz OpenType script probing and WebEngine JS console warnings
-    qputenv("QT_LOGGING_RULES", "qt.text.font.db=false;qt.text.font.db.warning=false;qt.text.font.*=false;js.warning=false");
-    QLoggingCategory::setFilterRules("qt.text.font.db.warning=false\nqt.text.font.db=false\nqt.text.font.*=false\njs.warning=false");
+    // Silence benign font, WebEngine, and debug noise in terminal
+    qputenv("QT_LOGGING_RULES", "qt.text.font.*=false;js.warning=false;default.debug=false;*.debug=false");
+    QLoggingCategory::setFilterRules("qt.text.font.*=false\njs.warning=false\ndefault.debug=false\n*.debug=false");
 
     // High DPI and performance flags for Raspberry Pi / desktop
     QGuiApplication::setApplicationName("APEX VISION IVI");
@@ -526,6 +526,132 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (app.arguments().contains("--orbitxm") || app.arguments().contains("--page-orbitxm")) {
+            mediaBackend->setSource("OrbitXM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+        }
+
+        if (app.arguments().contains("--sxm-channel")) {
+            int chIdx = app.arguments().indexOf("--sxm-channel");
+            if (chIdx + 1 < app.arguments().size()) {
+                int chNum = app.arguments().at(chIdx + 1).toInt();
+                mediaBackend->setSource("OrbitXM");
+                QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+                if (pageStack) {
+                    pageStack->setProperty("currentIndex", 7);
+                }
+                QTimer::singleShot(200, [mb = mediaBackend.get(), chNum]() {
+                    mb->tuneSxmChannelNumber(chNum);
+                });
+            }
+        }
+
+        if (app.arguments().contains("--click-related")) {
+            mediaBackend->setSource("OrbitXM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(500, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *modal = radioPage->findChild<QObject*>("relatedDrawer");
+                    if (modal) {
+                        QMetaObject::invokeMethod(modal, "openModal");
+                    }
+                }
+            });
+        }
+
+        if (app.arguments().contains("--guide-open")) {
+            mediaBackend->setSource("OrbitXM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(800, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *guide = radioPage->findChild<QObject*>("channelGuideModal");
+                    if (guide) {
+                        QMetaObject::invokeMethod(guide, "openGuide");
+                    }
+                }
+            });
+        }
+
+        if (app.arguments().contains("--notif-dialog")) {
+            mediaBackend->setSource("OrbitXM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(600, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *modal = radioPage->findChild<QObject*>("sxmNotificationModal");
+                    if (modal) {
+                        QMetaObject::invokeMethod(modal, "openDialog");
+                    }
+                }
+            });
+        }
+
+        if (app.arguments().contains("--channels-modal")) {
+            mediaBackend->setSource("OrbitXM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(600, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *modal = radioPage->findChild<QObject*>("channelsViewModal");
+                    if (modal) {
+                        QMetaObject::invokeMethod(modal, "openModal");
+                    }
+                }
+            });
+        }
+
+        if (app.arguments().contains("--related-modal")) {
+            mediaBackend->setSource("OrbitXM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(600, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *modal = radioPage->findChild<QObject*>("relatedDrawer");
+                    if (modal) {
+                        QMetaObject::invokeMethod(modal, "openModal");
+                    }
+                }
+            });
+        }
+
+        if (app.arguments().contains("--shows-modal")) {
+            mediaBackend->setSource("OrbitXM");
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 7);
+            }
+            QTimer::singleShot(600, [rootObj]() {
+                QObject *radioPage = rootObj->findChild<QObject*>("radioPage");
+                if (radioPage) {
+                    QObject *modal = radioPage->findChild<QObject*>("relatedDrawer");
+                    if (modal) {
+                        QMetaObject::invokeMethod(modal, "openModal");
+                        modal->setProperty("activeTab", 1);
+                    }
+                }
+            });
+        }
+
         if (app.arguments().contains("--open-source-menu")) {
             mediaBackend->setSource("AM");
             QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
@@ -619,6 +745,48 @@ int main(int argc, char *argv[])
                     stack->setProperty("currentIndex", pageNum);
                 }
             }
+        }
+
+        if (app.arguments().contains("--radio-sxm")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 7);
+            }
+            if (mediaBackend) {
+                mediaBackend->setSource("OrbitXM");
+            }
+        }
+
+        if (app.arguments().contains("--radio-related")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 7);
+            }
+            if (mediaBackend) {
+                mediaBackend->setSource("OrbitXM");
+            }
+            QTimer::singleShot(800, [rootObj]() {
+                QObject *rel = rootObj->findChild<QObject*>("relatedDrawer");
+                if (rel) {
+                    QMetaObject::invokeMethod(rel, "openModal");
+                }
+            });
+        }
+
+        if (app.arguments().contains("--radio-shows")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 7);
+            }
+            if (mediaBackend) {
+                mediaBackend->setSource("OrbitXM");
+            }
+            QTimer::singleShot(800, [rootObj]() {
+                QObject *rel = rootObj->findChild<QObject*>("relatedDrawer");
+                if (rel) {
+                    QMetaObject::invokeMethod(rel, "openShows");
+                }
+            });
         }
 
         if (app.arguments().contains("--test-player")) {

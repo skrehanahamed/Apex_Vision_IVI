@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import ApexVision
 import ".."
 
@@ -238,26 +239,40 @@ Item {
                     anchors.centerIn: parent
                     spacing: 8
 
-                    // AM Radio Blue Circular Icon or FM Wave Icon
+                    // Circular Icon (OrbitXM Favicon replaces satellite icon)
                     Rectangle {
                         width: 24
                         height: 24
                         radius: 12
-                        color: "#1E88E5"
+                        color: MediaBackend.isSxm ? "transparent" : "#1E88E5"
                         anchors.verticalCenter: parent.verticalCenter
 
                         Image {
                             anchors.centerIn: parent
-                            width: 14
-                            height: 14
+                            width: MediaBackend.isSxm ? 24 : 14
+                            height: MediaBackend.isSxm ? 24 : 14
                             fillMode: Image.PreserveAspectFit
-                            source: MediaBackend.source === "USB" ? "qrc:/ApexVision/qml/assets/icons/usb_source.svg" :
+                            smooth: true
+                            mipmap: true
+                            source: MediaBackend.isSxm ? "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" :
+                                   (MediaBackend.source === "USB" ? "qrc:/ApexVision/qml/assets/icons/usb_source.svg" :
                                    (MediaBackend.source === "Bluetooth" ? "qrc:/ApexVision/qml/assets/icons/bluetooth.svg" :
-                                   "qrc:/ApexVision/qml/assets/icons/radio_source.svg")
+                                   "qrc:/ApexVision/qml/assets/icons/radio_source.svg"))
                         }
                     }
 
                     Text {
+                        visible: MediaBackend.isSxm
+                        text: "OrbitXM"
+                        color: "#FFFFFF"
+                        font.family: "Inter"
+                        font.pixelSize: 14
+                        font.weight: Font.DemiBold
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        visible: !MediaBackend.isSxm
                         text: MediaBackend.source === "Bluetooth" ? "BT" : (MediaBackend.source === "USB" ? "USB" : MediaBackend.source)
                         color: "#FFFFFF"
                         font.family: "Inter"
@@ -284,66 +299,184 @@ Item {
                 }
             }
 
-            // Center Content: When AM is ON, display Coral Note Card + Indian AM Station (Screenshot 2 style)
+            // Center Content: Artwork + Track / Station Info
             Column {
                 anchors.top: sourcePill.bottom
                 anchors.topMargin: 10
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.bottom: transportRow.top
-                spacing: 14
+                spacing: 12
 
-                // 1. Artwork Card (Enlarged to fill space beautifully)
-                Rectangle {
+                // 1. Artwork Card with Soft Glow and Glass Sheen
+                Item {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    width: 130
-                    height: 130
-                    radius: 26
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: Qt.rgba(20/255, 45/255, 95/255, 0.65) }
-                        GradientStop { position: 1.0; color: Qt.rgba(10/255, 25/255, 60/255, 0.85) }
+                    width: 136
+                    height: 136
+
+                    // Ambient glow behind artwork
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: 144
+                        height: 144
+                        radius: 28
+                        color: MediaBackend.isSxm ? Qt.rgba(0, 180/255, 255/255, 0.20) : Qt.rgba(255, 109/255, 0, 0.16)
+                        visible: MediaBackend.isPlaying
                     }
-                    border.color: Qt.rgba(255, 255, 255, 0.25)
-                    border.width: 1.5
+
+                    // True Rounded Corner Mask for Artwork
+                    Rectangle {
+                        id: mediaCardMask
+                        anchors.fill: parent
+                        radius: 24
+                        visible: false
+                        layer.enabled: true
+                    }
+
+                    Item {
+                        anchors.fill: parent
+                        layer.enabled: true
+                        layer.effect: MultiEffect {
+                            maskEnabled: true
+                            maskSource: mediaCardMask
+                        }
+
+                        Rectangle {
+                            anchors.fill: parent
+                            color: Qt.rgba(15/255, 30/255, 70/255, 0.7)
+                        }
+
+                        Image {
+                            anchors.fill: parent
+                            visible: MediaBackend.isSxm && source != ""
+                            source: MediaBackend.sxmArtworkUrl
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            mipmap: true
+                        }
+
+                        Image {
+                            anchors.centerIn: parent
+                            width: 68
+                            height: 68
+                            visible: !MediaBackend.isSxm || MediaBackend.sxmArtworkUrl === ""
+                            source: MediaBackend.isRadio ?
+                                    "qrc:/ApexVision/qml/assets/icons/music_note_coral.svg" :
+                                    "qrc:/ApexVision/qml/assets/icons/radio_source.svg"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+                    }
+                }
+
+                // 2. Channel Logo / Pill Row (Only for OrbitXM)
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 8
+                    visible: MediaBackend.isSxm
 
                     Image {
-                        anchors.centerIn: parent
-                        width: 72
-                        height: 72
-                        source: MediaBackend.isRadio ?
-                                "qrc:/ApexVision/qml/assets/icons/music_note_coral.svg" :
-                                "qrc:/ApexVision/qml/assets/icons/radio_source.svg"
+                        height: 40
+                        width: (implicitHeight > 0) ? Math.min(110, Math.round(height * implicitWidth / implicitHeight)) : 90
+                        source: MediaBackend.sxmChannelLogoUrl
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                         mipmap: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    // Modern Live Pill (Glowing Glass + Radiating Waves SVG + Pulsing Signal + Bold White Text)
+                    Rectangle {
+                        width: 68
+                        height: 24
+                        radius: 12
+                        gradient: Gradient {
+                            orientation: Gradient.Horizontal
+                            GradientStop { position: 0.0; color: Qt.rgba(255/255, 46/255, 76/255, 0.28) }
+                            GradientStop { position: 1.0; color: Qt.rgba(220/255, 38/255, 38/255, 0.20) }
+                        }
+                        border.color: Qt.rgba(255/255, 77/255, 106/255, 0.80)
+                        border.width: 1
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 5
+
+                            // Radiating Waves Broadcast SVG Icon with live pulse animation
+                            Item {
+                                width: 14
+                                height: 14
+                                anchors.verticalCenter: parent.verticalCenter
+
+                                Image {
+                                    anchors.fill: parent
+                                    source: "qrc:/ApexVision/qml/assets/icons/icon_live_broadcast.svg"
+                                    fillMode: Image.PreserveAspectFit
+                                }
+
+                                SequentialAnimation on opacity {
+                                    loops: Animation.Infinite
+                                    running: true
+                                    NumberAnimation { to: 0.35; duration: 850; easing.type: Easing.InOutQuad }
+                                    NumberAnimation { to: 1.0; duration: 850; easing.type: Easing.InOutQuad }
+                                }
+                            }
+
+                            Text {
+                                text: "LIVE"
+                                color: "#FFFFFF"
+                                font.family: "Inter"
+                                font.pixelSize: 10
+                                font.weight: Font.Bold
+                                font.letterSpacing: 0.8
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                        }
                     }
                 }
 
-                // 2. Station Name / Title (Bigger font for clear readability)
+                // 3. Station Name / Track Title
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: MediaBackend.isAm ? MediaBackend.amStationName : MediaBackend.station
+                    text: MediaBackend.isSxm ? (MediaBackend.sxmSongTitle || "") :
+                          (MediaBackend.isAm ? MediaBackend.amStationName : MediaBackend.station)
                     color: "#FFFFFF"
                     font.family: "Inter"
-                    font.pixelSize: 26
-                    font.weight: Font.DemiBold
+                    font.pixelSize: 22
+                    font.weight: Font.Bold
                     elide: Text.ElideRight
-                    width: parent.width - 40
+                    width: parent.width - 32
                     horizontalAlignment: Text.AlignHCenter
                 }
 
-                // 3. Frequency & Subtitle (Bigger subtitle)
+                // 4. Artist Name (High-Contrast Crisp Bright Silver-White - No Dim Gray)
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: MediaBackend.isAm ?
-                          (MediaBackend.amFrequency + " kHz • " + MediaBackend.amStationCity) :
-                          (MediaBackend.source === "FM" ? (MediaBackend.frequency + " MHz • " + MediaBackend.trackTitle) : (MediaBackend.frequency + " MHz"))
-                    color: "#94A3B8"
+                    text: MediaBackend.isSxm ? MediaBackend.sxmArtist :
+                          (MediaBackend.isAm ? MediaBackend.amStationCity :
+                          (MediaBackend.source === "FM" ? MediaBackend.trackTitle : MediaBackend.station))
+                    color: "#F8FAFC"
                     font.family: "Inter"
-                    font.pixelSize: 17
-                    font.weight: Font.Medium
+                    font.pixelSize: 16
+                    font.weight: 600
                     elide: Text.ElideRight
-                    width: parent.width - 40
+                    width: parent.width - 32
+                    horizontalAlignment: Text.AlignHCenter
+                }
+
+                // 5. Channel Badge / Frequency Info (Electric Sky Cyan #38BDF8)
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: MediaBackend.isSxm ? ("Ch " + MediaBackend.sxmChannelNumber + " • " + MediaBackend.sxmChannelName) :
+                          (MediaBackend.isAm ? (MediaBackend.amFrequency + " kHz") : (MediaBackend.frequency + " MHz"))
+                    color: "#38BDF8"
+                    font.family: "Inter"
+                    font.pixelSize: 13
+                    font.weight: 600
+                    elide: Text.ElideRight
+                    width: parent.width - 32
                     horizontalAlignment: Text.AlignHCenter
                 }
             }
@@ -360,7 +493,7 @@ Item {
 
                 Row {
                     anchors.centerIn: parent
-                    spacing: MediaBackend.isRadio ? 110 : 60
+                    spacing: (MediaBackend.isRadio && !MediaBackend.isSxm) ? 110 : 60
 
                     // Previous Button |<<
                     Item {
@@ -384,7 +517,7 @@ Item {
                             id: prevMouse
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: MediaBackend.previous()
+                            onClicked: MediaBackend.isSxm ? MediaBackend.prevSxmChannel() : MediaBackend.previous()
                         }
                     }
 
@@ -439,7 +572,7 @@ Item {
                             id: nextMouse
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: MediaBackend.next()
+                            onClicked: MediaBackend.isSxm ? MediaBackend.nextSxmChannel() : MediaBackend.next()
                         }
                     }
                 }

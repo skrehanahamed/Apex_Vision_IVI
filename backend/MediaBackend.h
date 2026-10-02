@@ -9,6 +9,8 @@ class VehicleSimulator;
 class QMediaPlayer;
 class QAudioOutput;
 class QNetworkAccessManager;
+class QNetworkReply;
+class QTimer;
 
 class MediaBackend : public QObject
 {
@@ -49,6 +51,29 @@ class MediaBackend : public QObject
     Q_PROPERTY(QVariantList fmStations READ fmStations NOTIFY fmStationsChanged)
     Q_PROPERTY(int currentFmStationIndex READ currentFmStationIndex NOTIFY currentFmStationIndexChanged)
 
+    // OrbitXM Satellite Radio Properties (Matching SiriusXM Player Reference)
+    Q_PROPERTY(bool isSxm READ isSxm NOTIFY sourceChanged)
+    Q_PROPERTY(int sxmChannelNumber READ sxmChannelNumber NOTIFY sxmChannelChanged)
+    Q_PROPERTY(QString sxmChannelName READ sxmChannelName NOTIFY sxmChannelChanged)
+    Q_PROPERTY(QString sxmChannelLogoUrl READ sxmChannelLogoUrl NOTIFY sxmChannelChanged)
+    Q_PROPERTY(QString sxmCategory READ sxmCategory NOTIFY sxmChannelChanged)
+    Q_PROPERTY(QString sxmTagline READ sxmTagline NOTIFY sxmChannelChanged)
+    Q_PROPERTY(QString sxmArtist READ sxmArtist NOTIFY sxmTrackChanged)
+    Q_PROPERTY(QString sxmSongTitle READ sxmSongTitle NOTIFY sxmTrackChanged)
+    Q_PROPERTY(QString sxmAlbum READ sxmAlbum NOTIFY sxmTrackChanged)
+    Q_PROPERTY(QString sxmArtworkUrl READ sxmArtworkUrl NOTIFY sxmTrackChanged)
+    Q_PROPERTY(QVariantList sxmChannels READ sxmChannels NOTIFY sxmChannelsChanged)
+    Q_PROPERTY(QVariantList sxmPresets READ sxmPresets NOTIFY sxmPresetsChanged)
+    Q_PROPERTY(int activeSxmPresetIndex READ activeSxmPresetIndex NOTIFY activeSxmPresetIndexChanged)
+    Q_PROPERTY(bool isSxmFavorite READ isSxmFavorite NOTIFY sxmFavoriteChanged)
+    Q_PROPERTY(bool isSxmAlertSet READ isSxmAlertSet NOTIFY sxmAlertChanged)
+    Q_PROPERTY(QString sxmGenre READ sxmGenre NOTIFY sxmTrackChanged)
+    Q_PROPERTY(QString sxmReleaseYear READ sxmReleaseYear NOTIFY sxmTrackChanged)
+    Q_PROPERTY(bool isSxmLive READ isSxmLive NOTIFY sxmTrackChanged)
+    Q_PROPERTY(QVariantList onlineSearchResults READ onlineSearchResults NOTIFY onlineSearchResultsChanged)
+    Q_PROPERTY(bool isSearchingOnline READ isSearchingOnline NOTIFY isSearchingOnlineChanged)
+    Q_PROPERTY(int currentSxmChannelIndex READ currentSxmChannelIndex NOTIFY sxmChannelChanged)
+
 public:
     explicit MediaBackend(VehicleSimulator *simulator, QObject *parent = nullptr);
     ~MediaBackend() override;
@@ -85,6 +110,29 @@ public:
     bool isCurrentRadioPreset() const;
     QVariantList fmStations() const { return m_fmStations; }
     int currentFmStationIndex() const { return m_currentFmStationIndex; }
+
+    // OrbitXM Satellite Radio Getters
+    bool isSxm() const { return m_source == "OrbitXM" || m_source == "SXM"; }
+    int sxmChannelNumber() const { return m_sxmChannelNumber; }
+    QString sxmChannelName() const { return m_sxmChannelName; }
+    QString sxmChannelLogoUrl() const { return m_sxmChannelLogoUrl; }
+    QString sxmCategory() const { return m_sxmCategory; }
+    QString sxmTagline() const { return m_sxmTagline; }
+    QString sxmArtist() const { return m_sxmArtist; }
+    QString sxmSongTitle() const { return m_sxmSongTitle; }
+    QString sxmAlbum() const { return m_sxmAlbum; }
+    QString sxmArtworkUrl() const { return m_sxmArtworkUrl; }
+    QVariantList sxmChannels() const { return m_sxmChannels; }
+    QVariantList sxmPresets() const { return m_sxmPresets; }
+    int activeSxmPresetIndex() const { return m_activeSxmPresetIndex; }
+    bool isSxmFavorite() const { return m_isSxmFavorite; }
+    bool isSxmAlertSet() const { return m_isSxmAlertSet; }
+    QString sxmGenre() const { return m_sxmGenre; }
+    QString sxmReleaseYear() const { return m_sxmReleaseYear; }
+    bool isSxmLive() const { return m_isSxmLive; }
+    QVariantList onlineSearchResults() const { return m_onlineSearchResults; }
+    bool isSearchingOnline() const { return m_isSearchingOnline; }
+    int currentSxmChannelIndex() const { return m_currentSxmChannelIndex; }
 
     Q_INVOKABLE void setSource(const QString &source);
     Q_INVOKABLE void setPreset(const QString &preset);
@@ -129,6 +177,23 @@ public:
     Q_INVOKABLE void prevFmStation();
     Q_INVOKABLE void cyclePresetOrBand();
 
+    // OrbitXM Operations (Matching SiriusXM Player Reference)
+    Q_INVOKABLE void selectSxmChannel(int channelIndex);
+    Q_INVOKABLE void tuneSxmChannelNumber(int chNum);
+    Q_INVOKABLE void nextSxmChannel();
+    Q_INVOKABLE void prevSxmChannel();
+    Q_INVOKABLE void nextSxmTrack();
+    Q_INVOKABLE void prevSxmTrack();
+    Q_INVOKABLE void selectSxmPreset(int presetIndex);
+    Q_INVOKABLE void saveCurrentSxmPreset(int presetIndex);
+    Q_INVOKABLE void toggleSxmFavorite();
+    Q_INVOKABLE void toggleSxmAlert();
+    Q_INVOKABLE void toggleSxmPlay();
+    Q_INVOKABLE void searchAndPlaySxm(const QString &query);
+    Q_INVOKABLE void searchOnlineRadioStations(const QString &query);
+    Q_INVOKABLE void tuneOnlineStation(const QString &name, const QString &streamUrl, const QString &category);
+    Q_INVOKABLE void seekProgress(int seconds);
+
 signals:
     void sourceChanged();
     void presetChanged();
@@ -159,6 +224,16 @@ signals:
     void fmStationsChanged();
     void currentFmStationIndexChanged();
 
+    void sxmChannelChanged();
+    void sxmTrackChanged();
+    void sxmChannelsChanged();
+    void sxmPresetsChanged();
+    void activeSxmPresetIndexChanged();
+    void sxmFavoriteChanged();
+    void sxmAlertChanged();
+    void onlineSearchResultsChanged();
+    void isSearchingOnlineChanged();
+
 private slots:
     void onMediaProgressUpdated(int pos, int dur);
     void onAmStationsNetworkReply();
@@ -169,11 +244,19 @@ private:
     void playCurrentFmStation();
     void initAmStations();
     void initFmStations();
+    void initDefaultRadioPresets();
     void syncAmWithMedia();
     void syncFmWithMedia();
     void updateActiveRadioPresetIndex();
 
-    QString m_source{"FM"};
+    void initSxmChannels();
+    void syncSxmWithMedia();
+    void playCurrentSxmChannel();
+    void fetchOnlineSxmArt(const QString &artist, const QString &title);
+    void fetchLiveIcyMetadata(const QString &streamUrl);
+    void updateActiveSxmPresetIndex();
+
+    QString m_source{"OrbitXM"};
     QString m_preset{"P1"};
     QString m_frequency{"95.9"};
     QString m_station{"AIR FM Rainbow"};
@@ -203,7 +286,33 @@ private:
     QVariantList m_fmStations;
     int m_currentFmStationIndex{2};
 
+    // OrbitXM State
+    int m_sxmChannelNumber{2};
+    QString m_sxmChannelName{"Orbit Bollywood Hits"};
+    QString m_sxmChannelLogoUrl{"qrc:/ApexVision/qml/assets/radio_logos/sxm_bollywood.png"};
+    QString m_sxmCategory{"Bollywood / Top 40"};
+    QString m_sxmTagline{"India's Biggest Bollywood Hits"};
+    QString m_sxmArtist{"Pritam, Arijit Singh & Irshad Kamil"};
+    QString m_sxmSongTitle{"O Maahi (From \"Dunki\")"};
+    QString m_sxmAlbum{"Dunki (Original Soundtrack)"};
+    QString m_sxmArtworkUrl{"https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/9e/fb/28/9efb2892-c3b1-0c1c-f7a3-3bcccce6346e/8903431975058_cover.jpg/600x600bb.jpg"};
+    QString m_sxmGenre{"Bollywood"};
+    QString m_sxmReleaseYear{"2023"};
+    bool m_isSxmLive{true};
+    QVariantList m_sxmChannels;
+    QVariantList m_sxmPresets;
+    int m_activeSxmPresetIndex{1};
+    bool m_isSxmFavorite{false};
+    bool m_isSxmAlertSet{false};
+    int m_currentSxmChannelIndex{0};
+    int m_currentSxmTrackIndex{0};
+    QTimer *m_sxmProgressionTimer{nullptr};
+    QVariantList m_onlineSearchResults;
+    bool m_isSearchingOnline{false};
+
     QMediaPlayer *m_mediaPlayer{nullptr};
     QAudioOutput *m_audioOutput{nullptr};
     QNetworkAccessManager *m_networkManager{nullptr};
+    QNetworkReply *m_icyMetadataReply{nullptr};
+    QTimer *m_icyPollTimer{nullptr};
 };

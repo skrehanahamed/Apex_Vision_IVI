@@ -110,10 +110,12 @@ Window {
                     if (pageStack.currentIndex === 0 && homePage && homePage.navExpanded) {
                         homePage.triggerNavToggle(false);
                         return;
+                    } else if (pageStack.currentIndex !== 0 && homePage) {
+                        homePage.collapseNav();
                     }
                 } else {
-                    if (homePage && homePage.navExpanded) {
-                        homePage.navExpanded = false;
+                    if (homePage) {
+                        homePage.collapseNav();
                     }
                 }
 
@@ -122,6 +124,9 @@ Window {
             onClimateCloseRequested: {
                 climateBar.climate3DOpen = false;
                 climate3DPanel.airQualityMenuOpen = false;
+                if (homePage) {
+                    homePage.collapseNav();
+                }
                 pageStack.currentIndex = 0;
             }
         }
@@ -132,7 +137,9 @@ Window {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.bottom: climateBar.top
-            width: 44
+            width: (pageStack.currentIndex === 7) ? 0 : 44
+            visible: width > 0
+            clip: true
             z: mainRoot.rejuvenateSessionActive ? 105 : 50
 
             transform: Translate {
@@ -147,7 +154,7 @@ Window {
         Item {
             id: workspaceItem
             anchors.left: sideNav.right
-            anchors.right: statusBar.left
+            anchors.right: (statusBar.visible && statusBar.width > 0) ? statusBar.left : parent.right
             anchors.top: parent.top
             anchors.bottom: climateBar.top
             clip: true
@@ -218,7 +225,7 @@ Window {
                         }
                     }
                     onOpenPlayerRequested: {
-                        if (MediaBackend.source === "AM" || MediaBackend.source === "FM") {
+                        if (MediaBackend.source === "AM" || MediaBackend.source === "FM" || MediaBackend.isSxm || MediaBackend.source === "OrbitXM") {
                             pageStack.currentIndex = 7;
                         }
                     }
@@ -279,12 +286,15 @@ Window {
                         } else if (name === "FM" || name === "RadioFM") {
                             MediaBackend.setSource("FM");
                             targetIdx = 7;
+                        } else if (name === "SatelliteRadio" || name === "OrbitXM" || name === "SiriusXM") {
+                            MediaBackend.setSource("OrbitXM");
+                            targetIdx = 7;
                         } else if (name === "Navigation") {
                             if (homePage) {
                                 homePage.navExpanded = true;
                             }
                             targetIdx = 0;
-                        } else if (name === "Media Player" || name === "Media" || name === "SatelliteRadio" || name === "CarPlay" || name === "AndroidAuto" || name === "Assistant") {
+                        } else if (name === "Media Player" || name === "Media" || name === "CarPlay" || name === "AndroidAuto" || name === "Assistant") {
                             targetIdx = 0;
                         } else if (name === "Vehicle Status") {
                             targetIdx = 1;

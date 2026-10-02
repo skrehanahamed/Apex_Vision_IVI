@@ -1,41 +1,39 @@
-# Apex VISION IVI - Digital Cockpit v2.4.0 Release Notes
+# Apex VISION IVI - Digital Cockpit v2.5.0 Release Notes
 
-**Release**: `v2.4.0`  
+**Release**: `v2.5.0`  
 **Target Architecture**: Modern Connected Automotive In-Vehicle Infotainment (HMI / Cockpit Head Unit)  
 **Supported Platforms**: Linux (Ubuntu 22.04 / 24.04 LTS), macOS (Apple Silicon / Intel), Windows (MSVC 2022)  
 **Framework**: Qt 6.5+ (C++20, Qt Quick / QML, QtWebEngine, QtQuick3D, QtMultimedia)  
 
 ---
 
-## 🌟 Major Highlights & New Capabilities in v2.4.0
+## 🌟 Major Highlights & New Capabilities in v2.5.0
 
-### 1. 🏎️ Authentic Lincoln Zephyr 3D Model with Pearl White Automotive Finish
-- **Three.js WebGL CustomLayer Integration**: Direct integration into MapLibre GL 3D perspective pipeline, rendering the high-fidelity **Lincoln Zephyr luxury sedan** (`lincoln_zephyr.glb`) at runtime.
-- **Custom Automotive Paint Shader**: Multi-layer pearl white metallic finish with specular gloss clearcoat, tinted panoramic black glass roof, and chrome trim accents.
-- **True Road Elevation & Dynamic Scaling**: Accurately centered bounding chassis sitting flush with the road surface at `Y = 0` with dynamic Mercator elevation and heading synchronization.
+### 1. 🛰️ OrbitXM™ Satellite Radio Suite & 18-Channel Broadcast
+- **18 Curated Digital Channels**: Complete channel portfolio spanning regional hits (**Bollywood Hits**, **Ishq & Melodies**, **Retro**, **90s Rewind**, **Punjabi Swag**, **South Wave**, **Desi Hip-Hop**, **Indie Spotlight**, **Bangla Modern**, **Acoustic Sessions**, **Bhakti & Dhyan**, **Classical Ragas**), live sports (**Cricket Live India**), 24x7 news (**Samachar 24x7**), and authentic in-game **Grand Theft Auto Radio Stations**.
+- **High-Definition Station Art Carousel**: Dynamic 3-card rotating visual art carousel featuring vibrant album artwork with smooth swipe animations and automated ambient backdrop lighting.
+- **Fluid Channel Grid & Preset Bar**: Normalized 150x62 station logo containers with pagination indicators, dynamic category filtering tabs, and persistent one-touch preset tuning across both cockpit views.
 
-### 2. 🎯 Dynamic 3D Screen Bounding Projection for Street Labels
-- **8-Corner 3D Bounding Box Projection**: Real-time projection of all 8 vertices of the Lincoln Zephyr 3D model into 2D screen coordinates on every frame.
-- **Collision-Free Positioning**: Automatically computes `maxY + 18px` so the current street pill label remains positioned cleanly beneath the vehicle, eliminating any visual overlap or clipping under any camera pitch, zoom level, heading angle, or display aspect ratio.
+### 2. 🎮 Authentic Grand Theft Auto Radio Stations & Original In-Game Logos
+- **Restored Authentic Internet Vectors**: Restored official, high-resolution logos for all GTA stations:
+  - **Ch 25: GTA Flash FM** — Iconic 80s gradient script with palm tree emblem.
+  - **Ch 26: GTA Los Santos Rock Radio** — Authentic red arched "LOS SANTOS" header with broadcast tower and stone-textured "ROCK RADIO" branding.
+  - **Ch 34: GTA Non-Stop-Pop FM** — Authentic disco globe emblem and pop typography.
+  - **Ch 36: GTA Radio Los Santos** — Authentic vinyl record emblem with yellow cursive script.
 
-### 3. ⏱️ Google Automotive Circular HUD Speedometer & Physics
-- **Integrated Speedometer Cluster**: Dual-ring circular HUD cluster with live digital vehicle speed readout (`km/h`), speed limit warning sign, and animated dial accent.
-- **Realistic Telemetry Physics**: Synchronized with vehicle acceleration and braking physics from the backend simulator.
-- **Optimized UI Clearance**: Re-positioned 32px above the Google badge to maintain balanced cockpit ergonomics.
+### 3. 🧹 Asset Footprint Cleanup & Performance Optimization
+- **Purged Unwanted Duplicate Assets**: Eliminated over 25 MB of unreferenced raw screenshot copies (`image copy*.png`, unreferenced `image.png` files, obsolete SiriusXM SVG vectors) to streamline the repository and binary bundle.
+- **Clean Owner's Manual Assets**: Renamed and compressed manual hotspot diagrams to `manual_interior_view.png` and `manual_exterior_view.png`.
+- **Intelligent Image Compression**: Re-sampled news card images and vehicle UI assets to match target display pixel densities, saving over 120 MB of expanded C++ compiler memory.
 
-### 4. 🧭 3-in-1 Cockpit View Mode Switcher
-- **Perspective 3D Mode**: 58° forward-looking driving angle locked to the vehicle's heading with extruded 3D vector buildings.
-- **North-Up 2D Mode**: 0° top-down flat cartography aligned to true geographic North with animated compass needle orientation.
-- **Route Overview Mode**: High-altitude macroscopic camera framing the active turn-by-turn route geometry.
+### 4. 🛠️ CI/CD Build Reliability & GitHub Actions Compiler Fixes
+- **Eliminated RCC Compiler Out-Of-Memory (OOM) Crashes**: Removed redundant bundling of heavy web assets into Qt's monolithic RCC byte-array, letting `DeployWebAssets` serve them directly from disk.
+- **Bounded Concurrency on CI**: Configured `-j 2` compilation flags on Ubuntu and Windows CI runners to prevent memory exhaustion and compiler termination during parallel compilation.
+- **Passing Workflows**: Validated successful multi-platform compilation across Linux (Ubuntu 22.04), macOS, and Windows runners.
 
-### 5. 🏁 Spacious Trip Arrival & Route Summary Card
-- **Automotive Arrival View**: Re-engineered arrival card with generous spatial layout, destination waypoint metadata, trip duration, total distance, and calculated average driving speed.
-- **One-Touch Trip Dismissal**: Primary end-route action button seamlessly resetting route state and returning to free-drive navigation.
-
-### 6. 🔍 Google Automotive Search Pill, POI Discovery & Clean Telemetry
-- **Refactored Search Card**: Modern floating search pill with Google Automotive branding, voice search shortcut, and horizontal category POI carousel (Gas Stations, Restaurants, Groceries, Coffee).
-- **CORS Resolution**: Migrated from blocked third-party reverse geocoding endpoints to reliable OpenStreetMap Nominatim with explicit JSON accept headers.
-- **Streamlined Telemetry & Console Silence**: Filtered informational web messages in QML terminal, purged obsolete mock assets, and bundled all local MapLibre and Three.js runtime assets.
+### 5. 🏛️ Updated System Architecture & High-Resolution Diagram
+- **Updated System Architecture Diagram**: Modern dark-mode high-resolution architecture diagram (`docs/architecture_diagram.png`) illustrating QML Presentation, Modern C++20 Core Controllers, and Hardware/Cloud Simulation layers.
+- **Interactive Documentation**: Enhanced both Mermaid and PlantUML component specifications in `README.md` reflecting the OrbitXM satellite radio engine, Lincoln Zephyr 3D model, and Google Automotive HUD cluster.
 
 ---
 

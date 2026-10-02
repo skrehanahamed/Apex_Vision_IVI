@@ -47,4 +47,4 @@ jobs:
       - name: Build Application
         shell: cmd
         run: |
-          cmake --build build --config Release --parallel
+          cmake --build build --config Release -j 2

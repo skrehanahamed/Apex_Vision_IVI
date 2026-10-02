@@ -63,7 +63,7 @@ jobs:
 
       - name: Build Application
         run: |
-          cmake --build build --config Release --parallel
+          cmake --build build --config Release -j 2
 
       - name: Package Linux Binary
         run: |
@@ -108,7 +108,7 @@ jobs:
 
       - name: Build Application
         run: |
-          cmake --build build --config Release --parallel
+          cmake --build build --config Release -j 2
 
       - name: Package macOS Binary
         run: |

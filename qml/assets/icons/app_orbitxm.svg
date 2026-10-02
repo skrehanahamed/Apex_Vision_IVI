@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <!-- Circular container with border matching all APP icons -->
+  <circle cx="50" cy="50" r="48" fill="#1E88E5"/>
+  <circle cx="50" cy="50" r="47" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-opacity="0.35"/>
+
+  <g transform="translate(50, 50)">
+    <!-- LEFT SOUNDWAVE ARCS (3 arcs) -->
+    <!-- Arc 1 (inner) -->
+    <path d="M -20 -3 A 22 26 0 0 0 -22 15" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+    <!-- Arc 2 (middle) -->
+    <path d="M -27 -11 A 30 36 0 0 0 -30 18" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" opacity="0.85"/>
+    <!-- Arc 3 (outer) -->
+    <path d="M -34 -18 A 38 46 0 0 0 -38 21" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" opacity="0.55"/>
+
+    <!-- RIGHT SOUNDWAVE ARCS (3 arcs) -->
+    <!-- Arc 1 (inner) -->
+    <path d="M 22 -3 A 22 26 0 0 1 20 15" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/>
+    <!-- Arc 2 (middle) -->
+    <path d="M 27 -10 A 30 36 0 0 1 25 18" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" opacity="0.85"/>
+    <!-- Arc 3 (outer) -->
+    <path d="M 34 -17 A 38 46 0 0 1 32 22" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" opacity="0.55"/>
+
+    <!-- ORBITAL RING - BACK (Passing behind top-right of O) -->
+    <path d="M -30 20 C -34 16 -10 -15 22 -21 C 28 -22 34 -18 34 -13" fill="none" stroke="#38BDF8" stroke-width="3.6" stroke-linecap="round"/>
+
+    <!-- CENTRAL 'O' PLANET BODY -->
+    <!-- Outer oval of 'O' -->
+    <path d="M 0 -26 C 14 -26 21 -14 21 0 C 21 14 14 26 0 26 C -14 26 -21 14 -21 0 C -21 -14 -14 -26 0 -26 Z" fill="#FFFFFF"/>
+    <!-- Inner cutout hole of 'O' -->
+    <path d="M 0 -15 C 7 -15 11 -8 11 0 C 11 8 7 15 0 15 C -7 15 -11 8 -11 0 C -11 -8 -7 -15 0 -15 Z" fill="#1E88E5"/>
+
+    <!-- ORBITAL RING - FRONT (Passing across front of O with clean depth) -->
+    <!-- Cutout boundary behind front ring for clean 2D separation -->
+    <path d="M -30 20 C -26 25 8 13 28 -8 C 34 -14 36 -19 32 -20" fill="none" stroke="#1E88E5" stroke-width="6.5" stroke-linecap="round"/>
+    <!-- Front Ring Stroke (Bright Electric Cyan #38BDF8) -->
+    <path d="M -30 20 C -26 25 8 13 28 -8 C 34 -14 36 -19 32 -20" fill="none" stroke="#38BDF8" stroke-width="3.6" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -12,6 +12,28 @@ Item {
     property bool inNavTransition: false
     signal openPlayerRequested()
 
+    function setNavExpanded(expanded, openSearch) {
+        root.navExpanded = expanded;
+        navPanel.isExpanded = expanded;
+        navPanel.updateMapMode();
+        if (expanded && openSearch) {
+            navPanel.openSearch();
+        }
+    }
+
+    function collapseNav() {
+        navFadeAnimation.stop();
+        root.inNavTransition = false;
+        navFadeOverlay.opacity = 0.0;
+        setNavExpanded(false, false);
+    }
+
+    onVisibleChanged: {
+        if (!visible && root.navExpanded) {
+            collapseNav();
+        }
+    }
+
     function triggerNavToggle(openSearch) {
         if (inNavTransition) return;
         navFadeAnimation.openSearchOnExpand = (openSearch === true);
@@ -42,11 +64,7 @@ Item {
         // 2. Switch state while concealed by the dark overlay
         ScriptAction {
             script: {
-                root.navExpanded = !root.navExpanded;
-                navPanel.isExpanded = root.navExpanded;
-                if (root.navExpanded && navFadeAnimation.openSearchOnExpand) {
-                    navPanel.openSearch();
-                }
+                root.setNavExpanded(!root.navExpanded, navFadeAnimation.openSearchOnExpand);
             }
         }
 
@@ -115,7 +133,7 @@ Item {
 
         MouseArea {
             anchors.fill: parent
-            enabled: navFadeOverlay.visible
+            enabled: navFadeOverlay.visible && navFadeOverlay.opacity > 0.05
         }
     }
 
@@ -164,6 +182,7 @@ Item {
 
             Repeater {
                 model: [
+                    { name: "OrbitXM", sourceKey: "OrbitXM", icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" },
                     { name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" },
                     { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
                     { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
@@ -190,22 +209,23 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 18
 
-                        // Bigger circular blue badge
+                        // Circular badge with Icon (OrbitXM renders directly without redundant outer blue background)
                         Rectangle {
                             width: 40
                             height: 40
                             radius: 20
-                            color: "#1976D2"
+                            color: modelData.sourceKey === "OrbitXM" ? "transparent" : "#1976D2"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            // Bigger icon inside badge
+                            // Icon inside badge
                             Image {
                                 anchors.centerIn: parent
-                                width: 22
-                                height: 22
+                                width: modelData.sourceKey === "OrbitXM" ? 40 : 22
+                                height: modelData.sourceKey === "OrbitXM" ? 40 : 22
                                 source: modelData.icon
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
+                                mipmap: true
                             }
                         }
 
@@ -229,7 +249,7 @@ Item {
                         anchors.rightMargin: 16
                         height: 1
                         color: Qt.rgba(255, 255, 255, 0.08)
-                        visible: index < 4
+                        visible: index < 5
                     }
 
                     MouseArea {

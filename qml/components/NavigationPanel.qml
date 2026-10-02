@@ -54,6 +54,12 @@ Item {
         updateMapMode();
     }
 
+    onVisibleChanged: {
+        if (visible) {
+            updateMapMode();
+        }
+    }
+
     function updateMapMode() {
         if (!webEngineView.loading) {
             webEngineView.runJavaScript("if (typeof window.setCompactMode === 'function') { window.setCompactMode(" + (!root.isExpanded) + "); }");
@@ -84,6 +90,7 @@ Item {
     Item {
         id: mapContainer
         anchors.fill: parent
+        enabled: root.isExpanded
         layer.enabled: true
         layer.effect: MultiEffect {
             maskEnabled: true
@@ -151,7 +158,7 @@ Item {
         anchors.fill: parent
         enabled: !root.isExpanded
         cursorShape: Qt.PointingHandCursor
-        z: 90
+        z: 100
         onClicked: function(mouse) {
             var isSearchIcon = (mouse.x < 85 && mouse.y < 85);
             root.toggleExpandRequested(isSearchIcon);

@@ -8,11 +8,11 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.4.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.5.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
 [![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
 [![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.4.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Releases](https://img.shields.io/badge/Release-v2.5.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -26,7 +26,7 @@
 
 ## Executive Overview
 
-Apex VISION IVI is a production-grade automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered with Qt 6 (QML / Qt Quick), WebEngine WebGL 3D acceleration, and modern C++20. Modeled on modern connected electric vehicle (EV) widescreen cockpit architectures, the system features a hardware-accelerated dual-viewport dashboard, live 3D perspective cockpit navigation powered by a custom **Three.js WebGL CustomLayer** rendering an authentic **Lincoln Zephyr luxury sedan in pearl white**, real-time vector 3D building extrusions, a circular **Google Automotive Speedometer Cluster** with live speed physics and speed limit warnings, a **3-in-1 Cockpit View Mode Switcher** (Perspective / North-up / Overview), an integrated native **YouTube Video Streaming Suite** with infinite feed browsing and seamless Up Next recommendations, the **APEX Rejuvenate™ Stationary Wellness Immersion Suite** synchronized across vehicle climate, motorized seating, and ambient lighting, a **Digital Owner's Manual with 2-Page Visual Search and Hotspot Mapping**, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite.
+Apex VISION IVI is a production-grade automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered with Qt 6 (QML / Qt Quick), WebEngine WebGL 3D acceleration, and modern C++20. Modeled on modern connected electric vehicle (EV) widescreen cockpit architectures, the system features a hardware-accelerated dual-viewport dashboard, live 3D perspective cockpit navigation powered by a custom **Three.js WebGL CustomLayer** rendering an authentic **Lincoln Zephyr luxury sedan in pearl white**, real-time vector 3D building extrusions, a circular **Google Automotive Speedometer Cluster** with live speed physics and speed limit warnings, a **3-in-1 Cockpit View Mode Switcher** (Perspective / North-up / Overview), an integrated native **YouTube Video Streaming Suite** with infinite feed browsing and seamless Up Next recommendations, the **OrbitXM Satellite Radio Suite** with 18 curated live audio stations, dynamic artwork carousel, quick preset bar, and authentic Grand Theft Auto radio station logos, the **APEX Rejuvenate™ Stationary Wellness Immersion Suite** synchronized across vehicle climate, motorized seating, and ambient lighting, a **Digital Owner's Manual with 2-Page Visual Search and Hotspot Mapping**, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite.
 
 The architecture strictly decouples the QML presentation layer from deterministic C++ backend controllers, establishing an automotive-compliant state machine that manages live telemetry, reverse geocode lookups, thermal comfort states, valet access arbitration, YouTube network extraction, multi-sensory wellness orchestration, and vehicle safety interlocks.
 
@@ -50,34 +50,36 @@ graph TD
     subgraph QML["Presentation Layer (Qt Quick / QML)"]
         Main["Main.qml (Viewport Coordinator)"]
         Home["HomePage (Dual-Card Dashboard)"]
-        NavView["NavigationPanel (3D WebEngine Map & HUD)"]
+        NavView["NavigationPanel (3D WebEngine Map, Zephyr & HUD)"]
+        RadioView["OrbitXM & RadioPage (18-Ch Satellite Broadcast)"]
         ClimateView["ClimateBar & 3D Cabin (HVAC / PM2.5)"]
-        VehicleView["VehiclePage (3D Studio & Valet)"]
-        VideoView["VideoPage (YouTube Streamer)"]
-        RejView["RejuvenatePage (Calm Immersion)"]
+        VehicleView["VehiclePage (3D Studio & Valet Security)"]
+        VideoView["VideoPage (YouTube Streamer & UpNext)"]
+        RejView["RejuvenatePage (Stationary Immersion)"]
         ManualView["ManualPage (2-Page Visual Search)"]
-        SettingsView["SettingsPage & RadioPage"]
+        SettingsView["SettingsPage (7-Category OEM Suite)"]
     end
 
-    subgraph Backend["Core Backend Controllers (C++20)"]
-        NavB["NavigationBackend"]
-        ClimB["ClimateBackend"]
-        VehB["VehicleBackend & Valet"]
-        SeatB["SeatBackend"]
-        LightB["AmbientLightBackend"]
-        VidB["VideoBackend"]
-        RejC["RejuvenateController"]
-        MedB["MediaBackend"]
-        SysB["SystemBackend"]
+    subgraph Backend["Core Backend Controllers (Modern C++20)"]
+        NavB["NavigationBackend (3-in-1 View Switcher)"]
+        MedB["MediaBackend (OrbitXM & AudioDSP Engine)"]
+        ClimB["ClimateBackend (Dual-Zone HVAC)"]
+        VehB["VehicleBackend & Valet (CAN Arbitration & PIN)"]
+        SeatB["SeatBackend (3D Actuators & Massage)"]
+        LightB["AmbientLightBackend (Multi-Zone RGB Theme)"]
+        VidB["VideoBackend (Async Stream Extractor)"]
+        RejC["RejuvenateController (Sensory Timeline)"]
+        SysB["SystemBackend (Hardware Diagnostics)"]
     end
 
-    subgraph External["Hardware Simulation & Web Services"]
-        CAN["VehicleSimulator (CAN Bus 500ms Loop)"]
-        MAP["MapLibre GL 3D (Extruded Buildings)"]
-        CAR["Three.js / WebGL CustomLayer (Lincoln Zephyr 3D Sedan)"]
-        HUD["Circular Speedometer & Physics HUD"]
-        YT["YouTube Media Endpoints"]
-        GEO["Nominatim & IP Geolocation"]
+    subgraph External["Hardware Simulation & Cloud Services"]
+        CAN["VehicleSimulator (500ms CAN Telemetry Loop)"]
+        MAP["MapLibre GL 3D Engine (Extruded Planet Tiles)"]
+        CAR["Three.js WebGL CustomLayer (Lincoln Zephyr 3D White Model)"]
+        HUD["Google Automotive UI (Speedometer Cluster & HUD)"]
+        SXM["OrbitXM & GTA Endpoints (18 Live Radio Decoders)"]
+        YT["YouTube Endpoint Scraper (No-Key Stream Extractor)"]
+        GEO["Nominatim & IP Geocoder (Live HTTPS Geocoding)"]
     end
 
     Main --> Home
@@ -88,6 +90,7 @@ graph TD
     Main --> ManualView
 
     NavView <--> NavB
+    RadioView <--> MedB
     ClimateView <--> ClimB
     VehicleView <--> VehB
     VehicleView <--> SeatB
@@ -103,6 +106,7 @@ graph TD
     NavB --> CAR
     NavB --> HUD
     NavB --> GEO
+    MedB --> SXM
     VidB --> YT
     CAN --> VehB
 ```
@@ -115,43 +119,65 @@ graph TD
 ```plantuml
 @startuml Apex_Vision_Architecture
 !theme plain
-skinparam backgroundColor transparent
+skinparam backgroundColor #0A0E14
 skinparam componentStyle uml2
 skinparam roundCorner 10
 skinparam defaultFontName "Inter, Helvetica, Arial, sans-serif"
 skinparam defaultFontSize 12
+skinparam defaultFontColor #E6EDF3
+skinparam dpi 200
+
+skinparam package {
+  BackgroundColor #131822
+  BorderColor #2D3748
+  FontColor #60A5FA
+  FontStyle bold
+}
+
+skinparam component {
+  BackgroundColor #1A2234
+  BorderColor #3B82F6
+  FontColor #F8FAFC
+}
+
+skinparam arrow {
+  Color #60A5FA
+  FontColor #94A3B8
+}
 
 package "Presentation Layer (Qt Quick / QML)" as QML {
   [Main.qml\nViewport Coordinator] as Main
-  [HomePage\nSplit Dashboard] as Home
-  [NavigationPanel\n3D WebEngine Map] as NavView
+  [HomePage\nDual-Card Split Dashboard] as Home
+  [NavigationPanel\n3D Perspective Map & Zephyr] as NavView
+  [OrbitXM & RadioPage\n18-Ch Satellite Broadcast] as RadioView
   [ClimateBar & 3D Cabin\nHVAC & Air Refresh] as ClimateView
-  [Vehicle & Seats\n3D Studio & Valet] as VehicleView
-  [VideoPage\nYouTube Streamer] as VideoView
-  [RejuvenatePage\nWellness Immersion] as RejView
+  [Vehicle & Seats\n3D Studio & Valet Security] as VehicleView
+  [VideoPage\nYouTube Streamer & UpNext] as VideoView
+  [RejuvenatePage\nStationary Immersion] as RejView
   [ManualPage\n2-Page Visual Search] as ManualView
-  [Settings & Radio\nOEM Audio Suite] as SettingsView
+  [SettingsPage\n7-Category OEM Suite] as SettingsView
 }
 
-package "Core Backend Controllers (C++20)" as Backend {
-  [NavigationBackend] as NavB
-  [ClimateBackend] as ClimB
-  [VehicleBackend & Valet] as VehB
-  [SeatBackend] as SeatB
-  [AmbientLightBackend] as LightB
-  [VideoBackend] as VidB
-  [RejuvenateController] as RejC
-  [MediaBackend] as MedB
-  [SystemBackend] as SysB
+package "Core Backend Controllers (Modern C++20)" as Backend {
+  [NavigationBackend\n3-in-1 View Switcher] as NavB
+  [MediaBackend\nOrbitXM & AudioDSP Engine] as MedB
+  [ClimateBackend\nDual-Zone HVAC] as ClimB
+  [VehicleBackend & Valet\nCAN Arbitration & PIN] as VehB
+  [SeatBackend\n3D Actuators & Massage] as SeatB
+  [AmbientLightBackend\nMulti-Zone RGB Theme] as LightB
+  [VideoBackend\nAsync Stream Extractor] as VidB
+  [RejuvenateController\nSensory Timeline] as RejC
+  [SystemBackend\nHardware Diagnostics] as SysB
 }
 
-package "Hardware Simulation & External Services" as External {
-  [VehicleSimulator\nCAN Bus Telemetry] as CAN
-  [MapLibre GL 3D\nExtruded Planet Tiles] as OSM
-  [Three.js / WebGL CustomLayer\nLincoln Zephyr 3D White Model] as CAR
-  [Google Automotive UI\nSpeedometer & Search Card] as HUD
-  [YouTube Endpoint Streamer\nNo-Key Media Scraper] as YT
-  [IP Geolocation & Nominatim\nLive Street Geocoder] as GEO
+package "Hardware Simulation & Cloud Services" as External {
+  [VehicleSimulator\n500ms CAN Telemetry Loop] as CAN
+  [MapLibre GL 3D Engine\nExtruded Planet Tiles] as OSM
+  [Three.js WebGL CustomLayer\nLincoln Zephyr 3D White Model] as CAR
+  [Google Automotive UI\nSpeedometer Cluster & HUD] as HUD
+  [OrbitXM & GTA Endpoints\n18 Live Radio Decoders] as SXM
+  [YouTube Endpoint Scraper\nNo-Key Stream Extractor] as YT
+  [Nominatim & IP Geocoder\nLive HTTPS Geocoding] as GEO
 }
 
 Main -down-> Home
@@ -162,23 +188,25 @@ Main -down-> RejView
 Main -down-> ManualView
 
 NavView <--> NavB : Q_PROPERTY / Qt Signals
-ClimateView <--> ClimB : Dual-Zone & Air Quality
+RadioView <--> MedB : Station Art & Presets
+ClimateView <--> ClimB : Dual-Zone Thermal
 VehicleView <--> VehB : CAN Telemetry & PIN Lock
 VehicleView <--> SeatB : 3D Actuators & Massage
 RejView <--> RejC : Immersion Timeline
 VideoView <--> VidB : Video Feed & UpNext
-SettingsView <--> MedB : Tone & Presets
+SettingsView <--> MedB : Tone & Soundstage
 
 RejC -right-> ClimB : 22°C Auto Airflow
 RejC -right-> SeatB : 45° Recline & Wave Massage
-RejC -right-> LightB : Cyan/Amber Ambience
+RejC -right-> LightB : Aurora Ambient Glow
 
 NavB --> OSM : WebChannel Integration
-NavB --> CAR : Three.js Heading & Elevation
-NavB --> HUD : Speedometer & Search Integration
+NavB --> CAR : Heading & Pitch Synchronizer
+NavB --> HUD : Speedometer & Speed Limit Warnings
 NavB --> GEO : HTTPS Reverse Geocoding
-VidB --> YT : Asynchronous QNetworkAccessManager
-CAN --> VehB : 500ms CAN Simulation Loop
+MedB --> SXM : Satellite Audio Decoders
+VidB --> YT : Asynchronous QNAM
+CAN --> VehB : 500ms Simulation Loop
 
 @enduml
 ```
@@ -375,14 +403,19 @@ CAN --> VehB : 500ms CAN Simulation Loop
 - **Dynamic Visual State Lighting**: Selected category icon illuminates in vibrant OEM **yellow** (`#FBBF24`), while unselected icons remain crisp pure **white** (`#FFFFFF`).
 - **Fluid Horizontal Slide Transitions**: Smooth directional sliding animations between the primary categories and nested sub-setting views.
 
-### 9. Media Player, Audio, and Acoustic Soundstage Architecture
+### 9. Media Player, OrbitXM Satellite Radio, and Acoustic Soundstage Architecture
+- **OrbitXM™ Satellite Radio Suite**:
+  - **18 Curated Satellite Channels**: Broadcast channels spanning regional Indian hits (**Bollywood Hits**, **Ishq & Melodies**, **Retro**, **90s Rewind**, **Punjabi Swag**, **South Wave**, **Desi Hip-Hop**, **Indie Spotlight**, **Bangla Modern**, **Acoustic Sessions**, **Bhakti & Dhyan**, **Classical Ragas**), live sports (**Cricket Live India**), 24x7 news (**Samachar 24x7**), and authentic in-game **Grand Theft Auto Radio Stations** (**Flash FM**, **Los Santos Rock Radio**, **Non-Stop-Pop FM**, **Radio Los Santos**).
+  - **Authentic Radio Logos**: Genuine vector and high-resolution station emblems faithfully preserved and loaded across dark-mode cards and HUD pills.
+  - **High-Definition Station Art Carousel**: Dynamic 3-card rotating visual art carousel showcasing vibrant station graphics with smooth swipe navigation and automated backdrop lighting.
+  - **Fluid Channel Grid Pagination & Preset Bar**: Normalized 150x62 station logo containers with pagination indicators and instant one-touch preset tuning.
 - **Acoustic Balance & Fade Soundstage**:
   - **Zoomed Cabin Geometry**: Focused interior cabin layout showcasing driver, passenger, and second-row seating with metallic roof contours.
   - **Theme-Blended Alpha Dissolve**: Vehicle top-view renders with a smooth cubic alpha gradient, blending effortlessly into active wallpapers (**Inspire**, **Constellation**, **Tranquil**, **Voyage**) without harsh bounding boxes.
   - **Radiating Acoustic Wave Ripples**: Animated concentric sound wave pulses continuously propagate outward in real-time from the draggable focal point.
   - **Interactive Reticle Thumb & Instant Reset**: Touch and drag positioning to adjust front/rear fade and left/right balance, with a one-touch "Reset" button restoring center equilibrium `(0, 0)`.
 - **Dynamic Tone Controls**: 13-point discrete sliders (-6 to +6) for Bass, Midrange, and Treble with floating teardrop level tooltips.
-- **Digital Radio Tuner & Frequency Keypad**: Multi-band AM, FM, and SiriusXM tuner with numeric frequency entry, preset bookmarking, and live waveform monitor.
+- **Digital Radio Tuner & Frequency Keypad**: Multi-band AM, FM, and satellite tuner with numeric frequency entry, preset bookmarking, and live waveform monitor.
 
 ---
 

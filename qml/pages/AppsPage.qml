@@ -245,9 +245,9 @@ Item {
                         icon: "qrc:/ApexVision/qml/assets/icons/app_fm.svg"
                     },
                     {
-                        name: "Satellite Radio",
-                        action: "SatelliteRadio",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_satellite_radio.svg"
+                        name: "OrbitXM",
+                        action: "OrbitXM",
+                        icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png"
                     },
                     {
                         name: "Bluetooth Audio",

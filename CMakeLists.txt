@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(APEX_VISION_IVI VERSION 2.4.0 LANGUAGES CXX)
+project(APEX_VISION_IVI VERSION 2.5.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,6 +78,8 @@ set_source_files_properties(qml/Typography.qml PROPERTIES
 )
 
 file(GLOB NEWS_IMAGE_ASSETS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/news_images/*.jpg")
+file(GLOB RADIO_LOGO_ASSETS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/radio_logos/*")
+file(GLOB STATION_ART_ASSETS RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" CONFIGURE_DEPENDS "qml/assets/station_art/*")
 
 qt_add_qml_module(apex_vision_ivi
     URI ApexVision
@@ -150,8 +152,6 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/remote_start_climate_preview.png
         qml/assets/remote_start_seats_preview.png
         qml/assets/image.png
-        "qml/assets/image copy.png"
-        "qml/assets/image copy 2.png"
         qml/assets/theme_constellation.png
         qml/assets/theme_tranquil.png
         qml/assets/theme_voyage.png
@@ -159,8 +159,10 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/car_top_balance_fade.png
         qml/assets/remote_unlock_all.png
         qml/assets/remote_unlock_driver.png
-        qml/assets/icons/image.png
         qml/assets/vehicle_studio_bg.png
+        qml/assets/orbitxm_logo.png
+        qml/assets/orbitxm_emblem.png
+        qml/assets/icons/app_orbitxm.svg
         qml/assets/icons/compass.svg
         qml/assets/icons/bluetooth.svg
 
@@ -177,6 +179,10 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/music_note_coral.svg
         qml/assets/icons/usb_source.svg
         qml/assets/icons/phone_add.svg
+        qml/assets/icons/chevron_left_white.svg
+        qml/assets/icons/chevron_right_white.svg
+        qml/assets/icons/nav_back_arrow.svg
+        qml/assets/sounds/preset_chime.wav
 
         # YouTube & Video Icons
         qml/assets/icons/yt_cat_all.svg
@@ -198,22 +204,19 @@ qt_add_qml_module(apex_vision_ivi
         # Map & Search Controls
         qml/assets/icons/search.svg
         qml/assets/icons/icon_search_white.svg
+        qml/assets/icons/icon_live_broadcast.svg
         qml/assets/icons/plus.svg
         qml/assets/icons/minus.svg
+        qml/assets/icons/sxm_note.svg
+        qml/assets/icons/sxm_mic.svg
 
         # Climate & Seat Comfort
         qml/assets/icons/seat_comfort_icon.png
         qml/assets/icons/seat_comfort_icon_passenger.png
         qml/assets/icons/seat_second_row_render.png
-        "qml/assets/icons/image copy 2.png"
         qml/assets/icons/seat_passenger_render.png
-        "qml/assets/icons/image copy 3.png"
-        "qml/assets/icons/image copy 4.png"
-        "qml/assets/icons/image copy 5.png"
-        "qml/assets/icons/image copy 6.png"
-        "qml/assets/icons/image copy 7.png"
-        "qml/assets/icons/image copy 9.png"
-        "qml/assets/icons/image copy 10.png"
+        qml/assets/icons/manual_interior_view.png
+        qml/assets/icons/manual_exterior_view.png
         qml/assets/icons/setting_sound.png
         qml/assets/icons/setting_sound_white.png
         qml/assets/icons/setting_sound_yellow.png
@@ -274,6 +277,7 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/app_phone.svg
         qml/assets/icons/app_am.svg
         qml/assets/icons/app_fm.svg
+        qml/assets/icons/app_orbitxm.svg
         qml/assets/icons/app_siriusxm.svg
         qml/assets/icons/app_satellite_radio.svg
         qml/assets/icons/app_bluetooth.svg
@@ -452,13 +456,8 @@ qt_add_qml_module(apex_vision_ivi
         qml/assets/icons/news_bookmark.svg
         qml/assets/icons/news_bookmark_filled.svg
         ${NEWS_IMAGE_ASSETS}
-
-        # Web & Live 3D Map
-        web/map.html
-        web/maplibre-gl.js
-        web/maplibre-gl.css
-        web/three.min.js
-        web/GLTFLoader.js
+        ${RADIO_LOGO_ASSETS}
+        ${STATION_ART_ASSETS}
 )
 
 target_include_directories(apex_vision_ivi PRIVATE

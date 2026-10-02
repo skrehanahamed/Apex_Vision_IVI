@@ -554,7 +554,7 @@ Item {
     // =========================================================================
     // VISUAL SEARCH HOTSPOTS DATA: INTERIOR (1 of 2) & EXTERIOR (2 of 2)
     // =========================================================================
-    // Hotspots corresponding directly to image copy 10.png (Interior 1 of 2)
+    // Hotspots corresponding directly to manual_interior_view.png (Interior 1 of 2)
     // Laser-accurate coordinates verified against 1536x1024 graphic badges
     readonly property var visualHotspotsInterior: [
         // Top Row Badges (y: 0.1514)
@@ -578,7 +578,7 @@ Item {
         { name: "Passenger Seat Adjustment", category: "Seats and Restraints", topic: "30-Way Perfect Position Seat Adjustment", x: 0.9284, y: 0.8525 }
     ]
 
-    // Hotspots corresponding directly to image copy 9.png (Exterior 2 of 2)
+    // Hotspots corresponding directly to manual_exterior_view.png (Exterior 2 of 2)
     // Laser-accurate coordinates verified against 1536x1024 graphic badges
     readonly property var visualHotspotsExterior: [
         // Left Column Badges
@@ -1868,7 +1868,7 @@ Item {
                     Image {
                         id: interiorImg
                         anchors.fill: parent
-                        source: "qrc:/ApexVision/qml/assets/icons/image copy 10.png"
+                        source: "qrc:/ApexVision/qml/assets/icons/manual_interior_view.png"
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                         mipmap: true
@@ -2000,7 +2000,7 @@ Item {
                     Image {
                         id: exteriorImg
                         anchors.fill: parent
-                        source: "qrc:/ApexVision/qml/assets/icons/image copy 9.png"
+                        source: "qrc:/ApexVision/qml/assets/icons/manual_exterior_view.png"
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                         mipmap: true

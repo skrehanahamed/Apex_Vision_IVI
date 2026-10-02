@@ -60,4 +60,4 @@ jobs:
 
       - name: Build Application
         run: |
-          cmake --build build --config Release --parallel
+          cmake --build build --config Release -j 2

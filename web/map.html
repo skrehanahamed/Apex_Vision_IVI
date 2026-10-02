@@ -2155,6 +2155,13 @@
         body.compact-mode .results-list-card,
         body.compact-mode .route-preview-card,
         body.compact-mode .hud-turn-banner,
+        body.compact-mode .google-nav-top-banner,
+        body.compact-mode .google-nav-bottom-card,
+        body.compact-mode .nav-speedometer-cluster,
+        body.compact-mode .trip-arrival-card,
+        body.compact-mode .map-settings-card,
+        body.compact-mode .dest-eta-callout,
+        body.compact-mode .side-flyout-pill,
         body.compact-mode .docked-touch-keyboard {
             display: none !important;
         }
@@ -3864,6 +3871,54 @@
             }
         }
 
+        let carAlignmentAnimId = null;
+
+        function smoothAlignCarToRoute(coords) {
+            if (!coords || coords.length < 2) return;
+            if (carAlignmentAnimId) {
+                cancelAnimationFrame(carAlignmentAnimId);
+                carAlignmentAnimId = null;
+            }
+
+            const startLng = coords[0][0];
+            const startLat = coords[0][1];
+            const nextLng = coords[1][0];
+            const nextLat = coords[1][1];
+
+            const dLng = nextLng - startLng;
+            const dLat = nextLat - startLat;
+            let targetHeading = (Math.atan2(dLng, dLat) * 180 / Math.PI + 360) % 360;
+
+            const fromLng = currentLng;
+            const fromLat = currentLat;
+            const fromHeading = currentHeading;
+
+            let headingDiff = (targetHeading - fromHeading + 540) % 360 - 180;
+            const animDuration = 600; // ms, aligns smoothly with map.fitBounds
+            const startTime = performance.now();
+
+            function stepAlign(now) {
+                const elapsed = now - startTime;
+                const p = Math.min(1.0, elapsed / animDuration);
+                // Ease out cubic
+                const ease = 1 - Math.pow(1 - p, 3);
+
+                currentLng = fromLng + (startLng - fromLng) * ease;
+                currentLat = fromLat + (startLat - fromLat) * ease;
+                currentHeading = (fromHeading + headingDiff * ease + 360) % 360;
+
+                if (marker) marker.setLngLat([currentLng, currentLat]);
+                if (map) map.triggerRepaint();
+
+                if (p < 1.0 && !isNavigating) {
+                    carAlignmentAnimId = requestAnimationFrame(stepAlign);
+                } else {
+                    carAlignmentAnimId = null;
+                }
+            }
+            carAlignmentAnimId = requestAnimationFrame(stepAlign);
+        }
+
         let currentDestinationItem = null;
 
         async function selectDestination(item) {
@@ -3949,6 +4004,7 @@
                                 if (map && map.getSource("nav-route")) {
                                     map.getSource("nav-route").setData({ type: "Feature", geometry: currentRouteGeoJson });
                                 }
+                                smoothAlignCarToRoute(pts);
 
                                 const distMeters = r.distanceMeters || (item.distKm * 1000);
                                 const distKm = (distMeters / 1000).toFixed(1) + " km";
@@ -3994,6 +4050,7 @@
                         if (map && map.getSource("nav-route")) {
                             map.getSource("nav-route").setData({ type: "Feature", geometry: currentRouteGeoJson });
                         }
+                        smoothAlignCarToRoute(currentRouteGeoJson.coordinates);
 
                         const distKm = (route.distance / 1000).toFixed(1) + " km";
                         const durationMin = Math.max(1, Math.round(route.duration / 60));
@@ -4052,6 +4109,7 @@
                 if (map && map.getSource("nav-route")) {
                     map.getSource("nav-route").setData({ type: "Feature", geometry: currentRouteGeoJson });
                 }
+                smoothAlignCarToRoute(coords);
 
                 const distStr = item.distKm > 1000 ? `${Math.round(item.distKm).toLocaleString()} km` : `${item.distKm.toFixed(1)} km`;
                 document.getElementById("previewDuration").textContent = durShort;
@@ -4439,6 +4497,10 @@
                 if (hudBanner) hudBanner.style.display = "none";
                 const hudBottom = document.getElementById("hudBottomCard");
                 if (hudBottom) hudBottom.style.display = "none";
+                const speedCluster = document.getElementById("navSpeedometerCluster");
+                if (speedCluster) speedCluster.style.display = "none";
+                const arrivalCard = document.getElementById("tripArrivalCard");
+                if (arrivalCard) arrivalCard.classList.remove("visible");
                 const kb = document.getElementById("dockedKeyboard");
                 if (kb) kb.classList.remove("visible");
                 if (map && map.getSource("nav-route")) {
@@ -4450,10 +4512,16 @@
                 if (destBadgeMarker) { destBadgeMarker.remove(); destBadgeMarker = null; }
                 activeMarkers.forEach(m => m.remove());
                 activeMarkers = [];
+                if (isNavigating) {
+                    isNavigating = false;
+                    if (typeof stopActiveNavigationDrive === "function") {
+                        stopActiveNavigationDrive();
+                    }
+                }
             } else {
                 document.body.classList.remove("compact-mode");
                 const searchCard = document.getElementById("searchCardContainer");
-                if (searchCard) searchCard.style.display = "flex";
+                if (searchCard && !isNavigating) searchCard.style.display = "flex";
             }
             if (map) {
                 map.resize();
@@ -5218,140 +5286,226 @@
             document.getElementById("btnVoice")?.addEventListener("click", triggerVoiceSearch);
             document.getElementById("btnDialogMic")?.addEventListener("click", triggerVoiceSearch);
 
-            // Active Vehicle Navigation Drive Simulation Engine
-            let navDriveInterval = null;
-            let currentRouteStepIndex = 0;
+            // Active Vehicle Navigation Drive Simulation Engine (60 FPS Continuous Arc-Length Simulation)
+            let navDriveAnimationId = null;
+            let navDriveInterval = null; // compatibility handle
+            let currentDriveSpeed = 0;
 
-            const startActiveNavigationDrive = () => {
+            const stopActiveNavigationDrive = () => {
+                if (navDriveAnimationId) {
+                    cancelAnimationFrame(navDriveAnimationId);
+                    navDriveAnimationId = null;
+                }
                 if (navDriveInterval) {
                     clearInterval(navDriveInterval);
                     navDriveInterval = null;
                 }
+            };
+
+            const startActiveNavigationDrive = () => {
+                stopActiveNavigationDrive();
                 if (!currentRouteGeoJson || !currentRouteGeoJson.coordinates || currentRouteGeoJson.coordinates.length < 2) {
                     return;
                 }
 
                 const coords = currentRouteGeoJson.coordinates;
-                currentRouteStepIndex = 0;
                 currentDriveSpeed = 0;
 
                 const clusterEl = document.getElementById("navSpeedometerCluster");
                 if (clusterEl) clusterEl.style.display = "flex";
                 updateSpeedometer(0);
 
-                navDriveInterval = setInterval(() => {
+                // 1. Calculate cumulative arc-length distances in meters using geodesic formula
+                const dists = [0];
+                let totalDistance = 0;
+                for (let i = 1; i < coords.length; i++) {
+                    const pPrev = coords[i - 1];
+                    const pCurr = coords[i];
+                    const d = calculateHaversineKm(pPrev[1], pPrev[0], pCurr[1], pCurr[0]) * 1000.0;
+                    totalDistance += d;
+                    dists.push(totalDistance);
+                }
+
+                if (totalDistance < 2.0) {
+                    triggerTripArrival(currentDestinationItem);
+                    return;
+                }
+
+                let traveledDistance = 0; // continuous meters along path
+                let currentSpeedMps = 0;  // m/s
+                let currentSmoothedHeading = currentHeading;
+                let currentSeg = 0;
+                let lastFrameTime = performance.now();
+                let lastPolylineTime = 0;
+                let lastTextTime = 0;
+
+                const driveFrame = (now) => {
                     if (!isNavigating) {
-                        clearInterval(navDriveInterval);
-                        navDriveInterval = null;
+                        stopActiveNavigationDrive();
                         if (clusterEl) clusterEl.style.display = "none";
+                        updateSpeedometer(0);
                         return;
                     }
 
-                    currentRouteStepIndex++;
-                    if (currentRouteStepIndex >= coords.length) {
-                        clearInterval(navDriveInterval);
-                        navDriveInterval = null;
+                    const dtRaw = (now - lastFrameTime) / 1000.0;
+                    lastFrameTime = now;
+                    // Clamp delta time to avoid jumps on tab blur
+                    const dt = Math.max(0.001, Math.min(0.045, dtRaw));
+
+                    const remainingDist = totalDistance - traveledDistance;
+                    if (remainingDist <= 0.8) {
+                        // Trip finished smoothly at destination
+                        stopActiveNavigationDrive();
                         updateSpeedometer(0);
                         if (clusterEl) clusterEl.style.display = "none";
                         triggerTripArrival(currentDestinationItem);
                         return;
                     }
 
-                    const curr = coords[currentRouteStepIndex];
-                    const next = coords[Math.min(currentRouteStepIndex + 1, coords.length - 1)];
-
-                    // Compute bearing between current and next route point
-                    const dLng = next[0] - curr[0];
-                    const dLat = next[1] - curr[1];
-                    let stepHeading = (Math.atan2(dLng, dLat) * 180 / Math.PI);
-                    if (stepHeading < 0) stepHeading += 360;
-
-                    // Heading delta for realistic cornering speed deceleration
-                    let headingDelta = 0;
-                    if (currentRouteStepIndex + 2 < coords.length) {
-                        const future = coords[currentRouteStepIndex + 2];
-                        const dLng2 = future[0] - next[0];
-                        const dLat2 = future[1] - next[1];
-                        let nextHeading = (Math.atan2(dLng2, dLat2) * 180 / Math.PI);
-                        if (nextHeading < 0) nextHeading += 360;
-                        headingDelta = Math.abs(nextHeading - stepHeading);
-                        if (headingDelta > 180) headingDelta = 360 - headingDelta;
-                    }
-
-                    // Realistic automotive speed dynamics:
-                    const totalSteps = coords.length;
-                    let targetSpeed = 50; // standard cruising speed
-                    if (currentRouteStepIndex < 4) {
-                        // Accelerating from stop
-                        targetSpeed = Math.min(48, currentRouteStepIndex * 15);
-                    } else if (currentRouteStepIndex > totalSteps - 4) {
-                        // Decelerating into destination arrival
-                        const rem = totalSteps - currentRouteStepIndex;
-                        targetSpeed = Math.max(8, rem * 10);
-                    } else if (headingDelta > 30) {
-                        // Slowing down for upcoming curve/turn
-                        targetSpeed = 26 + Math.random() * 4;
+                    // 2. Realistic Automotive Speed Dynamics & Lookahead Cornering
+                    let targetSpeedKmh = 48.0; // standard cruising speed
+                    if (traveledDistance < 30.0) {
+                        // Smooth launch & acceleration from standstill (0 -> 48 km/h)
+                        targetSpeedKmh = Math.max(6.0, (traveledDistance / 30.0) * 48.0);
+                    } else if (remainingDist < 55.0) {
+                        // Gentle deceleration into destination stop
+                        targetSpeedKmh = Math.max(4.0, (remainingDist / 55.0) * 44.0);
                     } else {
-                        // Smooth cruising with subtle road variations
-                        targetSpeed = 48 + Math.sin(currentRouteStepIndex * 0.45) * 5;
+                        // Lookahead cornering: check road curvature ~25 meters ahead
+                        let lookDist = Math.min(totalDistance - 1.0, traveledDistance + 25.0);
+                        let lookSeg = currentSeg;
+                        while (lookSeg < coords.length - 2 && dists[lookSeg + 1] < lookDist) {
+                            lookSeg++;
+                        }
+                        const pA1 = coords[lookSeg];
+                        const pA2 = coords[lookSeg + 1];
+                        const pC1 = coords[currentSeg];
+                        const pC2 = coords[currentSeg + 1];
+                        const bCur = (Math.atan2(pC2[0] - pC1[0], pC2[1] - pC1[1]) * 180 / Math.PI + 360) % 360;
+                        const bAhead = (Math.atan2(pA2[0] - pA1[0], pA2[1] - pA1[1]) * 180 / Math.PI + 360) % 360;
+                        let dAngle = Math.abs((bAhead - bCur + 540) % 360 - 180);
+                        if (dAngle > 24.0) {
+                            // Smoothly slow down for curve
+                            targetSpeedKmh = Math.max(22.0, 48.0 - (dAngle - 24.0) * 0.7);
+                        } else {
+                            targetSpeedKmh = 48.0 + Math.sin(traveledDistance * 0.04) * 3.5;
+                        }
                     }
 
-                    // Smooth speed transition
-                    currentDriveSpeed += (targetSpeed - currentDriveSpeed) * 0.35;
+                    const targetSpeedMps = targetSpeedKmh / 3.6;
+                    if (currentSpeedMps < targetSpeedMps) {
+                        currentSpeedMps += Math.min(targetSpeedMps - currentSpeedMps, 2.5 * dt); // smooth accel
+                    } else {
+                        currentSpeedMps -= Math.min(currentSpeedMps - targetSpeedMps, 3.8 * dt); // gentle braking
+                    }
+                    currentSpeedMps = Math.max(0.5, currentSpeedMps);
+
+                    // Continuous arc-length advancement
+                    traveledDistance += currentSpeedMps * dt;
+                    if (traveledDistance > totalDistance) traveledDistance = totalDistance;
+
+                    // 3. Sub-segment linear position interpolation
+                    while (currentSeg < coords.length - 2 && dists[currentSeg + 1] < traveledDistance) {
+                        currentSeg++;
+                    }
+                    const p1 = coords[currentSeg];
+                    const p2 = coords[currentSeg + 1];
+                    const segLen = dists[currentSeg + 1] - dists[currentSeg];
+                    const u = segLen > 0.0001 ? Math.max(0, Math.min(1.0, (traveledDistance - dists[currentSeg]) / segLen)) : 0;
+
+                    const curLng = p1[0] + u * (p2[0] - p1[0]);
+                    const curLat = p1[1] + u * (p2[1] - p1[1]);
+
+                    // 4. Shortest-path angular heading interpolation with corner rounding
+                    const segDlng = p2[0] - p1[0];
+                    const segDlat = p2[1] - p1[1];
+                    let segBearing = (Math.atan2(segDlng, segDlat) * 180 / Math.PI + 360) % 360;
+
+                    if (u > 0.60 && currentSeg + 2 < coords.length) {
+                        const p3 = coords[currentSeg + 2];
+                        const nextBearing = (Math.atan2(p3[0] - p2[0], p3[1] - p2[1]) * 180 / Math.PI + 360) % 360;
+                        let blend = (u - 0.60) / 0.40;
+                        let diffNext = (nextBearing - segBearing + 540) % 360 - 180;
+                        segBearing = (segBearing + diffNext * blend + 360) % 360;
+                    }
+
+                    let headDiff = (segBearing - currentSmoothedHeading + 540) % 360 - 180;
+                    const turnRate = Math.min(1.0, dt * 7.5);
+                    currentSmoothedHeading = (currentSmoothedHeading + headDiff * turnRate + 360) % 360;
+
+                    // Update vehicle state
+                    currentLng = curLng;
+                    currentLat = curLat;
+                    currentHeading = currentSmoothedHeading;
+                    currentDriveSpeed = currentSpeedMps * 3.6;
+
+                    if (marker) marker.setLngLat([curLng, curLat]);
                     updateSpeedometer(currentDriveSpeed);
 
-                    // Update vehicle position and 3D Lincoln Zephyr model
-                    setVehiclePosition(curr[1], curr[0], stepHeading, currentDriveSpeed);
-
-                    // Update current street name under the vehicle dynamically along the route
-                    if (currentRouteSteps && currentRouteSteps.length > 0) {
-                        const stepRatio = currentRouteStepIndex / coords.length;
-                        const stepIdx = Math.min(Math.floor(stepRatio * currentRouteSteps.length), currentRouteSteps.length - 1);
-                        const curStep = currentRouteSteps[stepIdx];
-                        if (curStep && curStep.name && curStep.name.trim().length > 0) {
-                            setStreetName(curStep.name);
-                        }
-                        const nextStep = currentRouteSteps[Math.min(stepIdx + 1, currentRouteSteps.length - 1)];
-                        if (nextStep && nextStep.name && nextStep.name.trim().length > 0) {
-                            const hudSt = document.getElementById("hudStreetText");
-                            if (hudSt) hudSt.textContent = nextStep.name;
-                        }
-                    }
-
-                    // Smoothly track map with the vehicle in 3D perspective
-                    if (map) {
-                        map.easeTo({
-                            center: [curr[0], curr[1]],
-                            bearing: isNorthUp ? 0 : stepHeading,
+                    // 5. 60 FPS hardware-synchronized camera tracking
+                    if (map && !isRouteOverviewActive) {
+                        const targetOffset = isNorthUp ? [0, 0] : [0, 80];
+                        map.jumpTo({
+                            center: [curLng, curLat],
+                            bearing: isNorthUp ? 0 : currentSmoothedHeading,
                             pitch: 58.0,
                             zoom: 17.5,
-                            duration: 380
+                            offset: targetOffset
                         });
-                        updateCompassNeedle();
+                        map.triggerRepaint();
                     }
 
-                    // Remaining distance and ETA calculation
-                    const remainingSteps = coords.length - currentRouteStepIndex;
-                    const remKm = Math.max(0.1, (remainingSteps * 0.04)).toFixed(1);
-                    const remMin = Math.max(1, Math.round(remainingSteps * 0.28));
-                    document.getElementById("hudBottomDur").textContent = `${remMin} min`;
-                    
-                    const etaDate = new Date(Date.now() + remMin * 60000);
-                    let h = etaDate.getHours();
-                    const ampm = h >= 12 ? 'PM' : 'AM';
-                    h = h % 12 || 12;
-                    const m = etaDate.getMinutes().toString().padStart(2, '0');
-                    document.getElementById("hudBottomSub").textContent = `${remKm} km · ${h}:${m} ${ampm}`;
-
-                    // Update route polyline on map as vehicle drives
-                    const remainingCoords = coords.slice(currentRouteStepIndex);
-                    if (map && map.getSource("nav-route")) {
-                        map.getSource("nav-route").setData({
-                            type: "Feature",
-                            geometry: { type: "LineString", coordinates: remainingCoords }
-                        });
+                    const needle = document.getElementById("compassNeedleSvg");
+                    if (needle && map) {
+                        needle.style.transform = isNorthUp ? "rotate(0deg)" : `rotate(${-map.getBearing()}deg)`;
                     }
-                }, 400); // 400ms tick for fluid driving progression
+
+                    // 6. Throttled polyline trimming (~100ms)
+                    if (now - lastPolylineTime > 100) {
+                        lastPolylineTime = now;
+                        const remainingCoords = [[curLng, curLat], ...coords.slice(currentSeg + 1)];
+                        if (map && map.getSource("nav-route")) {
+                            map.getSource("nav-route").setData({
+                                type: "Feature",
+                                geometry: { type: "LineString", coordinates: remainingCoords }
+                            });
+                        }
+                    }
+
+                    // 7. Throttled street instruction & ETA calculation (~280ms)
+                    if (now - lastTextTime > 280) {
+                        lastTextTime = now;
+                        if (currentRouteSteps && currentRouteSteps.length > 0) {
+                            const stepRatio = traveledDistance / totalDistance;
+                            const stepIdx = Math.min(Math.floor(stepRatio * currentRouteSteps.length), currentRouteSteps.length - 1);
+                            const curStep = currentRouteSteps[stepIdx];
+                            if (curStep && curStep.name && curStep.name.trim().length > 0) {
+                                setStreetName(curStep.name);
+                            }
+                            const nextStep = currentRouteSteps[Math.min(stepIdx + 1, currentRouteSteps.length - 1)];
+                            if (nextStep && nextStep.name && nextStep.name.trim().length > 0) {
+                                const hudSt = document.getElementById("hudStreetText");
+                                if (hudSt) hudSt.textContent = nextStep.name;
+                            }
+                        }
+
+                        const remKm = Math.max(0.1, (remainingDist / 1000.0)).toFixed(1);
+                        const remMin = Math.max(1, Math.round(remainingDist / (Math.max(6.0, currentSpeedMps) * 60.0)));
+                        const bDur = document.getElementById("hudBottomDur");
+                        if (bDur) bDur.textContent = `${remMin} min`;
+                        const etaDate = new Date(Date.now() + remMin * 60000);
+                        let h = etaDate.getHours();
+                        const ampm = h >= 12 ? 'PM' : 'AM';
+                        h = h % 12 || 12;
+                        const m = etaDate.getMinutes().toString().padStart(2, '0');
+                        const bSub = document.getElementById("hudBottomSub");
+                        if (bSub) bSub.textContent = `${remKm} km · ${h}:${m} ${ampm}`;
+                    }
+
+                    navDriveAnimationId = requestAnimationFrame(driveFrame);
+                };
+
+                navDriveAnimationId = requestAnimationFrame(driveFrame);
             };
 
             // Start Navigation
@@ -5369,9 +5523,16 @@
                     if (clusterEl) clusterEl.style.display = "flex";
                     updateSpeedometer(0);
                     isNavigating = true;
-                    if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 17.5, pitch: 58.0, bearing: currentHeading, duration: 600 });
+                    isRouteOverviewActive = false;
+                    const targetOffset = isNorthUp ? [0, 0] : [0, 80];
+                    if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 17.5, pitch: 58.0, bearing: isNorthUp ? 0 : currentHeading, offset: targetOffset, duration: 600 });
                     showToast("Navigation started");
-                    startActiveNavigationDrive();
+                    // Allow cinematic easeTo into driving cockpit to finish smoothly before locking tracking
+                    setTimeout(() => {
+                        if (isNavigating) {
+                            startActiveNavigationDrive();
+                        }
+                    }, 600);
                 });
             }
 
@@ -5380,10 +5541,7 @@
             if (btnEndNavEl) {
                 btnEndNavEl.addEventListener("click", () => {
                     isNavigating = false;
-                    if (navDriveInterval) {
-                        clearInterval(navDriveInterval);
-                        navDriveInterval = null;
-                    }
+                    stopActiveNavigationDrive();
                     document.getElementById("hudTurnBanner").style.display = "none";
                     document.getElementById("hudBottomCard").style.display = "none";
                     const clusterEl = document.getElementById("navSpeedometerCluster");
@@ -5472,10 +5630,7 @@
                     if (card) card.classList.remove("visible");
 
                     isNavigating = false;
-                    if (navDriveInterval) {
-                        clearInterval(navDriveInterval);
-                        navDriveInterval = null;
-                    }
+                    stopActiveNavigationDrive();
                     const clusterEl = document.getElementById("navSpeedometerCluster");
                     if (clusterEl) clusterEl.style.display = "none";
                     updateSpeedometer(0);
@@ -5748,6 +5903,9 @@
 
             if (map) {
                 map.triggerRepaint();
+                if (isNavigating) {
+                    return; // 60 FPS driving loop manages camera via synchronized jumpTo
+                }
                 const dist = calculateHaversineKm(prevLat, prevLng, lat, lng);
                 const targetOffset = isNorthUp ? [0, 0] : [0, 80];
                 if (dist > 25) {
