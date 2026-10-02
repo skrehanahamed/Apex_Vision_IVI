@@ -53,6 +53,8 @@ int main(int argc, char *argv[])
     // Dark style for Controls
     QQuickStyle::setStyle("Basic");
 
+    Q_INIT_RESOURCE(assets);
+
     // Load bundled Inter fonts into Qt application font database
     QFontDatabase::addApplicationFont(":/qt/qml/ApexVision/qml/assets/fonts/Inter-Regular.ttf");
     QFontDatabase::addApplicationFont(":/qt/qml/ApexVision/qml/assets/fonts/Inter-Medium.ttf");
