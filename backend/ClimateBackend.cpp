@@ -1,3 +1,12 @@
+/**
+ * ==============================================================================
+ * Project: Apex VISION IVI - Digital Cockpit & Infotainment System
+ * File: ClimateBackend.cpp
+ * Author / Developer: Sk Rehan Ahamed
+ * License: MIT
+ * ==============================================================================
+ */
+
 #include "ClimateBackend.h"
 #include <algorithm>
 

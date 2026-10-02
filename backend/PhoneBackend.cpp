@@ -1,3 +1,12 @@
+/**
+ * ==============================================================================
+ * Project: Apex VISION IVI - Digital Cockpit & Infotainment System
+ * File: PhoneBackend.cpp
+ * Author / Developer: Sk Rehan Ahamed
+ * License: MIT
+ * ==============================================================================
+ */
+
 #include "PhoneBackend.h"
 
 PhoneBackend::PhoneBackend(QObject *parent)

@@ -1,3 +1,12 @@
+/**
+ * ==============================================================================
+ * Project: Apex VISION IVI - Digital Cockpit & Infotainment System
+ * File: AmbientLightBackend.cpp
+ * Author / Developer: Sk Rehan Ahamed
+ * License: MIT
+ * ==============================================================================
+ */
+
 #include "AmbientLightBackend.h"
 #include <algorithm>
 

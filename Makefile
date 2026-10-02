@@ -1,4 +1,11 @@
 # ==============================================================================
+# Project: Apex VISION IVI - Digital Cockpit & Infotainment System
+# File: Makefile
+# Author / Developer: Sk Rehan Ahamed
+# License: MIT
+# ==============================================================================
+
+# ==============================================================================
 # APEX VISION IVI — Build & Execution Makefile
 # Targets:
 #   make / make all   : Configures and builds the binary
