@@ -28,7 +28,12 @@ Item {
     function updateVehiclePositionInMap() {}
     function updateStreetNameInMap() {}
     function searchInMap(query) {}
-    function recenterMap() {}
+    function recenterMap() {
+        if (googleMapView) {
+            googleMapView.panX = 0;
+            googleMapView.panY = 0;
+        }
+    }
     function updateMapTheme() {}
 
     readonly property bool isNightMode: true
@@ -60,158 +65,267 @@ Item {
             anchors.fill: parent
             color: "#080D1A" // Deep navy dark mode
 
-            // Stylized Road Grid / Perspective Lines
-            Canvas {
-                id: mapCanvas
+            // =================================================================
+            // LIVE GOOGLE MAPS SLIPPY TILE ENGINE (Direct Google Maps Stream)
+            // =================================================================
+            Item {
+                id: googleMapView
                 anchors.fill: parent
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.clearRect(0, 0, width, height);
+                clip: true
 
-                    // Background ambient terrain blocks
-                    ctx.fillStyle = "#0D1527";
-                    ctx.fillRect(0, 0, width * 0.45, height * 0.35);
-                    ctx.fillRect(width * 0.55, 0, width * 0.45, height * 0.4);
-                    ctx.fillRect(0, height * 0.65, width * 0.4, height * 0.35);
-                    ctx.fillRect(width * 0.6, height * 0.6, width * 0.4, height * 0.4);
+                property real centerLat: (typeof NavigationBackend !== "undefined" && NavigationBackend.latitude !== 0) ? NavigationBackend.latitude : 37.7749
+                property real centerLon: (typeof NavigationBackend !== "undefined" && NavigationBackend.longitude !== 0) ? NavigationBackend.longitude : -122.4194
+                property int zoom: 16
+                property string mapType: "m" // "m" = Google Road Map, "y" = Google Satellite Hybrid
+                property real panX: 0
+                property real panY: 0
 
-                    // Secondary roads (subtle dark blue lines)
-                    ctx.strokeStyle = "rgba(30, 48, 80, 0.75)";
-                    ctx.lineWidth = 14;
-                    ctx.beginPath();
-                    // Horizontal crossing
-                    ctx.moveTo(0, height * 0.42);
-                    ctx.lineTo(width, height * 0.42);
-                    // Diagonal arterial
-                    ctx.moveTo(0, height * 0.85);
-                    ctx.lineTo(width * 0.6, 0);
-                    ctx.stroke();
-
-                    // Secondary road inner line
-                    ctx.strokeStyle = "rgba(45, 70, 115, 0.4)";
-                    ctx.lineWidth = 8;
-                    ctx.beginPath();
-                    ctx.moveTo(0, height * 0.42);
-                    ctx.lineTo(width, height * 0.42);
-                    ctx.moveTo(0, height * 0.85);
-                    ctx.lineTo(width * 0.6, 0);
-                    ctx.stroke();
-
-                    // Main Expressway Route (Glowing Cyan / Teal)
-                    var startX = width * 0.48;
-                    var startY = height * 0.88;
-                    var midX = width * 0.48;
-                    var midY = height * 0.48;
-                    var bendX = width * 0.72;
-                    var bendY = height * 0.22;
-
-                    // Route Outer Glow
-                    ctx.strokeStyle = "rgba(0, 229, 255, 0.18)";
-                    ctx.lineWidth = 26;
-                    ctx.lineCap = "round";
-                    ctx.lineJoin = "round";
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(midX, midY);
-                    ctx.bezierCurveTo(midX, midY - 60, bendX - 60, bendY, bendX, bendY);
-                    ctx.lineTo(width * 0.78, height * 0.12);
-                    ctx.stroke();
-
-                    // Route Core
-                    ctx.strokeStyle = "#00E5FF";
-                    ctx.lineWidth = 10;
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(midX, midY);
-                    ctx.bezierCurveTo(midX, midY - 60, bendX - 60, bendY, bendX, bendY);
-                    ctx.lineTo(width * 0.78, height * 0.12);
-                    ctx.stroke();
-
-                    // Route Centerline Dots
-                    ctx.strokeStyle = "#FFFFFF";
-                    ctx.lineWidth = 2;
-                    ctx.setLineDash([8, 12]);
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(midX, midY);
-                    ctx.bezierCurveTo(midX, midY - 60, bendX - 60, bendY, bendX, bendY);
-                    ctx.lineTo(width * 0.78, height * 0.12);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
+                readonly property real centerTileX: (centerLon + 180) / 360 * Math.pow(2, zoom)
+                readonly property real centerTileY: {
+                    var rad = centerLat * Math.PI / 180;
+                    var val = Math.tan(rad) + (1 / Math.cos(rad));
+                    if (val <= 0) val = 0.0001;
+                    return (1 - Math.log(val) / Math.PI) / 2 * Math.pow(2, zoom);
                 }
-            }
+                readonly property int baseTileX: Math.floor(centerTileX)
+                readonly property int baseTileY: Math.floor(centerTileY)
+                readonly property real fracX: (centerTileX - baseTileX) * 256
+                readonly property real fracY: (centerTileY - baseTileY) * 256
 
-            // Destination Flag Pin at (width * 0.78, height * 0.12)
-            Item {
-                x: parent.width * 0.78 - 18
-                y: parent.height * 0.12 - 36
-                width: 36
-                height: 36
-
+                // Deep background while loading
                 Rectangle {
-                    width: 32
-                    height: 32
-                    radius: 16
-                    color: "#00E5FF"
-                    border.color: "#FFFFFF"
-                    border.width: 2
-                    anchors.centerIn: parent
+                    anchors.fill: parent
+                    color: googleMapView.mapType === "m" ? "#1A2234" : "#0A0E17"
+                }
 
-                    Text {
+                // Slippy Tile Grid (7 horizontal x 5 vertical tiles)
+                Item {
+                    id: tileGrid
+                    x: (googleMapView.width / 2) - googleMapView.fracX + googleMapView.panX
+                    y: (googleMapView.height / 2) - googleMapView.fracY + googleMapView.panY
+
+                    Repeater {
+                        model: 35
+                        delegate: Image {
+                            property int col: index % 7 - 3
+                            property int row: Math.floor(index / 7) - 2
+                            property int tX: googleMapView.baseTileX + col
+                            property int tY: googleMapView.baseTileY + row
+
+                            x: col * 256
+                            y: row * 256
+                            width: 256
+                            height: 256
+                            asynchronous: true
+                            cache: true
+                            fillMode: Image.PreserveAspectFit
+
+                            source: (tX >= 0 && tY >= 0) ?
+                                ("https://mt" + (Math.abs(tX + tY) % 4) + ".google.com/vt/lyrs=" + googleMapView.mapType + "&x=" + tX + "&y=" + tY + "&z=" + googleMapView.zoom) : ""
+
+                            opacity: status === Image.Ready ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 180 } }
+                        }
+                    }
+                }
+
+                // Pan Gesture Area
+                MouseArea {
+                    anchors.fill: parent
+                    property real lastX: 0
+                    property real lastY: 0
+                    onPressed: function(mouse) {
+                        lastX = mouse.x;
+                        lastY = mouse.y;
+                    }
+                    onPositionChanged: function(mouse) {
+                        if (pressed) {
+                            googleMapView.panX += (mouse.x - lastX);
+                            googleMapView.panY += (mouse.y - lastY);
+                            lastX = mouse.x;
+                            lastY = mouse.y;
+                        }
+                    }
+                }
+
+                // Google Maps Branding Watermark (Bottom-Left)
+                Row {
+                    anchors.bottom: parent.bottom
+                    anchors.left: parent.left
+                    anchors.margins: 16
+                    spacing: 8
+                    z: 20
+
+                    Rectangle {
+                        color: Qt.rgba(0, 0, 0, 0.70)
+                        radius: 6
+                        width: 72
+                        height: 24
+                        Text {
+                            anchors.centerIn: parent
+                            text: "Google"
+                            font.family: "Inter"
+                            font.pixelSize: 13
+                            font.bold: true
+                            color: "#FFFFFF"
+                        }
+                    }
+                }
+
+                // Interactive Map Controls (Bottom-Right: Zoom, Satellite toggle, Recenter)
+                Column {
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    anchors.margins: 16
+                    spacing: 8
+                    z: 20
+
+                    // Recenter Button
+                    Rectangle {
+                        width: 44
+                        height: 44
+                        radius: 22
+                        color: Qt.rgba(15, 23, 42, 0.88)
+                        border.color: Qt.rgba(255, 255, 255, 0.22)
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "⌖"
+                            font.pixelSize: 22
+                            color: "#00E5FF"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                googleMapView.panX = 0;
+                                googleMapView.panY = 0;
+                            }
+                        }
+                    }
+
+                    // Satellite / Road Map Toggle
+                    Rectangle {
+                        width: 44
+                        height: 44
+                        radius: 22
+                        color: Qt.rgba(15, 23, 42, 0.88)
+                        border.color: Qt.rgba(255, 255, 255, 0.22)
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: googleMapView.mapType === "m" ? "🛰" : "🗺"
+                            font.pixelSize: 18
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                googleMapView.mapType = (googleMapView.mapType === "m" ? "y" : "m");
+                            }
+                        }
+                    }
+
+                    // Zoom In
+                    Rectangle {
+                        width: 44
+                        height: 44
+                        radius: 22
+                        color: Qt.rgba(15, 23, 42, 0.88)
+                        border.color: Qt.rgba(255, 255, 255, 0.22)
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "+"
+                            font.pixelSize: 22
+                            font.bold: true
+                            color: "#FFFFFF"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: if (googleMapView.zoom < 19) googleMapView.zoom++
+                        }
+                    }
+
+                    // Zoom Out
+                    Rectangle {
+                        width: 44
+                        height: 44
+                        radius: 22
+                        color: Qt.rgba(15, 23, 42, 0.88)
+                        border.color: Qt.rgba(255, 255, 255, 0.22)
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "-"
+                            font.pixelSize: 22
+                            font.bold: true
+                            color: "#FFFFFF"
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: if (googleMapView.zoom > 10) googleMapView.zoom--
+                        }
+                    }
+                }
+
+                // GPS Vehicle Location Puck
+                Item {
+                    id: vehiclePuck
+                    x: (googleMapView.width / 2) + googleMapView.panX - 24
+                    y: (googleMapView.height / 2) + googleMapView.panY - 24
+                    width: 48
+                    height: 48
+                    z: 15
+                    rotation: (typeof NavigationBackend !== "undefined") ? NavigationBackend.heading : 0
+
+                    // Pulse ring
+                    Rectangle {
                         anchors.centerIn: parent
-                        text: "★"
-                        color: "#070A0F"
-                        font.pixelSize: 16
-                        font.bold: true
+                        width: 46
+                        height: 46
+                        radius: 23
+                        color: "transparent"
+                        border.color: Qt.rgba(0/255, 229/255, 255/255, 0.5)
+                        border.width: 2
+
+                        SequentialAnimation on scale {
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.8; to: 1.5; duration: 1800; easing.type: Easing.OutQuad }
+                        }
+                        SequentialAnimation on opacity {
+                            loops: Animation.Infinite
+                            NumberAnimation { from: 0.8; to: 0.0; duration: 1800; easing.type: Easing.OutQuad }
+                        }
                     }
-                }
-            }
 
-            // GPS Vehicle Location Puck (Pulsing Apex Arrow)
-            Item {
-                id: vehiclePuck
-                x: parent.width * 0.48 - 24
-                y: parent.height * 0.88 - 24
-                width: 48
-                height: 48
-
-                // Pulse ring
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 44
-                    height: 44
-                    radius: 22
-                    color: "transparent"
-                    border.color: Qt.rgba(0/255, 229/255, 255/255, 0.4)
-                    border.width: 2
-
-                    SequentialAnimation on scale {
-                        loops: Animation.Infinite
-                        NumberAnimation { from: 0.8; to: 1.5; duration: 1800; easing.type: Easing.OutQuad }
-                    }
-                    SequentialAnimation on opacity {
-                        loops: Animation.Infinite
-                        NumberAnimation { from: 0.8; to: 0.0; duration: 1800; easing.type: Easing.OutQuad }
-                    }
-                }
-
-                // Center core puck
-                Rectangle {
-                    anchors.centerIn: parent
-                    width: 28
-                    height: 28
-                    radius: 14
-                    color: "#00E5FF"
-                    border.color: "#FFFFFF"
-                    border.width: 2.5
-
-                    // Vehicle arrowhead pointing up along route
-                    Text {
+                    // Center core puck
+                    Rectangle {
                         anchors.centerIn: parent
-                        text: "▲"
-                        color: "#080D1A"
-                        font.pixelSize: 14
-                        font.bold: true
+                        width: 30
+                        height: 30
+                        radius: 15
+                        color: "#00E5FF"
+                        border.color: "#FFFFFF"
+                        border.width: 2.5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: "▲"
+                            color: "#080D1A"
+                            font.pixelSize: 15
+                            font.bold: true
+                        }
                     }
                 }
             }

@@ -248,8 +248,8 @@ Item {
             id: sceneEnv
             clearColor: "#00000000"
             backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
+            antialiasingMode: SceneEnvironment.NoAA
+            antialiasingQuality: SceneEnvironment.Medium
             tonemapMode: SceneEnvironment.TonemapModeLinear
 
             lightProbe: Texture {

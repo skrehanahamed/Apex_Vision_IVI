@@ -21,7 +21,7 @@ Rectangle {
     signal pageSelected(int index)
     signal climateCloseRequested()
 
-    width: 84
+    width: 104
     color: "#070A0F" // Deep automotive cockpit black, matching main theme
 
     // Seamless vertical right divider matching cockpit aesthetic
@@ -84,12 +84,12 @@ Rectangle {
         Column {
             id: navIconsColumn
             anchors.centerIn: parent
-            spacing: 14
+            spacing: 20
 
             ApexNavItem {
                 icon: "qrc:/ApexVision/qml/assets/icons/icon_home.png"
-                iconWidth: 32
-                iconHeight: 30
+                iconWidth: 42
+                iconHeight: 40
                 isSelected: root.currentIndex === 0
                 onClicked: {
                     root.currentIndex = 0;
@@ -99,8 +99,8 @@ Rectangle {
 
             ApexNavItem {
                 icon: "qrc:/ApexVision/qml/assets/icons/icon_car.png"
-                iconWidth: 36
-                iconHeight: 27
+                iconWidth: 48
+                iconHeight: 36
                 isSelected: root.currentIndex === 1
                 onClicked: {
                     root.currentIndex = 1;
@@ -110,8 +110,8 @@ Rectangle {
 
             ApexNavItem {
                 icon: "qrc:/ApexVision/qml/assets/icons/icon_menu.png"
-                iconWidth: 32
-                iconHeight: 23
+                iconWidth: 42
+                iconHeight: 30
                 isSelected: root.currentIndex === 2
                 onClicked: {
                     root.currentIndex = 2;
@@ -681,8 +681,8 @@ Rectangle {
         property bool isSelected: false
         signal clicked()
 
-        width: 60
-        height: 48
+        width: 80
+        height: 60
         anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
         Image {

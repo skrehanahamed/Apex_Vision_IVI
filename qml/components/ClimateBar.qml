@@ -16,7 +16,7 @@ import ".."
 Rectangle {
     id: root
 
-    height: 72
+    height: 84
     color: "#070A0F" // Deep automotive cockpit black, completely borderless and flush with bottom
 
     property bool driverSeatMenuOpen: false

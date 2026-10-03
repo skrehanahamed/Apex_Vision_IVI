@@ -22,8 +22,8 @@ Item {
         anchors.fill: parent
         environment: ExtendedSceneEnvironment {
             backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
+            antialiasingMode: SceneEnvironment.NoAA
+            antialiasingQuality: SceneEnvironment.Medium
             tonemapMode: SceneEnvironment.TonemapModeLinear
 
             lightProbe: Texture {
@@ -31,10 +31,7 @@ Item {
             }
             probeExposure: 1.15
 
-            glowEnabled: true
-            glowStrength: 1.10
-            glowIntensity: 0.90
-            glowBloom: 0.35
+            glowEnabled: false
         }
 
         Node {

@@ -82,8 +82,8 @@ Item {
             id: sceneEnv
             clearColor: "#040810"
             backgroundMode: SceneEnvironment.Color
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
+            antialiasingMode: SceneEnvironment.NoAA
+            antialiasingQuality: SceneEnvironment.Medium
             tonemapMode: SceneEnvironment.TonemapModeLinear
         }
 

@@ -72,6 +72,7 @@ public:
     Q_INVOKABLE void setUnitsTemperature(const QString &unit);
     Q_INVOKABLE void setTouchSoundsEnabled(bool enabled);
     Q_INVOKABLE void playTouchSound();
+    Q_INVOKABLE void playSound(const QString &soundName);
 
 signals:
     void timeChanged();

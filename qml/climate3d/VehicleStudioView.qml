@@ -391,8 +391,8 @@ Item {
             id: sceneEnv
             clearColor: "#00000000"
             backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
+            antialiasingMode: SceneEnvironment.NoAA
+            antialiasingQuality: SceneEnvironment.Medium
             tonemapMode: SceneEnvironment.TonemapModeFilmic
 
             // Studio Light Probe for 360-degree environment reflections & ambient body illumination
@@ -401,12 +401,12 @@ Item {
             }
             probeExposure: 0.45
 
-            // Studio bloom for headlights & lightbar
+            // Studio bloom for headlights & lightbar (optimized for embedded performance)
             glowEnabled: true
-            glowQualityHigh: true
-            glowStrength: 1.15
-            glowIntensity: 0.85
-            glowBloom: 0.32
+            glowQualityHigh: false
+            glowStrength: 1.0
+            glowIntensity: 0.75
+            glowBloom: 0.25
         }
 
         // Camera Orbit Rig (Smooth flight between normal hero pose, ambient pose, and status poses)

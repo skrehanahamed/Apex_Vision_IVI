@@ -313,3 +313,45 @@ void SystemBackend::playTouchSound()
 #endif
     }
 }
+
+void SystemBackend::playSound(const QString &soundName)
+{
+    QString baseName = soundName;
+    if (!baseName.endsWith(QStringLiteral(".wav"))) {
+        baseName += QStringLiteral(".wav");
+    }
+
+    const QStringList candidates = {
+        QCoreApplication::applicationDirPath() + QStringLiteral("/qml/assets/sounds/") + baseName,
+        QStringLiteral("/opt/apex_vision_ivi/qml/assets/sounds/") + baseName,
+        QDir::currentPath() + QStringLiteral("/qml/assets/sounds/") + baseName,
+        QStringLiteral("/Users/reno/Projects/APEX_VISION_IVI/qml/assets/sounds/") + baseName
+    };
+
+    QString targetPath;
+    for (const QString &p : candidates) {
+        if (QFile::exists(p)) {
+            targetPath = p;
+            break;
+        }
+    }
+
+    if (targetPath.isEmpty()) {
+        const QString resPath = QStringLiteral(":/ApexVision/qml/assets/sounds/") + baseName;
+        if (QFile::exists(resPath)) {
+            QString tmpPath = QDir::tempPath() + QStringLiteral("/apex_") + baseName;
+            QFile::remove(tmpPath);
+            if (QFile::copy(resPath, tmpPath)) {
+                targetPath = tmpPath;
+            }
+        }
+    }
+
+    if (!targetPath.isEmpty()) {
+#if defined(Q_OS_MACOS)
+        QProcess::startDetached(QStringLiteral("afplay"), {targetPath});
+#elif defined(Q_OS_LINUX)
+        QProcess::startDetached(QStringLiteral("aplay"), {QStringLiteral("-q"), targetPath});
+#endif
+    }
+}

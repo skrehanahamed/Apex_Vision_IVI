@@ -292,6 +292,9 @@ Item {
                     } catch (e) {
                         console.warn("[WelcomeScreen] SoundEffect error:", e);
                     }
+                    if (typeof SystemBackend !== "undefined") {
+                        SystemBackend.playSound("welcome_startup");
+                    }
                 }
             }
             NumberAnimation { target: root; property: "apexLogoOpacity"; from: 0.0; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
