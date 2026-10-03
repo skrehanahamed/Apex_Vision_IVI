@@ -8,11 +8,11 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.5.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.6.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
 [![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
 [![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.5.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Releases](https://img.shields.io/badge/Release-v2.6.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -331,6 +331,24 @@ CAN --> VehB : 500ms Simulation Loop
 ![Cockpit Homescreen OrbitXM](docs/screenshots/19_cockpit_homescreen_orbitxm.png)
 *Dual-card cockpit dashboard with live hardware-accelerated Google 3D perspective vector map, Three.js Lincoln Zephyr sedan, dynamic street projection, and the OrbitXM live streaming card with now-playing artwork.*
 
+<br/>
+
+### 20. Apple CarPlay & Android Auto Mobile Device Connection Suite
+![Mobile Device Connection Suite](docs/screenshots/20_mobile_device_carplay.png)
+*Interactive automotive projection gateway supporting wireless Apple CarPlay, Android Auto, and USB flash storage synchronization with real-time pairing telemetry and device status indicators.*
+
+<br/>
+
+### 21. Automotive OEM Welcome Screen & Specular Brand Evolution
+![Welcome Screen Specular Reveal](docs/screenshots/21_welcome_screen_metallic_shine.png)
+*Dynamic startup brand ignition sequence featuring brushed titanium and specular chrome APEX VISION emblems, synchronized acoustic welcome chime, and fluid reveal of the digital cockpit.*
+
+<br/>
+
+### 22. Midnight Cockpit Navigation HUD & Vector Map
+![Midnight Cockpit Navigation HUD](docs/screenshots/22_midnight_cockpit_navigation.png)
+*High-contrast night-mode digital cockpit navigation HUD with dark vector road grid, glowing Apex cyan route path, vehicle puck, real-time speed limit sign, turn-by-turn guidance, and integrated media overlay.*
+
 </div>
 
 ---
@@ -472,7 +490,7 @@ Apex_Vision_IVI/
 │       ├── themes/               # Theme JSON manifests with actuator sync parameters
 │       └── video/                # Hardware-optimized looping nature MP4 backdrops
 ├── docs/                         # System documentation and visual media
-│   └── screenshots/              # Cockpit interface screenshots (01 to 19)
+│   └── screenshots/              # Cockpit interface screenshots (01 to 22)
 │       ├── 01_cockpit_dashboard.png
 │       ├── 02_climate_seat_comfort.png
 │       ├── 03_seat_comfort_massage.png
@@ -491,8 +509,12 @@ Apex_Vision_IVI/
 │       ├── 16_owners_manual_visual_search.png
 │       ├── 17_owners_manual_topics_detail.png
 │       ├── 18_navigation_expanded_3d.png
-│       └── 19_cockpit_homescreen_orbitxm.png
+│       ├── 19_cockpit_homescreen_orbitxm.png
+│       ├── 20_mobile_device_carplay.png
+│       ├── 21_welcome_screen_metallic_shine.png
+│       └── 22_midnight_cockpit_navigation.png
 ├── backend/                      # C++20 backend engines
+│   ├── PersistenceManager.h/.cpp # State persistence engine (news cache, driver profiles, audio states across power cycles)
 │   ├── VehicleSimulator.h/.cpp   # Vehicle physics and telemetry simulator
 │   ├── VehicleBackend.h/.cpp     # Vehicle status and lighting controller
 │   ├── ClimateBackend.h/.cpp     # Dual-zone HVAC and seat comfort controller
@@ -512,6 +534,7 @@ Apex_Vision_IVI/
 │   ├── assets/                   # Vector and raster UI iconography
 │   │   ├── fonts/                # Bundled Inter typeface font files
 │   │   ├── icons/                # Cockpit controls, climate, settings, and media icons
+│   │   ├── sounds/               # Studio-grade audio chimes (welcome_startup.wav, touch_click.wav)
 │   │   └── avatars/              # OEM profile and identity avatars
 │   ├── climate3d/                # 3D interactive studio views
 │   │   ├── ClimateCabinView.qml  # 3D cabin airflow and thermal view
@@ -519,6 +542,7 @@ Apex_Vision_IVI/
 │   │   ├── VehicleStudioView.qml # 3D vehicle exterior interactive studio
 │   │   └── LaneKeepingCarView3D.qml # 3D lane-keeping assist chassis view
 │   ├── components/               # Reusable automotive cockpit components
+│   │   ├── WelcomeScreen.qml     # OEM startup animation with laser ignition, metallic shine, and audio chime
 │   │   ├── ClimateBar.qml        # Bottom climate dock with seat flyouts
 │   │   ├── Climate3DPanel.qml    # 3D climate overlay panel
 │   │   ├── CabinAirRefreshOverlay.qml # PM2.5 air purification gauge overlay
@@ -541,18 +565,22 @@ Apex_Vision_IVI/
 │       ├── SettingsPage.qml      # Automotive settings suite with 7-category slider navigation
 │       ├── VideoPage.qml         # Native YouTube video streaming hub
 │       ├── RadioPage.qml         # Multi-band digital radio tuner
-│       ├── NewsPage.qml          # Live automotive news reader
+│       ├── NewsPage.qml          # Live automotive news reader with persistent article storage
 │       ├── TowingPage.qml        # Towing & trailer management
 │       ├── RejuvenatePage.qml    # APEX Rejuvenate™ stationary wellness portal
 │       ├── RejuvenateSession.qml # Full-screen multi-sensory immersion session
-│       └── ManualPage.qml        # Digital Owner's Manual with 2-page visual search
+│       ├── ManualPage.qml        # Digital Owner's Manual with 2-page visual search
+│       ├── MobileDeviceConnectionPage.qml # Apple CarPlay & Android Auto projection gateway
+│       ├── MessagesPage.qml      # In-car messaging and SMS center
+│       ├── GamesPage.qml         # In-cabin stationary gaming hub
+│       └── ProfileSwitcherPage.qml # Multi-driver profile and personalization switcher
 └── web/                          # Embedded 3D navigation web assets
-    ├── map.html                  # MapLibre GL 3D perspective navigation view
+    ├── map.html                  # MapLibre GL 3D perspective navigation view with day/night styles
     ├── maplibre-gl.js            # Bundled MapLibre GL engine runtime
     ├── maplibre-gl.css           # MapLibre stylesheet
     ├── three.min.js              # Bundled Three.js 3D WebGL engine
     ├── GLTFLoader.js             # Three.js GLTF/GLB asset loader
-    └── lincoln_zephyr.glb        # Lincoln Zephyr authentic 3D car model
+    └── apex_zephyr.glb           # Lincoln Zephyr authentic 3D car model
 ```
 
 ---
@@ -661,6 +689,27 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 ---
 
 ## Release History & Highlights
+
+### [v2.6.0] - Automotive OEM Welcome Screen, Specular Brand Evolution, Persistent State Engine & Infotainment Suite Expansion
+- **Automotive OEM Welcome Screen & Specular Brand Evolution**:
+  - Dynamic cinematic brand reveal sequence featuring laser ignition, horizon sweep, SUV silhouette reveal, and final APEX VISION emblem lock.
+  - Realistic brushed titanium and specular chrome metallic textures (`apex_logo_metallic.png`, `apex_vision_metallic.png`) with synchronized dynamic specular shine sweep.
+  - Integrated studio-grade automotive acoustic welcome chime (`welcome_startup.wav`) and responsive UI touch feedback (`touch_click.wav`).
+  - Audio lockout protection: Radio, media playback, and streaming audio are strictly locked during startup reveal, seamlessly resuming upon cockpit transition.
+- **Automotive State Persistence Engine (`PersistenceManager`)**:
+  - Thread-safe JSON-backed state persistence preserving driver profiles, media playback sources, volume levels, climate presets, and cached automotive news articles across vehicle power cycles.
+  - Real-time caching of news feed articles with automatic reload and offline retention upon ignition reboot.
+- **Infotainment & Cockpit Application Suite Expansion**:
+  - **Mobile Device Connection Suite (`MobileDeviceConnectionPage.qml`)**: Full projection gateway interface supporting Apple CarPlay, Android Auto, and USB flash storage synchronization with real-time pairing telemetry.
+  - **Messages Center (`MessagesPage.qml`)**: In-car SMS and messaging hub with read-aloud capabilities and driver-friendly quick replies.
+  - **In-Cabin Gaming Portal (`GamesPage.qml`)**: Stationary gaming portal with retro titles for vehicle charging and park sessions.
+  - **Multi-Driver Profile Switcher (`ProfileSwitcherPage.qml`)**: Rapid driver seat, mirror, and climate customization switching with visual profile avatars.
+- **Midnight Cockpit Navigation HUD & WebEngine Night Styling**:
+  - Dedicated automotive night-mode stylesheet in `web/map.html` providing deep contrast (`#090D16`), dark vector building geometry, and high-visibility road networks.
+  - Dynamic time-of-day theme synchronization automatically transitioning cockpit navigation between day and night aesthetics.
+- **Cross-Platform Compatibility & Build Hardening**:
+  - Standardized CMake 3.20+ build definitions across Linux (Ubuntu, Yocto / embedded Linux), macOS, and Windows.
+  - Clean modular Qt 6 architecture with validated QML type registrations and zero compiler warnings.
 
 ### [v2.5.0] - OrbitXM Satellite Radio Suite, Direct Full-Screen Navigation, Security Hardening & CI Multi-Platform Stabilization
 - **OrbitXM Satellite Radio Suite & 18-Channel Broadcast**:
