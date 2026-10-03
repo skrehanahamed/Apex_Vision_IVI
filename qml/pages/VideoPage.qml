@@ -10,7 +10,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import QtWebEngine
 import ApexVision
 
 Item {
@@ -1664,47 +1663,113 @@ Item {
                     clip: true
                     color: "#000000"
 
-                    WebEngineView {
+                    Item {
                         id: ytWebEngine
                         anchors.fill: parent
-                        backgroundColor: "#000000"
 
-                        // settings.javascriptEnabled: true
-                        // settings.playbackRequiresUserGesture: false
-                        // settings.localContentCanAccessRemoteUrls: true
-                        // settings.localContentCanAccessFileUrls: true
-                        // settings.pluginsEnabled: true
-                        // settings.fullScreenSupportEnabled: true
-                        // settings.allowRunningInsecureContent: true
-                        // profile.httpUserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
+                        property bool audioMuted: false
+                        property string url: ""
+                        property string title: ""
 
-                        onLoadingChanged: function(loadRequest) {
-                            if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
-                                loadingOverlay.visible = false
-                            } else if (loadRequest.status === WebEngineView.LoadStartedStatus) {
-                                loadingOverlay.visible = true
-                            } else if (loadRequest.status === WebEngineView.LoadFailedStatus) {
-                                loadingOverlay.visible = false
-                                console.log("[VideoPage] Load failed:", loadRequest.errorString)
+                        function runJavaScript(script, callback) {
+                            if (webEnginePlayerLoader.item && typeof webEnginePlayerLoader.item.runJavaScript === "function") {
+                                webEnginePlayerLoader.item.runJavaScript(script, callback);
+                            } else if (callback) {
+                                callback(false);
                             }
                         }
 
-                        onTitleChanged: {
-                            if (ytWebEngine.title.indexOf("YT_VIDEO_ENDED") !== -1) {
-                                ytWebEngine.runJavaScript("if (window.resetVideoEnded) window.resetVideoEnded();")
-                                videoEndDebounceTimer.restart()
+                        function loadHtml(html, baseUrl) {
+                            if (webEnginePlayerLoader.item && typeof webEnginePlayerLoader.item.loadHtml === "function") {
+                                webEnginePlayerLoader.item.loadHtml(html, baseUrl);
                             }
                         }
 
-                        onFullScreenRequested: function(request) {
-                            if (request.toggleOn) {
-                                videoPage.isFullScreen = true
-                                videoPage.fullScreenRequested(true)
-                            } else {
-                                videoPage.isFullScreen = false
-                                videoPage.fullScreenRequested(false)
+                        function stop() {
+                            if (webEnginePlayerLoader.item && typeof webEnginePlayerLoader.item.stop === "function") {
+                                webEnginePlayerLoader.item.stop();
                             }
-                            request.accept()
+                        }
+
+                        onAudioMutedChanged: {
+                            if (webEnginePlayerLoader.item) {
+                                webEnginePlayerLoader.item.audioMuted = ytWebEngine.audioMuted;
+                            }
+                        }
+
+                        onUrlChanged: {
+                            if (webEnginePlayerLoader.item) {
+                                webEnginePlayerLoader.item.url = ytWebEngine.url;
+                            }
+                        }
+
+                        Loader {
+                            id: webEnginePlayerLoader
+                            anchors.fill: parent
+                            source: "VideoWebEnginePlayer.qml"
+                            asynchronous: false
+                            onLoaded: {
+                                if (item) {
+                                    item.loadingChanged.connect(function(loadRequest) {
+                                        if (loadRequest.status === 2) {
+                                            loadingOverlay.visible = false;
+                                        } else if (loadRequest.status === 1) {
+                                            loadingOverlay.visible = true;
+                                        } else {
+                                            loadingOverlay.visible = false;
+                                        }
+                                    });
+                                    item.videoEnded.connect(function() {
+                                        videoEndDebounceTimer.restart();
+                                    });
+                                    item.fullScreenRequested.connect(function(toggleOn) {
+                                        videoPage.isFullScreen = toggleOn;
+                                        videoPage.fullScreenRequested(toggleOn);
+                                    });
+                                }
+                            }
+                            onStatusChanged: {
+                                if (status === Loader.Error) {
+                                    console.log("[VideoPage] WebEngine unavailable on target platform. Activating fallback viewer.");
+                                }
+                            }
+                        }
+
+                        // Native fallback card when WebEngine is not present
+                        Rectangle {
+                            anchors.fill: parent
+                            color: "#0B0F19"
+                            visible: webEnginePlayerLoader.status === Loader.Error
+
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 10
+
+                                Image {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    source: "qrc:/ApexVision/qml/assets/icons/app_youtube.svg"
+                                    width: 48
+                                    height: 48
+                                    fillMode: Image.PreserveAspectFit
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "Stationary Video Hub"
+                                    font.family: "Inter"
+                                    font.pixelSize: 16
+                                    font.weight: Font.DemiBold
+                                    color: "#FFFFFF"
+                                }
+
+                                Text {
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: "In-Cabin Streaming Display"
+                                    font.family: "Inter"
+                                    font.pixelSize: 12
+                                    color: "#94A3B8"
+                                }
+                            }
                         }
                     }
 

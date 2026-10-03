@@ -41,10 +41,10 @@ find_package(Qt6 REQUIRED COMPONENTS
     QuickControls2
     Svg
     Network
-    Quick3D
-    Quick3DHelpers
     Multimedia
 )
+
+find_package(Qt6 COMPONENTS Quick3D Quick3DHelpers QUIET)
 
 find_package(Qt6 COMPONENTS WebEngineCore WebEngineQuick QUIET)
 
@@ -103,6 +103,7 @@ qt_add_qml_module(apex_vision_ivi
         qml/pages/NewsPage.qml
         qml/pages/RadioPage.qml
         qml/pages/VideoPage.qml
+        qml/pages/VideoWebEnginePlayer.qml
         qml/pages/RejuvenatePage.qml
         qml/pages/RejuvenateSession.qml
         qml/pages/ManualPage.qml
@@ -114,6 +115,8 @@ qt_add_qml_module(apex_vision_ivi
         qml/components/StatusBar.qml
         qml/components/MediaCard.qml
         qml/components/NavigationPanel.qml
+        qml/components/NavigationWebEngine.qml
+        qml/components/NavigationNativeHUD.qml
         qml/components/ClimateBar.qml
         qml/components/Climate3DPanel.qml
         qml/components/CabinAirRefreshOverlay.qml
@@ -165,10 +168,15 @@ target_link_libraries(apex_vision_ivi PRIVATE
     Qt6::QuickControls2
     Qt6::Svg
     Qt6::Network
-    Qt6::Quick3D
-    Qt6::Quick3DHelpers
     Qt6::Multimedia
 )
+
+if(TARGET Qt6::Quick3D)
+    target_link_libraries(apex_vision_ivi PRIVATE Qt6::Quick3D)
+endif()
+if(TARGET Qt6::Quick3DHelpers)
+    target_link_libraries(apex_vision_ivi PRIVATE Qt6::Quick3DHelpers)
+endif()
 
 if(TARGET Qt6::WebEngineQuick)
     target_link_libraries(apex_vision_ivi PRIVATE
