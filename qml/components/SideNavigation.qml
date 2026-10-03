@@ -713,7 +713,12 @@ Rectangle {
             id: navMouse
             anchors.fill: parent
             cursorShape: Qt.PointingHandCursor
-            onClicked: navItem.clicked()
+            onClicked: {
+                if (typeof SystemBackend !== "undefined") {
+                    SystemBackend.playTouchSound();
+                }
+                navItem.clicked();
+            }
         }
     }
 }

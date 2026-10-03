@@ -18,6 +18,7 @@ Item {
 
     signal openPlayerRequested()
     signal sourceMenuRequested()
+    signal openProfileRequested()
 
     Column {
         anchors.fill: parent
@@ -59,19 +60,6 @@ Item {
 
                 scale: phoneMouse.pressed ? 0.98 : (phoneMouse.containsMouse ? 1.015 : 1.0)
                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
-
-                // Top Specular Glass Reflection
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.topMargin: 1
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
-                    height: 1
-                    color: phoneMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.60) : Qt.rgba(255, 255, 255, 0.35)
-                    radius: 1
-                }
 
                 Column {
                     anchors.centerIn: parent
@@ -137,35 +125,85 @@ Item {
                 scale: profileMouse.pressed ? 0.98 : (profileMouse.containsMouse ? 1.015 : 1.0)
                 Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
 
-                // Top Specular Glass Reflection
-                Rectangle {
-                    anchors.top: parent.top
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.topMargin: 1
-                    anchors.leftMargin: 12
-                    anchors.rightMargin: 12
-                    height: 1
-                    color: profileMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.60) : Qt.rgba(255, 255, 255, 0.35)
-                    radius: 1
-                }
-
-                Rectangle {
+                Column {
                     anchors.centerIn: parent
-                    width: 54
-                    height: 54
-                    radius: 27
-                    color: Qt.rgba(255, 255, 255, 0.12)
-                    border.color: Qt.rgba(225/255, 242/255, 255/255, 0.36)
-                    border.width: 1
+                    spacing: 4
 
+                    // Profile Avatar / Monogram (52x52)
+                    Item {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 52
+                        height: 52
+
+                        // Image Avatar
+                        Item {
+                            anchors.fill: parent
+                            visible: VehicleBackend.driverProfileAvatarPath !== ""
+
+                            Image {
+                                id: cardAvatarImg
+                                anchors.fill: parent
+                                source: VehicleBackend.driverProfileAvatarPath
+                                fillMode: Image.PreserveAspectCrop
+                                visible: false
+                            }
+                            Rectangle {
+                                id: cardAvatarMask
+                                anchors.fill: parent
+                                radius: 26
+                                visible: false
+                                layer.enabled: true
+                            }
+                            MultiEffect {
+                                anchors.fill: parent
+                                source: cardAvatarImg
+                                maskEnabled: true
+                                maskSource: cardAvatarMask
+                            }
+                            Rectangle {
+                                anchors.fill: parent
+                                radius: 26
+                                color: "transparent"
+                                border.color: Qt.rgba(255, 255, 255, 0.45)
+                                border.width: 1.5
+                            }
+                        }
+
+                        // Monogram Circle (when avatar is monogram or empty)
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 26
+                            visible: VehicleBackend.driverProfileAvatarPath === ""
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: "#2563EB" }
+                                GradientStop { position: 1.0; color: "#1D4ED8" }
+                            }
+                            border.color: Qt.rgba(255, 255, 255, 0.40)
+                            border.width: 1.5
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: VehicleBackend.driverProfile
+                                color: "#F2F5F7"
+                                font.family: "Inter"
+                                font.pixelSize: VehicleBackend.driverProfile.length > 2 ? 14 : 18
+                                font.weight: Font.DemiBold
+                                renderType: Text.NativeRendering
+                            }
+                        }
+                    }
+
+                    // Profile Name Text below avatar
                     Text {
-                        anchors.centerIn: parent
-                        text: VehicleBackend.driverProfile
-                        color: "#F2F5F7"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 84
+                        text: VehicleBackend.driverProfileName
+                        color: "#E2E8F0"
                         font.family: "Inter"
-                        font.pixelSize: VehicleBackend.driverProfile.length > 2 ? 14 : 18
-                        font.weight: Font.DemiBold
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        horizontalAlignment: Text.AlignHCenter
+                        elide: Text.ElideRight
                         renderType: Text.NativeRendering
                     }
                 }
@@ -176,7 +214,7 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        VehicleBackend.cycleDriverProfile();
+                        root.openProfileRequested();
                     }
                 }
             }
@@ -212,19 +250,6 @@ Item {
                 onClicked: {
                     root.openPlayerRequested();
                 }
-            }
-
-            // Top Specular Glass Reflection
-            Rectangle {
-                anchors.top: parent.top
-                anchors.left: parent.left
-                anchors.right: parent.right
-                anchors.topMargin: 1
-                anchors.leftMargin: 20
-                anchors.rightMargin: 20
-                height: 1
-                color: Qt.rgba(255, 255, 255, 0.35)
-                radius: 1
             }
 
             // Source Selector Pill on Top-Left: ((•)) ▾ (Matching Screenshot 2)

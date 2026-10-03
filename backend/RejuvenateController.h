@@ -21,7 +21,10 @@ class ClimateBackend;
 class AmbientLightBackend;
 class SeatBackend;
 class VehicleBackend;
+class MediaBackend;
 class RejuvenateTheme;
+class QMediaPlayer;
+class QAudioOutput;
 
 class RejuvenateController : public QObject
 {
@@ -79,6 +82,7 @@ public:
                                  AmbientLightBackend *ambient,
                                  SeatBackend *seat,
                                  VehicleBackend *vehicle,
+                                 MediaBackend *media = nullptr,
                                  QObject *parent = nullptr);
     ~RejuvenateController() override;
 
@@ -123,6 +127,8 @@ public:
     Q_INVOKABLE void pauseSession();
     Q_INVOKABLE void resumeSession();
     Q_INVOKABLE void endSession(bool confirmed = true);
+    Q_INVOKABLE void startPreviewAudio();
+    Q_INVOKABLE void stopPreviewAudio();
     Q_INVOKABLE void dismissSafetyAlert();
     Q_INVOKABLE void reloadThemes();
 
@@ -182,6 +188,7 @@ private:
     AmbientLightBackend *m_ambient{nullptr};
     SeatBackend *m_seat{nullptr};
     VehicleBackend *m_vehicle{nullptr};
+    MediaBackend *m_media{nullptr};
 
     SessionState m_state{Idle};
     QString m_phaseName{"Idle"};
@@ -210,4 +217,6 @@ private:
     QTimer m_sessionTimer;
     QTimer m_fadeTimer;
     QList<std::shared_ptr<RejuvenateTheme>> m_themeList;
+    QMediaPlayer *m_audioPlayer{nullptr};
+    QAudioOutput *m_audioOutput{nullptr};
 };

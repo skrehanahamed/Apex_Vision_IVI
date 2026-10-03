@@ -9,6 +9,8 @@
 
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
+import ApexVision
 
 Item {
     id: root
@@ -36,42 +38,98 @@ Item {
         height: 64
         z: 10
 
-        // Profile Badge & Title
-        Row {
-            id: profileRow
+        // Profile Container (Left)
+        Item {
+            id: profileContainer
             anchors.left: parent.left
             anchors.leftMargin: 44
             anchors.verticalCenter: parent.verticalCenter
-            spacing: 14
+            width: profileRow.width
+            height: 44
 
-            // "P1" Badge Pill
-            Rectangle {
-                width: 34
-                height: 24
+            Row {
+                id: profileRow
                 anchors.verticalCenter: parent.verticalCenter
-                radius: 5
-                color: Qt.rgba(255, 255, 255, 0.08)
-                border.color: Qt.rgba(255, 255, 255, 0.55)
-                border.width: 1.5
+                spacing: 14
 
+                // Profile Picture / Monogram Badge
+                Item {
+                    width: 38
+                    height: 38
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    // Image Avatar if avatarPath is set
+                    Item {
+                        anchors.fill: parent
+                        visible: VehicleBackend.driverProfileAvatarPath !== ""
+
+                        Image {
+                            id: appHeaderAvatarImg
+                            anchors.fill: parent
+                            source: VehicleBackend.driverProfileAvatarPath
+                            fillMode: Image.PreserveAspectCrop
+                            visible: false
+                        }
+                        Rectangle {
+                            id: appHeaderAvatarMask
+                            anchors.fill: parent
+                            radius: 19
+                            visible: false
+                            layer.enabled: true
+                        }
+                        MultiEffect {
+                            anchors.fill: parent
+                            source: appHeaderAvatarImg
+                            maskEnabled: true
+                            maskSource: appHeaderAvatarMask
+                        }
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 19
+                            color: "transparent"
+                            border.color: Qt.rgba(255, 255, 255, 0.40)
+                            border.width: 1.5
+                        }
+                    }
+
+                    // Monogram Badge Pill if no image avatar
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 8
+                        visible: VehicleBackend.driverProfileAvatarPath === ""
+                        color: Qt.rgba(37/255, 99/255, 235/255, 0.35)
+                        border.color: Qt.rgba(56/255, 189/255, 248/255, 0.65)
+                        border.width: 1.5
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: VehicleBackend.driverProfile
+                            color: "#FFFFFF"
+                            font.family: "Inter"
+                            font.pixelSize: 13
+                            font.weight: Font.Bold
+                        }
+                    }
+                }
+
+                // Profile Name Text
                 Text {
-                    anchors.centerIn: parent
-                    text: "P1"
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: VehicleBackend.driverProfileName
                     color: "#FFFFFF"
                     font.family: "Inter"
-                    font.pixelSize: 12
-                    font.weight: Font.Bold
+                    font.pixelSize: 22
+                    font.weight: Font.DemiBold
                 }
             }
 
-            // "Profile 1" Text
-            Text {
-                anchors.verticalCenter: parent.verticalCenter
-                text: "Profile 1"
-                color: "#FFFFFF"
-                font.family: "Inter"
-                font.pixelSize: 22
-                font.weight: Font.DemiBold
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                    root.appSelected("ProfileSwitcher", "qrc:/ApexVision/qml/assets/icons/setting_profile.png");
+                }
             }
         }
 
@@ -108,6 +166,7 @@ Item {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
+                    if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
                     root.appSelected("Settings");
                 }
             }
@@ -191,10 +250,244 @@ Item {
         }
     }
 
+    property bool isDraggingAny: false
+    property int dragIndex: -1
+    property string dragAction: ""
+
+    ListModel {
+        id: appsModel
+    }
+
+    function loadApps() {
+        appsModel.clear();
+        var defaultApps = [
+            // ROW 1: Navigation, Voice Assistant, Rejuvenate, Phone
+            {
+                name: "Navigation",
+                action: "Navigation",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_navigation.svg"
+            },
+            {
+                name: "Voice Assistant",
+                action: "Assistant",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_assistant.svg"
+            },
+            {
+                name: "Rejuvenate",
+                action: "Rejuvenate",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_rejuvenate.svg"
+            },
+            {
+                name: "Phone",
+                action: "Phone",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_phone.svg"
+            },
+
+            // ROW 2: AM, FM, OrbitXM (Default media sources)
+            {
+                name: "AM",
+                action: "RadioAM",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_am.svg"
+            },
+            {
+                name: "FM",
+                action: "RadioFM",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_fm.svg"
+            },
+            {
+                name: "OrbitXM",
+                action: "OrbitXM",
+                icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png"
+            }
+        ];
+
+        if (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) {
+            defaultApps.push({
+                name: "Bluetooth Audio",
+                action: "Bluetooth",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_bluetooth.svg"
+            });
+        }
+
+        defaultApps = defaultApps.concat([
+            // ROW 3: Messages, Apple CarPlay, Towing
+            {
+                name: "Messages",
+                action: "Messages",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_messages.svg"
+            },
+            {
+                name: "Apple CarPlay",
+                action: "AppleCarPlay",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg"
+            },
+            {
+                name: "Towing",
+                action: "Towing",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_trailer.svg"
+            },
+
+            // ROW 4: Owner's Manual, Software Updates, Settings, Games
+            {
+                name: "Owner's Manual",
+                action: "Manual",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_manual.svg"
+            },
+            {
+                name: "Software Updates",
+                action: "Updates",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_updates.svg"
+            },
+            {
+                name: "Settings",
+                action: "Settings",
+                icon: "qrc:/ApexVision/qml/assets/icons/setting_sliders_logo.svg"
+            },
+            {
+                name: "Games",
+                action: "Games",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_games.svg"
+            },
+
+            // ROW 5: News, Video, Android Auto
+            {
+                name: "News",
+                action: "News",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_news.svg"
+            },
+            {
+                name: "YouTube",
+                action: "YouTube",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_video.svg"
+            },
+            {
+                name: "Android Auto",
+                action: "AndroidAuto",
+                icon: "qrc:/ApexVision/qml/assets/icons/app_projection.svg"
+            }
+        ]);
+
+        var savedOrderRaw = (typeof PersistenceManager !== "undefined") ? PersistenceManager.getSetting("app_order", "") : "";
+        var orderedList = [];
+        var map = {};
+        for (var i = 0; i < defaultApps.length; ++i) {
+            map[defaultApps[i].action] = defaultApps[i];
+        }
+
+        if (savedOrderRaw && typeof savedOrderRaw === "string" && savedOrderRaw.length > 2) {
+            try {
+                var savedActions = JSON.parse(savedOrderRaw);
+                if (Array.isArray(savedActions)) {
+                    for (var j = 0; j < savedActions.length; ++j) {
+                        var act = savedActions[j];
+                        if (map[act]) {
+                            orderedList.push(map[act]);
+                            delete map[act];
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn("Failed parsing saved app order:", e);
+            }
+        }
+
+        // Append remaining apps that weren't in saved order
+        for (var k = 0; k < defaultApps.length; ++k) {
+            if (map[defaultApps[k].action]) {
+                orderedList.push(defaultApps[k]);
+            }
+        }
+
+        for (var m = 0; m < orderedList.length; ++m) {
+            appsModel.append(orderedList[m]);
+        }
+    }
+
+    function saveAppOrder() {
+        if (typeof PersistenceManager === "undefined") return;
+        var order = [];
+        for (var i = 0; i < appsModel.count; ++i) {
+            order.push(appsModel.get(i).action);
+        }
+        PersistenceManager.setSetting("app_order", JSON.stringify(order));
+    }
+
+    Connections {
+        target: typeof PhoneBackend !== "undefined" ? PhoneBackend : null
+        function onIsConnectedChanged() {
+            root.loadApps();
+        }
+    }
+
+    Component.onCompleted: {
+        root.loadApps();
+    }
+
     // =========================================================================
-    // APPS GRID FLICKABLE (4 Columns, automotive circular app icons)
+    // FLOATING DRAG GHOST (Android elevation effect)
     // =========================================================================
-    Flickable {
+    Item {
+        id: dragGhost
+        width: appsFlickable.cellWidth
+        height: appsFlickable.cellHeight
+        z: 1000
+        visible: root.isDraggingAny
+        scale: 1.15
+
+        property string ghostName: ""
+        property string ghostIcon: ""
+
+        Behavior on scale {
+            NumberAnimation { duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+        }
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 10
+
+            Item {
+                id: ghostIconContainer
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 72
+                height: 72
+
+                // Android Drop Shadow / Elevation Halo
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 86
+                    height: 86
+                    radius: 43
+                    color: Qt.rgba(0, 210, 255, 0.32)
+                    border.color: "#00D2FF"
+                    border.width: 2.5
+                }
+
+                Image {
+                    anchors.fill: parent
+                    source: dragGhost.ghostIcon
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
+                    sourceSize: Qt.size(256, 256)
+                }
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: dragGhost.ghostName
+                color: "#00D2FF"
+                font.family: "Inter"
+                font.pixelSize: 15
+                font.weight: Font.DemiBold
+                horizontalAlignment: Text.AlignHCenter
+            }
+        }
+    }
+
+    // =========================================================================
+    // APPS GRID FLICKABLE (4 Columns, automotive circular app icons, draggable)
+    // =========================================================================
+    GridView {
         id: appsFlickable
         anchors.top: headerArea.bottom
         anchors.bottom: parent.bottom
@@ -204,186 +497,148 @@ Item {
         anchors.rightMargin: 40
         anchors.topMargin: 10
         anchors.bottomMargin: 16
-        contentWidth: width
-        contentHeight: appsGrid.height + 36
+        cellWidth: width / 4
+        cellHeight: 120
         clip: true
+        interactive: !root.isDraggingAny
         boundsBehavior: Flickable.DragAndOvershootBounds
         flickDeceleration: 1800
 
-        Grid {
-            id: appsGrid
-            width: parent.width
-            columns: 4
-            rowSpacing: 34
-            columnSpacing: 0
+        model: appsModel
 
-            // Full Comprehensive Apps Model without App Store
-            Repeater {
-                model: [
-                    // ROW 1: Navigation, Voice Assistant, Rejuvenate, Phone
-                    {
-                        name: "Navigation",
-                        action: "Navigation",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_navigation.svg"
-                    },
-                    {
-                        name: "Voice Assistant",
-                        action: "Assistant",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_assistant.svg"
-                    },
-                    {
-                        name: "Rejuvenate",
-                        action: "Rejuvenate",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_rejuvenate.svg"
-                    },
-                    {
-                        name: "Phone",
-                        action: "Phone",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_phone.svg"
-                    },
+        displaced: Transition {
+            NumberAnimation {
+                properties: "x,y"
+                duration: 250
+                easing.type: Easing.OutCubic
+            }
+        }
 
-                    // ROW 2: AM, FM, SiriusXM, Bluetooth Audio
-                    {
-                        name: "AM",
-                        action: "RadioAM",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_am.svg"
-                    },
-                    {
-                        name: "FM",
-                        action: "RadioFM",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_fm.svg"
-                    },
-                    {
-                        name: "OrbitXM",
-                        action: "OrbitXM",
-                        icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png"
-                    },
-                    {
-                        name: "Bluetooth Audio",
-                        action: "Bluetooth",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_bluetooth.svg"
-                    },
+        delegate: Item {
+            id: delegateRoot
+            width: appsFlickable.cellWidth
+            height: appsFlickable.cellHeight
 
-                    // ROW 3: Messages, Apple CarPlay, Towing, Wi-Fi Hotspot
-                    {
-                        name: "Messages",
-                        action: "Messages",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_messages.svg"
-                    },
-                    {
-                        name: "Apple CarPlay",
-                        action: "AppleCarPlay",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg"
-                    },
-                    {
-                        name: "Towing",
-                        action: "Towing",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_trailer.svg"
-                    },
-                    {
-                        name: "Wi-Fi Hotspot",
-                        action: "Hotspot",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_hotspot.svg"
-                    },
+            readonly property bool isThisHeld: root.isDraggingAny && root.dragIndex === index
 
-                    // ROW 4: Owner's Manual, Software Updates, Settings, Games
-                    {
-                        name: "Owner's Manual",
-                        action: "Manual",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_manual.svg"
-                    },
-                    {
-                        name: "Software Updates",
-                        action: "Updates",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_updates.svg"
-                    },
-                    {
-                        name: "Settings",
-                        action: "Settings",
-                        icon: "qrc:/ApexVision/qml/assets/icons/setting_sliders_logo.svg"
-                    },
-                    {
-                        name: "Games",
-                        action: "Games",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_games.svg"
-                    },
+            // Normal Item Container
+            Column {
+                anchors.centerIn: parent
+                spacing: 10
+                opacity: delegateRoot.isThisHeld ? 0.0 : 1.0
+                visible: opacity > 0.01
+                Behavior on opacity { NumberAnimation { duration: 120 } }
 
-                    // ROW 5: News, Video, Android Auto
-                    {
-                        name: "News",
-                        action: "News",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_news.svg"
-                    },
-                    {
-                        name: "YouTube",
-                        action: "YouTube",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_video.svg"
-                    },
-                    {
-                        name: "Android Auto",
-                        action: "AndroidAuto",
-                        icon: "qrc:/ApexVision/qml/assets/icons/app_projection.svg"
-                    }
-                ]
-
-                // Individual App Item Container
                 Item {
-                    width: appsGrid.width / 4
-                    height: 114
+                    id: iconContainer
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 72
+                    height: 72
 
-                    Column {
-                        anchors.centerIn: parent
-                        spacing: 10
+                    scale: appItemMouse.pressed ? 0.90 : (appItemMouse.containsMouse ? 1.05 : 1.0)
+                    Behavior on scale {
+                        NumberAnimation {
+                            duration: 160
+                            easing.type: Easing.OutBack
+                            easing.overshoot: 1.2
+                        }
+                    }
 
-                        // Circular App Icon with smooth press/hover feedback
-                        Item {
-                            id: iconContainer
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: 72
-                            height: 72
+                    Image {
+                        anchors.fill: parent
+                        source: model.icon
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
+                        sourceSize: Qt.size(256, 256)
+                    }
+                }
 
-                            scale: appItemMouse.pressed ? 0.90 : (appItemMouse.containsMouse ? 1.05 : 1.0)
-                            Behavior on scale {
-                                NumberAnimation {
-                                    duration: 160
-                                    easing.type: Easing.OutBack
-                                    easing.overshoot: 1.2
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: model.name
+                    color: "#FFFFFF"
+                    font.family: "Inter"
+                    font.pixelSize: 15
+                    font.weight: Font.Medium
+                    horizontalAlignment: Text.AlignHCenter
+                    opacity: appItemMouse.pressed ? 0.75 : 1.0
+                    Behavior on opacity { NumberAnimation { duration: 120 } }
+                }
+            }
+
+            MouseArea {
+                id: appItemMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: root.isDraggingAny ? Qt.ClosedHandCursor : Qt.PointingHandCursor
+                pressAndHoldInterval: 350
+
+                onPressAndHold: {
+                    root.isDraggingAny = true;
+                    root.dragIndex = index;
+                    root.dragAction = model.action;
+                    dragGhost.ghostName = model.name;
+                    dragGhost.ghostIcon = model.icon;
+
+                    var p = delegateRoot.mapToItem(root, 0, 0);
+                    dragGhost.x = p.x;
+                    dragGhost.y = p.y;
+
+                    if (typeof SystemBackend !== "undefined") {
+                        SystemBackend.playTouchSound();
+                    }
+                }
+
+                onPositionChanged: function(mouse) {
+                    if (root.isDraggingAny && root.dragIndex === index) {
+                        var globalPos = delegateRoot.mapToItem(root, mouse.x, mouse.y);
+                        dragGhost.x = globalPos.x - dragGhost.width / 2;
+                        dragGhost.y = globalPos.y - dragGhost.height / 2;
+
+                        var gridPos = root.mapToItem(appsFlickable.contentItem, globalPos.x, globalPos.y);
+                        var col = Math.floor(gridPos.x / appsFlickable.cellWidth);
+                        var row = Math.floor(gridPos.y / appsFlickable.cellHeight);
+                        if (col >= 0 && col < 4 && row >= 0) {
+                            var targetIdx = row * 4 + col;
+                            if (targetIdx >= 0 && targetIdx < appsModel.count && targetIdx !== root.dragIndex) {
+                                appsModel.move(root.dragIndex, targetIdx, 1);
+                                root.dragIndex = targetIdx;
+                                if (typeof SystemBackend !== "undefined") {
+                                    SystemBackend.playTouchSound();
                                 }
                             }
-
-                            Image {
-                                anchors.fill: parent
-                                source: modelData.icon
-                                fillMode: Image.PreserveAspectFit
-                                smooth: true
-                                mipmap: true
-                                sourceSize: Qt.size(256, 256)
-                            }
-                        }
-
-                        // App Label beneath
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: modelData.name
-                            color: "#FFFFFF"
-                            font.family: "Inter"
-                            font.pixelSize: 15
-                            font.weight: Font.Medium
-                            horizontalAlignment: Text.AlignHCenter
-                            opacity: appItemMouse.pressed ? 0.75 : 1.0
-                            Behavior on opacity { NumberAnimation { duration: 120 } }
                         }
                     }
+                }
 
-                    // Mouse Interaction Area
-                    MouseArea {
-                        id: appItemMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            handleAppClick(modelData.name, modelData.action, modelData.icon);
+                onReleased: {
+                    if (root.isDraggingAny) {
+                        root.isDraggingAny = false;
+                        root.dragIndex = -1;
+                        root.dragAction = "";
+                        root.saveAppOrder();
+                        root.showToast("App layout saved");
+                        if (typeof SystemBackend !== "undefined") {
+                            SystemBackend.playTouchSound();
                         }
+                    }
+                }
+
+                onCanceled: {
+                    if (root.isDraggingAny) {
+                        root.isDraggingAny = false;
+                        root.dragIndex = -1;
+                        root.dragAction = "";
+                    }
+                }
+
+                onClicked: {
+                    if (!root.isDraggingAny) {
+                        if (typeof SystemBackend !== "undefined") {
+                            SystemBackend.playTouchSound();
+                        }
+                        handleAppClick(model.name, model.action, model.icon);
                     }
                 }
             }

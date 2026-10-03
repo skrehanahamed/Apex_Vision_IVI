@@ -10,8 +10,12 @@
 #pragma once
 
 #include <QObject>
+#include <QMap>
+#include <QVariantList>
+#include <QVariantMap>
 
 class VehicleSimulator;
+class PersistenceManager;
 
 class VehicleBackend : public QObject
 {
@@ -38,10 +42,44 @@ class VehicleBackend : public QObject
     Q_PROPERTY(int tirePressureRR READ tirePressureRR NOTIFY tirePressureChanged)
     Q_PROPERTY(int recPressureFront READ recPressureFront CONSTANT)
     Q_PROPERTY(int recPressureRear READ recPressureRear CONSTANT)
+
+    // Driver Profile properties
     Q_PROPERTY(QString driverProfile READ driverProfile WRITE setDriverProfile NOTIFY driverProfileChanged)
+    Q_PROPERTY(QString driverProfileName READ driverProfileName WRITE setDriverProfileName NOTIFY driverProfileChanged)
+    Q_PROPERTY(QString driverProfileAvatar READ driverProfileAvatar WRITE setDriverProfileAvatar NOTIFY driverProfileChanged)
+    Q_PROPERTY(QString driverProfileAvatarPath READ driverProfileAvatarPath WRITE setDriverProfileAvatarPath NOTIFY driverProfileChanged)
+    Q_PROPERTY(QVariantList profilesList READ profilesList NOTIFY driverProfileChanged)
+    Q_PROPERTY(int profileCount READ profileCount NOTIFY driverProfileChanged)
+    Q_PROPERTY(bool canAddProfile READ canAddProfile NOTIFY driverProfileChanged)
+    Q_PROPERTY(QString currentProfileId READ currentProfileId NOTIFY driverProfileChanged)
+    Q_PROPERTY(bool isGuestSession READ isGuestSession NOTIFY driverProfileChanged)
+
+    // Profile Security & Device Linking
+    Q_PROPERTY(QString currentLockType READ currentLockType WRITE setCurrentLockType NOTIFY profileSecurityChanged)
+    Q_PROPERTY(QString profilePinCode READ profilePinCode WRITE setProfilePinCode NOTIFY profileSecurityChanged)
+    Q_PROPERTY(QString profilePassword READ profilePassword WRITE setProfilePassword NOTIFY profileSecurityChanged)
+    Q_PROPERTY(QString currentProfileRole READ currentProfileRole CONSTANT)
+    Q_PROPERTY(bool keyFobLinked READ keyFobLinked WRITE setKeyFobLinked NOTIFY profileSecurityChanged)
+    Q_PROPERTY(bool phoneKeyLinked READ phoneKeyLinked WRITE setPhoneKeyLinked NOTIFY profileSecurityChanged)
+    Q_PROPERTY(bool btDeviceLinked READ btDeviceLinked WRITE setBtDeviceLinked NOTIFY profileSecurityChanged)
 
 public:
-    explicit VehicleBackend(VehicleSimulator *simulator, QObject *parent = nullptr);
+    explicit VehicleBackend(VehicleSimulator *simulator, PersistenceManager *persistence = nullptr, QObject *parent = nullptr);
+
+    struct ProfileData {
+        QString id;
+        QString name;
+        QString avatar{"monogram"};
+        QString avatarPath{""};
+        QString linkedKey{"Key Fob 1, Phone As A Key linked"};
+        QString lockType{"None"};
+        QString pinCode{"1234"};
+        QString password{""};
+        QString role{"Signed in as admin"};
+        bool keyFobLinked{true};
+        bool phoneKeyLinked{true};
+        bool btDeviceLinked{true};
+    };
 
     int vehicleSpeed() const { return m_vehicleSpeed; }
     int engineRpm() const { return m_engineRpm; }
@@ -64,13 +102,51 @@ public:
     int tirePressureRR() const { return m_tirePressureRR; }
     int recPressureFront() const { return m_recPressureFront; }
     int recPressureRear() const { return m_recPressureRear; }
-    QString driverProfile() const { return m_driverProfile; }
+
+    QString driverProfile() const;
+    QString driverProfileName() const;
+    QString driverProfileAvatar() const;
+    QString driverProfileAvatarPath() const;
+    QVariantList profilesList() const;
+    int profileCount() const;
+    bool canAddProfile() const;
+    QString currentProfileId() const;
+    bool isGuestSession() const { return m_isGuest; }
+
+    // Security & Link getters
+    QString currentLockType() const;
+    QString profilePinCode() const;
+    QString profilePassword() const;
+    QString currentProfileRole() const;
+    bool keyFobLinked() const;
+    bool phoneKeyLinked() const;
+    bool btDeviceLinked() const;
 
     Q_INVOKABLE void setGear(const QString &gear);
     Q_INVOKABLE void setDriveMode(const QString &mode);
     Q_INVOKABLE void cycleDriveMode();
     Q_INVOKABLE void setDriverProfile(const QString &profile);
-    Q_INVOKABLE void cycleDriverProfile();
+    Q_INVOKABLE void setDriverProfileName(const QString &name);
+    Q_INVOKABLE void setDriverProfileAvatar(const QString &avatar, const QString &path = QString());
+    Q_INVOKABLE void setDriverProfileAvatarPath(const QString &path);
+    Q_INVOKABLE bool switchProfile(const QString &profileId);
+    Q_INVOKABLE bool addProfile(const QString &name, const QString &avatar = "monogram", const QString &avatarPath = "", const QString &linkedKey = "Key Fob linked");
+    Q_INVOKABLE bool deleteProfile(const QString &profileId);
+    Q_INVOKABLE void driveAsGuest();
+    Q_INVOKABLE void showToast(const QString &msg) { Q_UNUSED(msg); }
+    Q_INVOKABLE void renameProfile(const QString &profileId, const QString &name);
+    Q_INVOKABLE void updateProfileAvatar(const QString &profileId, const QString &avatar, const QString &avatarPath = "");
+
+    // Security & Link invokables
+    Q_INVOKABLE void setCurrentLockType(const QString &lockType);
+    Q_INVOKABLE void setProfilePinCode(const QString &pin);
+    Q_INVOKABLE void setProfilePassword(const QString &password);
+    Q_INVOKABLE void setKeyFobLinked(bool linked);
+    Q_INVOKABLE void setPhoneKeyLinked(bool linked);
+    Q_INVOKABLE void setBtDeviceLinked(bool linked);
+    Q_INVOKABLE void setProfileSecurity(const QString &profileId, const QString &lockType, const QString &pinCode, const QString &password);
+    Q_INVOKABLE void setProfileLinks(const QString &profileId, bool keyFob, bool phoneKey, bool btDevice);
+
     Q_INVOKABLE void setHeadlights(bool on);
     Q_INVOKABLE void setAutoHold(bool on);
     Q_INVOKABLE void toggleAutoHold();
@@ -103,12 +179,21 @@ signals:
     void oilLifeChanged();
     void tirePressureChanged();
     void driverProfileChanged();
+    void profileSecurityChanged();
 
 private slots:
     void onTelemetryUpdated(double speed, double rpm, const QString &gear, double temp, int battery);
 
 private:
-    QString m_driverProfile{"P1"};
+    void syncFromPersistence();
+    void saveCurrentProfilePreferences();
+    void loadProfilePreferences(const QString &profileId);
+
+    PersistenceManager *m_persistence{nullptr};
+
+    QList<ProfileData> m_profiles;
+    QString m_currentProfileId{"p1"};
+    bool m_isGuest{false};
     int m_vehicleSpeed{68};
     int m_engineRpm{1900};
     QString m_gear{"D"};
@@ -117,8 +202,8 @@ private:
     int m_batteryLevel{88};
     double m_tripDistance{142.6};
     bool m_headlights{true};
-    bool m_autoHold{true}; // Active as depicted in reference image
-    bool m_valetMode{true}; // Active as depicted in reference image
+    bool m_autoHold{true};
+    bool m_valetMode{false};
     bool m_ambientLighting{true};
     QString m_ambientColor{"#70C5F5"};
     double m_ambientBrightness{0.85};

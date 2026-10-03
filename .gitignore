@@ -45,3 +45,4 @@ temp/
 .env
 .env.local
 config.json
+apex_settings.json

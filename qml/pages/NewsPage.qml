@@ -18,6 +18,8 @@ Item {
     property int activeCategoryIndex: 0
     property int selectedArticleIndex: 0
     property bool isLoading: false
+    property bool isUpdating: false
+    property int updateCounter: 0
 
     // Distinct Briefing Modes: "none", "all", "single"
     property string briefingMode: "none"
@@ -45,6 +47,33 @@ Item {
                     articlesListView.positionViewAtIndex(0, ListView.Contain);
                     root.dictateStoryAt(0);
                 }
+            }
+        }
+    }
+
+    // Timer for ensuring smooth rotation animation on update button
+    Timer {
+        id: updateSpinTimer
+        interval: 850
+        repeat: false
+        property var pendingItems: null
+        onTriggered: {
+            root.applyNewsUpdate(pendingItems);
+            pendingItems = null;
+            root.isUpdating = false;
+        }
+    }
+
+    // Safety timeout for network requests
+    Timer {
+        id: apiSafetyTimer
+        interval: 2200
+        repeat: false
+        property var timeoutAction: null
+        onTriggered: {
+            if (timeoutAction) {
+                timeoutAction();
+                timeoutAction = null;
             }
         }
     }
@@ -785,102 +814,167 @@ Item {
                 }
             }
 
-            // Right Header Action: "All News Briefing" (Reads all stories sequentially)
-            Rectangle {
-                id: allBriefingBtn
+            // Right Header Actions: Update News Button + All News Briefing
+            Row {
                 anchors.right: parent.right
                 anchors.rightMargin: 24
                 anchors.verticalCenter: parent.verticalCenter
-                height: 38
-                width: allBriefingRow.implicitWidth + 30
-                radius: 19
+                spacing: 12
 
-                // Active glowing state when "all" briefing is in progress
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0.0
-                        color: (root.briefingMode === "all") ?
-                            Qt.rgba(0, 168/255, 255/255, 0.42) :
-                            (allBriefingMouse.pressed ? Qt.rgba(255, 255, 255, 0.24) :
-                            (allBriefingMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.18) : Qt.rgba(255, 255, 255, 0.11)))
+                // Round-arrow Update API Button (Icon only)
+                Rectangle {
+                    id: updateNewsBtn
+                    width: 38
+                    height: 38
+                    radius: 19
+
+                    scale: updateMouse.pressed ? 0.92 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0.0
+                            color: root.isUpdating ?
+                                Qt.rgba(0, 210/255, 255/255, 0.38) :
+                                (updateMouse.pressed ? Qt.rgba(255, 255, 255, 0.24) :
+                                (updateMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.18) : Qt.rgba(255, 255, 255, 0.11)))
+                        }
+                        GradientStop {
+                            position: 1.0
+                            color: root.isUpdating ?
+                                Qt.rgba(0, 140/255, 255/255, 0.28) :
+                                (updateMouse.pressed ? Qt.rgba(255, 255, 255, 0.18) :
+                                (updateMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.12) : Qt.rgba(255, 255, 255, 0.07)))
+                        }
                     }
-                    GradientStop {
-                        position: 1.0
-                        color: (root.briefingMode === "all") ?
-                            Qt.rgba(0, 110/255, 220/255, 0.32) :
-                            (allBriefingMouse.pressed ? Qt.rgba(255, 255, 255, 0.18) :
-                            (allBriefingMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.12) : Qt.rgba(255, 255, 255, 0.07)))
-                    }
-                }
 
-                border.color: (root.briefingMode === "all") ? "#00A8FF" : (allBriefingMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.45) : Qt.rgba(255, 255, 255, 0.22))
-                border.width: 1
+                    border.color: root.isUpdating ? "#00D2FF" : (updateMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.45) : Qt.rgba(255, 255, 255, 0.22))
+                    border.width: 1
 
-                Row {
-                    id: allBriefingRow
-                    anchors.centerIn: parent
-                    spacing: 8
-
-                    Item {
+                    Image {
+                        id: updateIcon
+                        anchors.centerIn: parent
                         width: 18
                         height: 18
-                        anchors.verticalCenter: parent.verticalCenter
+                        source: "qrc:/ApexVision/qml/assets/icons/icon_refresh_round.svg"
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
 
-                        Image {
-                            anchors.centerIn: parent
-                            width: 16
-                            height: 16
-                            source: (root.briefingMode === "all") ? "qrc:/ApexVision/qml/assets/icons/news_pause.svg" : "qrc:/ApexVision/qml/assets/icons/news_waveform.svg"
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                        }
-
-                        // Pulsing Wave Ring Animation when All Briefing is reading
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 22
-                            height: 22
-                            radius: 11
-                            color: "transparent"
-                            border.color: "#00A8FF"
-                            border.width: 1.5
-                            visible: root.briefingMode === "all"
-
-                            SequentialAnimation on scale {
-                                running: root.briefingMode === "all"
-                                loops: Animation.Infinite
-                                NumberAnimation { from: 0.9; to: 1.35; duration: 650; easing.type: Easing.OutQuad }
-                                NumberAnimation { from: 1.35; to: 0.9; duration: 650; easing.type: Easing.InQuad }
-                            }
-                            SequentialAnimation on opacity {
-                                running: root.briefingMode === "all"
-                                loops: Animation.Infinite
-                                NumberAnimation { from: 0.9; to: 0.2; duration: 650 }
-                                NumberAnimation { from: 0.2; to: 0.9; duration: 650 }
-                            }
+                        RotationAnimation on rotation {
+                            running: root.isUpdating
+                            loops: Animation.Infinite
+                            from: 0
+                            to: 360
+                            duration: 750
                         }
                     }
 
-                    Text {
-                        text: (root.briefingMode === "all") ? "Stop Briefing" : "All News Briefing"
-                        color: "#FFFFFF"
-                        font.family: "Inter"
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
-                        anchors.verticalCenter: parent.verticalCenter
+                    MouseArea {
+                        id: updateMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        enabled: !root.isUpdating
+                        onClicked: {
+                            root.refreshNewsFromApi();
+                        }
                     }
                 }
 
-                MouseArea {
-                    id: allBriefingMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                        if (root.briefingMode === "all") {
-                            root.stopBriefing();
-                        } else {
-                            root.startAllBriefing();
+                // "All News Briefing" (Reads all stories sequentially)
+                Rectangle {
+                    id: allBriefingBtn
+                    height: 38
+                    width: allBriefingRow.implicitWidth + 30
+                    radius: 19
+
+                    // Active glowing state when "all" briefing is in progress
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0.0
+                            color: (root.briefingMode === "all") ?
+                                Qt.rgba(0, 168/255, 255/255, 0.42) :
+                                (allBriefingMouse.pressed ? Qt.rgba(255, 255, 255, 0.24) :
+                                (allBriefingMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.18) : Qt.rgba(255, 255, 255, 0.11)))
+                        }
+                        GradientStop {
+                            position: 1.0
+                            color: (root.briefingMode === "all") ?
+                                Qt.rgba(0, 110/255, 220/255, 0.32) :
+                                (allBriefingMouse.pressed ? Qt.rgba(255, 255, 255, 0.18) :
+                                (allBriefingMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.12) : Qt.rgba(255, 255, 255, 0.07)))
+                        }
+                    }
+
+                    border.color: (root.briefingMode === "all") ? "#00A8FF" : (allBriefingMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.45) : Qt.rgba(255, 255, 255, 0.22))
+                    border.width: 1
+
+                    Row {
+                        id: allBriefingRow
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        Item {
+                            width: 18
+                            height: 18
+                            anchors.verticalCenter: parent.verticalCenter
+
+                            Image {
+                                anchors.centerIn: parent
+                                width: 16
+                                height: 16
+                                source: (root.briefingMode === "all") ? "qrc:/ApexVision/qml/assets/icons/news_pause.svg" : "qrc:/ApexVision/qml/assets/icons/news_waveform.svg"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                            }
+
+                            // Pulsing Wave Ring Animation when All Briefing is reading
+                            Rectangle {
+                                anchors.centerIn: parent
+                                width: 22
+                                height: 22
+                                radius: 11
+                                color: "transparent"
+                                border.color: "#00A8FF"
+                                border.width: 1.5
+                                visible: root.briefingMode === "all"
+
+                                SequentialAnimation on scale {
+                                    running: root.briefingMode === "all"
+                                    loops: Animation.Infinite
+                                    NumberAnimation { from: 0.9; to: 1.35; duration: 650; easing.type: Easing.OutQuad }
+                                    NumberAnimation { from: 1.35; to: 0.9; duration: 650; easing.type: Easing.InQuad }
+                                }
+                                SequentialAnimation on opacity {
+                                    running: root.briefingMode === "all"
+                                    loops: Animation.Infinite
+                                    NumberAnimation { from: 0.9; to: 0.2; duration: 650 }
+                                    NumberAnimation { from: 0.2; to: 0.9; duration: 650 }
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: (root.briefingMode === "all") ? "Stop Briefing" : "All News Briefing"
+                            color: "#FFFFFF"
+                            font.family: "Inter"
+                            font.pixelSize: 13
+                            font.weight: Font.DemiBold
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: allBriefingMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (root.briefingMode === "all") {
+                                root.stopBriefing();
+                            } else {
+                                root.startAllBriefing();
+                            }
                         }
                     }
                 }
@@ -1577,7 +1671,42 @@ Item {
         newsModel.setProperty(idx, "isBookmarked", isBm);
         if (root.newsStore && root.newsStore[root.activeCategoryIndex] && root.newsStore[root.activeCategoryIndex][idx]) {
             root.newsStore[root.activeCategoryIndex][idx].isBookmarked = isBm;
+            saveNewsToPersistence();
         }
+    }
+
+    function saveNewsToPersistence() {
+        if (typeof PersistenceManager !== "undefined") {
+            try {
+                var jsonStr = JSON.stringify(root.newsStore);
+                PersistenceManager.setSetting("persisted_news_store", jsonStr);
+                PersistenceManager.setSetting("news_update_counter", root.updateCounter);
+                PersistenceManager.flush();
+            } catch (e) {
+                console.warn("[NewsPage] Failed to save news store:", e);
+            }
+        }
+    }
+
+    function loadNewsFromPersistence() {
+        if (typeof PersistenceManager !== "undefined" && PersistenceManager.hasSetting("persisted_news_store")) {
+            try {
+                var raw = PersistenceManager.getSetting("persisted_news_store", "");
+                if (raw && typeof raw === "string" && raw.length > 20) {
+                    var parsed = JSON.parse(raw);
+                    if (parsed && typeof parsed === "object") {
+                        if (parsed[0] && Array.isArray(parsed[0]) && parsed[0].length > 0) {
+                            root.newsStore = parsed;
+                            root.updateCounter = PersistenceManager.getSetting("news_update_counter", 0);
+                            return true;
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn("[NewsPage] Failed to parse persisted news store:", e);
+            }
+        }
+        return false;
     }
 
     function preloadAllNews() {
@@ -1613,7 +1742,9 @@ Item {
 
         // Load instantly from preloaded background store
         if (!root.newsStore || !root.newsStore[catIdx]) {
-            root.preloadAllNews();
+            if (!loadNewsFromPersistence()) {
+                root.preloadAllNews();
+            }
         }
 
         var cachedList = root.newsStore[catIdx];
@@ -1623,8 +1754,276 @@ Item {
         }
     }
 
+    // Dynamic real-time breaking news updates for simulated/offline fallback
+    readonly property var breakingUpdatesByCategory: ({
+        "Top Stories": [
+            {
+                headline: "LIVE: Global EV Market Crosses Record 30-Million Delivery Milestone Ahead of Forecasts",
+                authorInfo: "Just now • By Global Auto Intelligence",
+                body: "International automotive industry registries reported a major historic surge today as combined global zero-emission vehicle deliveries crossed thirty million units. The milestone reflects accelerated multi-gigawatt charging infrastructure investments and solid-state battery platform rollouts across key regional corridors."
+            },
+            {
+                headline: "BREAKING: Intercontinental Optical Satellite Network Achieves Global Sub-15ms Latency",
+                authorInfo: "1m ago • By Orbit Telecom Desk",
+                body: "Commercial operators of next-generation low-Earth orbit satellite constellations verified sub-fifteen-millisecond routing across trans-oceanic pathways today. The achievement enables true real-time remote telemetry and continuous high-bandwidth connectivity for automotive fleets worldwide."
+            }
+        ],
+        "Automotive": [
+            {
+                headline: "LIVE: Next-Gen 1200V Silicon Carbide Inverters Cut Highway Recharge Times to 8 Minutes",
+                authorInfo: "Just now • By EV Power Dynamics",
+                body: "Automotive propulsion consortia unveiled breakthrough high-temperature semiconductor drive units capable of sustained twelve-hundred-volt charging cycles. Early fleet trials demonstrated eight-minute replenishment from ten to eighty percent battery capacity."
+            },
+            {
+                headline: "BREAKING: Autonomous Highway Freight Platoon Completes Zero-Intervention Cross-Country Run",
+                authorInfo: "1m ago • By Freight Tech Weekly",
+                body: "A three-vehicle autonomous heavy haulage convoy successfully concluded a forty-eight-hundred-kilometer transcontinental logistics trial with zero manual interventions, demonstrating a twenty-four percent improvement in overall aerodynamic fuel efficiency."
+            }
+        ],
+        "Technology": [
+            {
+                headline: "LIVE: Neuromorphic Quantum Co-Processor Slashes AI Edge Latency by Ninety Percent",
+                authorInfo: "Just now • By Tech Frontier",
+                body: "Hardware researchers have fabricated room-temperature neuromorphic accelerator chips specifically tailored for real-time vehicular perception and edge neural inference, cutting power draw to under five watts."
+            },
+            {
+                headline: "BREAKING: Open-Source Unified In-Vehicle Infotainment Framework Announced by Leading Automakers",
+                authorInfo: "1m ago • By Digital Cockpit Review",
+                body: "Seven major global automotive groups signed an interoperability treaty standardizing open APIs for seamless smartphone projection, bidirectional energy routing, and unified digital cockpit application ecosystems."
+            }
+        ],
+        "Business": [
+            {
+                headline: "LIVE: Clean Energy Infrastructure Index Climbs 18% as Commercial Microgrids Expand",
+                authorInfo: "Just now • By Global Markets Wire",
+                body: "Renewable energy equities and green utility funds reached three-year highs as major industrial zones accelerated on-site solar storage installations to protect against regional power market volatility."
+            },
+            {
+                headline: "BREAKING: Multilateral Semiconductor Alliance Allocates $65 Billion for Advanced Lithography",
+                authorInfo: "1m ago • By Industrial Times",
+                body: "Leading microelectronics foundries confirmed a shared capital expansion to construct next-generation extreme ultraviolet fabrication centers, securing long-term microchip supply for automotive and consumer electronics."
+            }
+        ],
+        "Sports": [
+            {
+                headline: "LIVE: World Endurance Prototype Championship Sets Historic Speed Record at Circuit Spa",
+                authorInfo: "Just now • By Motorsport Chronicle",
+                body: "Hybrid hypercar prototypes shattered previous qualifying benchmarks with an astonishing average lap speed exceeding two hundred and forty kilometers per hour in mixed weather conditions."
+            },
+            {
+                headline: "BREAKING: Championship Tennis Final Reaches Epic Five-Set Decider Before 45,000 Spectators",
+                authorInfo: "1m ago • By Global Sports Central",
+                body: "A thrilling display of baseline endurance and precision shot-making pushed the international final into a sudden-death championship tiebreak after four hours and forty minutes of world-class play."
+            }
+        ],
+        "Science": [
+            {
+                headline: "LIVE: Stellarator Fusion Core Achieves Continuous Thirty-Minute High-Beta Confinement",
+                authorInfo: "Just now • By Nuclear Sciences Digest",
+                body: "Plasma physicists at the international stellarator facility sustained stable hydrogen isotope reaction temperatures exceeding one hundred and ten million degrees Celsius without magnetic coil degradation."
+            },
+            {
+                headline: "BREAKING: Deep Space Probe Identifies Organic Biosignature Traces in Enceladus Plumes",
+                authorInfo: "1m ago • By Planetary Astro Review",
+                body: "Spectrometry readings collected during orbital flybys of the icy moon revealed rich concentrations of complex phosphorus, methane, and amino precursors venting from sub-surface ocean geysers."
+            }
+        ],
+        "World": [
+            {
+                headline: "LIVE: International Digital Customs Portal Reduces Cross-Border Transit Delays to 5 Minutes",
+                authorInfo: "Just now • By World Affairs Dispatch",
+                body: "Fifty-four member states of the global customs cooperative officially activated automated electronic cargo certification, saving commercial logistics carriers an estimated twelve billion dollars annually."
+            },
+            {
+                headline: "BREAKING: Trans-Continental Clean Power Supergrid Successfully Synchronizes Five Grids",
+                authorInfo: "1m ago • By Energy Geopolitics Today",
+                body: "Ultra-high-voltage direct-current transmission lines successfully balanced renewable solar and wind surpluses across five sovereign electricity markets in real time, setting a new benchmark in grid stability."
+            }
+        ],
+        "Environment": [
+            {
+                headline: "LIVE: Automated Ocean Cleanup Flotilla Celebrates 200,000 Metric Ton Recycling Milestone",
+                authorInfo: "Just now • By Oceanic Conservancy Wire",
+                body: "Solar-powered maritime collection barges stationed along the Great Pacific Garbage Patch celebrated their highest monthly harvest to date, recycling recovered polymers into durable circular manufacturing materials."
+            },
+            {
+                headline: "BREAKING: Geothermal Direct-Air Capture Plant Reaches Commercial Five-Hundred-Ton Daily Capacity",
+                authorInfo: "1m ago • By Clean Planet Review",
+                body: "Operating at full capacity powered entirely by volcanic steam, the facility binds ambient carbon dioxide with subterranean basalt rocks, permanently mineralizing greenhouse gases beneath the Earth's crust."
+            }
+        ]
+    })
+
+    function applyNewsUpdate(apiArticles) {
+        // Distribute and update fresh news across ALL categories
+        for (var c = 0; c < root.categories.length; c++) {
+            var catName = root.categories[c].name;
+            var existingList = (root.newsStore && root.newsStore[c]) ? root.newsStore[c] : [];
+            var heroImg = root.categories[c].heroImage || "qrc:/ApexVision/qml/assets/news_images/photo_1593941707882-a5bba14938c7.jpg";
+
+            // 1. Refresh timestamps on existing stories so they show realistic progression (e.g. 6m ago, 18m ago, 1h ago)
+            var updatedExisting = [];
+            for (var i = 0; i < existingList.length; i++) {
+                var old = existingList[i];
+                var newTime = (i === 0) ? "6m ago" : (i === 1) ? "18m ago" : (i + 1) + "h ago";
+                var authorSuffix = "Live Desk";
+                if (old.authorInfo && old.authorInfo.indexOf("•") !== -1) {
+                    authorSuffix = old.authorInfo.substring(old.authorInfo.indexOf("•") + 1).trim();
+                }
+                updatedExisting.push({
+                    category: old.category || catName,
+                    headline: old.headline,
+                    authorInfo: newTime + " • " + authorSuffix,
+                    timeText: newTime,
+                    image: old.image || heroImg,
+                    body: old.body,
+                    isBookmarked: old.isBookmarked || false
+                });
+            }
+
+            var newStories = [];
+
+            // If API articles were fetched, distribute to category
+            if (apiArticles && apiArticles.length > 0) {
+                var apiIdx = c % apiArticles.length;
+                var apiItem = apiArticles[apiIdx];
+                if (apiItem) {
+                    var sourceSuffix = (apiItem.authorInfo && apiItem.authorInfo.indexOf("•") !== -1) ? apiItem.authorInfo.split("•")[1].trim() : "Live Feed";
+                    newStories.push({
+                        category: catName,
+                        headline: apiItem.headline,
+                        authorInfo: "Just now • " + sourceSuffix,
+                        timeText: "Just now",
+                        image: (apiItem.image && apiItem.image.length > 0) ? apiItem.image : heroImg,
+                        body: apiItem.body,
+                        isBookmarked: false
+                    });
+                }
+            }
+
+            // Also distribute category-specific breaking story tailored to this category
+            var candidates = root.breakingUpdatesByCategory[catName] || root.breakingUpdatesByCategory["Top Stories"];
+            if (candidates && candidates.length > 0) {
+                var pickIdx = (root.updateCounter - 1) % candidates.length;
+                var item = candidates[pickIdx];
+                newStories.push({
+                    category: catName,
+                    headline: item.headline,
+                    authorInfo: item.authorInfo,
+                    timeText: "Just now",
+                    image: heroImg,
+                    body: item.body,
+                    isBookmarked: false
+                });
+            }
+
+            // Combine new stories at the top with existing stories (dedup by headline)
+            var combined = [];
+            var seenHeadlines = {};
+            for (var n = 0; n < newStories.length; n++) {
+                if (!seenHeadlines[newStories[n].headline]) {
+                    combined.push(newStories[n]);
+                    seenHeadlines[newStories[n].headline] = true;
+                }
+            }
+            for (var e = 0; e < updatedExisting.length; e++) {
+                if (!seenHeadlines[updatedExisting[e].headline]) {
+                    combined.push(updatedExisting[e]);
+                    seenHeadlines[updatedExisting[e].headline] = true;
+                }
+            }
+
+            // Keep up to 12 stories
+            if (combined.length > 12) combined = combined.slice(0, 12);
+
+            // Update cache for this category
+            root.newsStore[c] = combined;
+        }
+
+        saveNewsToPersistence();
+
+        // Repopulate newsModel for current active category
+        var activeList = root.newsStore[root.activeCategoryIndex] || [];
+        newsModel.clear();
+        for (var k = 0; k < activeList.length; k++) {
+            newsModel.append(activeList[k]);
+        }
+
+        root.selectedArticleIndex = 0;
+        if (typeof articlesListView !== "undefined" && articlesListView) {
+            articlesListView.positionViewAtIndex(0, ListView.Beginning);
+        }
+    }
+
+    function refreshNewsFromApi() {
+        if (root.isUpdating) return;
+        root.isUpdating = true;
+        root.updateCounter++;
+
+        var apiUrl = "https://api.spaceflightnewsapi.net/v4/articles/?limit=8";
+        var xhr = new XMLHttpRequest();
+        var requestDone = false;
+
+        var finalizeUpdate = function(fetchedItems) {
+            if (requestDone) return;
+            requestDone = true;
+
+            // Smooth minimum spin duration (850ms) so user sees the rotation
+            updateSpinTimer.pendingItems = fetchedItems;
+            updateSpinTimer.restart();
+        };
+
+        apiSafetyTimer.timeoutAction = function() {
+            if (!requestDone) {
+                try { xhr.abort(); } catch(e) {}
+                finalizeUpdate(null);
+            }
+        };
+        apiSafetyTimer.restart();
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    try {
+                        var json = JSON.parse(xhr.responseText);
+                        var results = json.results || json.articles || [];
+                        if (results.length > 0) {
+                            var items = [];
+                            for (var i = 0; i < results.length; i++) {
+                                var art = results[i];
+                                items.push({
+                                    headline: art.title || "Live Breaking Report",
+                                    authorInfo: "Just now • By " + (art.news_site || "Live Feed"),
+                                    timeText: "Just now",
+                                    image: art.image_url || "",
+                                    body: art.summary || "Live dispatch received via connected network API feed.",
+                                    isBookmarked: false
+                                });
+                            }
+                            finalizeUpdate(items);
+                            return;
+                        }
+                    } catch (e) {
+                        console.log("News API parse error:", e);
+                    }
+                }
+                finalizeUpdate(null);
+            }
+        };
+
+        try {
+            xhr.open("GET", apiUrl, true);
+            xhr.send();
+        } catch(e) {
+            finalizeUpdate(null);
+        }
+    }
+
     Component.onCompleted: {
-        preloadAllNews();
+        var restored = loadNewsFromPersistence();
+        if (!restored) {
+            preloadAllNews();
+        }
         switchCategory(0);
     }
 }

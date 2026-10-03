@@ -82,6 +82,11 @@ Item {
         id: mouseArea
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: root.clicked()
+        onClicked: {
+            if (typeof SystemBackend !== "undefined") {
+                SystemBackend.playTouchSound();
+            }
+            root.clicked();
+        }
     }
 }

@@ -29,6 +29,9 @@ endif()
 if(APPLE AND EXISTS "/opt/homebrew/opt/qt")
     list(PREPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/qt" "/opt/homebrew/opt/qtwebengine" "/opt/homebrew/opt/qtmultimedia")
 endif()
+if(EXISTS "/usr/lib/cmake/Qt6")
+    list(PREPEND CMAKE_PREFIX_PATH "/usr/lib/cmake/Qt6" "/usr/lib/cmake")
+endif()
 
 find_package(Qt6 REQUIRED COMPONENTS
     Core
@@ -37,17 +40,19 @@ find_package(Qt6 REQUIRED COMPONENTS
     Qml
     QuickControls2
     Svg
-    WebEngineCore
-    WebEngineQuick
     Network
     Quick3D
     Quick3DHelpers
     Multimedia
 )
 
+find_package(Qt6 COMPONENTS WebEngineCore WebEngineQuick QUIET)
+
 qt_standard_project_setup()
 
 set(BACKEND_SOURCES
+    backend/PersistenceManager.h
+    backend/PersistenceManager.cpp
     backend/VehicleSimulator.h
     backend/VehicleSimulator.cpp
     backend/VehicleBackend.h
@@ -101,6 +106,10 @@ qt_add_qml_module(apex_vision_ivi
         qml/pages/RejuvenatePage.qml
         qml/pages/RejuvenateSession.qml
         qml/pages/ManualPage.qml
+        qml/pages/ProfileSwitcherPage.qml
+        qml/pages/MobileDeviceConnectionPage.qml
+        qml/pages/MessagesPage.qml
+        qml/pages/GamesPage.qml
         qml/components/SideNavigation.qml
         qml/components/StatusBar.qml
         qml/components/MediaCard.qml
@@ -115,6 +124,7 @@ qt_add_qml_module(apex_vision_ivi
         qml/components/RejuvenateThemeCard.qml
         qml/components/RejuvenateStatusCard.qml
         qml/components/RejuvenateProgress.qml
+        qml/components/WelcomeScreen.qml
         qml/Typography.qml
 )
 
@@ -154,13 +164,19 @@ target_link_libraries(apex_vision_ivi PRIVATE
     Qt6::Qml
     Qt6::QuickControls2
     Qt6::Svg
-    Qt6::WebEngineCore
-    Qt6::WebEngineQuick
     Qt6::Network
     Qt6::Quick3D
     Qt6::Quick3DHelpers
     Qt6::Multimedia
 )
+
+if(TARGET Qt6::WebEngineQuick)
+    target_link_libraries(apex_vision_ivi PRIVATE
+        Qt6::WebEngineCore
+        Qt6::WebEngineQuick
+    )
+    target_compile_definitions(apex_vision_ivi PRIVATE HAVE_WEBENGINE=1)
+endif()
 
 # Custom target to keep 3D model meshes, textures, and assets in sync with build directory
 add_custom_target(DeployClimate3DAssets

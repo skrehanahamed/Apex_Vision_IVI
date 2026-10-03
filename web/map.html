@@ -2185,8 +2185,174 @@
             background: #070A0F;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.22s ease-in-out;
-            z-index: 9999;
+        }
+
+        /* =========================================================================
+           NIGHT / DARK MODE AUTOMOTIVE MAP STYLES
+           ========================================================================= */
+        body.night-mode {
+            background: #090D16 !important;
+            color: #F1F5F9 !important;
+        }
+
+        body.night-mode #map {
+            background: #090D16 !important;
+        }
+
+        body.night-mode .search-card-container {
+            background: rgba(15, 23, 42, 0.90) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        body.night-mode .search-placeholder-text {
+            color: #CBD5E1 !important;
+        }
+
+        body.night-mode .search-chevron-btn svg {
+            fill: #94A3B8 !important;
+        }
+
+        body.night-mode .search-card-bottom-row {
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .cat-icon-btn {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .cat-icon-btn:hover {
+            background: rgba(56, 189, 248, 0.15) !important;
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .compact-search-btn {
+            background: rgba(15, 23, 42, 0.92) !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .compact-search-btn svg {
+            stroke: #38BDF8 !important;
+        }
+
+        body.night-mode .strip-circle-btn {
+            background: rgba(15, 23, 42, 0.92) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #E2E8F0 !important;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        body.night-mode .strip-circle-btn:hover {
+            background: #1E293B !important;
+            color: #38BDF8 !important;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.7) !important;
+        }
+
+        body.night-mode .side-flyout-pill {
+            background: rgba(15, 23, 42, 0.96) !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .map-settings-card {
+            background: rgba(15, 23, 42, 0.96) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7) !important;
+        }
+
+        body.night-mode .settings-card-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .settings-card-title {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .settings-header-btn svg {
+            stroke: #94A3B8 !important;
+        }
+
+        body.night-mode .settings-row {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+        }
+
+        body.night-mode .settings-row-title {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .settings-row-sub {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .car-street-label {
+            background: rgba(15, 23, 42, 0.92) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .hud-compass-pill {
+            background: rgba(15, 23, 42, 0.90) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        body.night-mode .recenter-btn {
+            background: rgba(15, 23, 42, 0.92) !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
+            color: #38BDF8 !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .speedometer-cluster {
+            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.96), rgba(8, 12, 20, 0.98)) !important;
+            border: 2px solid rgba(56, 189, 248, 0.3) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), inset 0 0 16px rgba(56, 189, 248, 0.08) !important;
+        }
+
+        body.night-mode .speed-value {
+            color: #FFFFFF !important;
+        }
+
+        body.night-mode .speed-unit {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .trip-arrival-card {
+            background: rgba(15, 23, 42, 0.94) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .trip-dest-name {
+            color: #FFFFFF !important;
+        }
+
+        body.night-mode .trip-eta-val {
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .zoom-control-container {
+            background: rgba(15, 23, 42, 0.92) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .zoom-btn svg {
+            stroke: #E2E8F0 !important;
+        }
+
+        body.night-mode .zoom-btn:hover {
+            background: #1E293B !important;
+        }
+
+        body.night-mode .zoom-divider {
+            background: rgba(255, 255, 255, 0.12) !important;
         }
     </style>
 </head>
@@ -2343,7 +2509,7 @@
                         <div class="settings-row clickable" id="settingRowVehicle" data-submenu="vehicle">
                             <div class="settings-row-text">
                                 <div class="settings-row-title">Your vehicle</div>
-                                <div class="settings-row-sub">Lincoln Zephyr · Custom 3D Model</div>
+                                <div class="settings-row-sub">Apex Zephyr · Custom 3D Model</div>
                             </div>
                             <div class="settings-row-chevron">
                                 <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#80868B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -2859,7 +3025,7 @@
 
     <!-- MapLibre GL 3.6.2 Engine (Local High-Speed Bundled) -->
     <script src="maplibre-gl.js"></script>
-    <!-- Three.js & GLTFLoader Engine (for Lincoln Zephyr 3D Model CustomLayer) -->
+    <!-- Three.js & GLTFLoader Engine (for Apex Zephyr 3D Model CustomLayer) -->
     <script src="three.min.js"></script>
     <script src="GLTFLoader.js"></script>
 
@@ -3063,9 +3229,10 @@
             return points;
         }
 
-        // Initialize Map with Stadia Maps Light Engine (Alidade Smooth Retina + Persistent Local Caching)
+        // Initialize Map with Stadia Maps Light/Dark Engine (Alidade Smooth Retina + Persistent Local Caching)
         function initializeMap() {
             try {
+                const isNight = (currentMapTheme === 'night');
                 map = new maplibregl.Map({
                     container: "map",
                     style: {
@@ -3078,15 +3245,34 @@
                                 ],
                                 tileSize: 512,
                                 attribution: ''
+                            },
+                            "stadia-dark": {
+                                type: "raster",
+                                tiles: [
+                                    `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}@2x.png?api_key=${STADIA_API_KEY}`
+                                ],
+                                tileSize: 512,
+                                attribution: ''
                             }
                         },
                         layers: [
+                            {
+                                id: "stadia-dark-layer",
+                                type: "raster",
+                                source: "stadia-dark",
+                                minzoom: 0,
+                                maxzoom: 20,
+                                layout: { "visibility": isNight ? "visible" : "none" },
+                                paint: { "raster-opacity": isNight ? 1.0 : 0.0, "raster-opacity-transition": { "duration": 350 } }
+                            },
                             {
                                 id: "stadia-light-layer",
                                 type: "raster",
                                 source: "stadia-light",
                                 minzoom: 0,
-                                maxzoom: 20
+                                maxzoom: 20,
+                                layout: { "visibility": isNight ? "none" : "visible" },
+                                paint: { "raster-opacity": isNight ? 0.0 : 1.0, "raster-opacity-transition": { "duration": 350 } }
                             }
                         ]
                     },
@@ -3103,7 +3289,7 @@
                 streetTextEl = document.getElementById("streetNameText");
 
                 const updateStreetLabelFallback = () => {
-                    if (lincolnZephyrLayer && lincolnZephyrLayer.carCorners && lincolnZephyrLayer.carGroup) return;
+                    if (apexZephyrLayer && apexZephyrLayer.carCorners && apexZephyrLayer.carGroup) return;
                     const overlay = document.getElementById("carStreetLabelOverlay");
                     if (overlay && map) {
                         const pt = map.project([currentLng, currentLat]);
@@ -3114,7 +3300,7 @@
 
                 map.on("load", function() {
                     initRouteLayer();
-                    initLincolnZephyr3DLayer(map);
+                    initApexZephyr3DLayer(map);
                 });
 
                 map.on("dragstart", function() {
@@ -3196,19 +3382,19 @@
         }
 
         // =========================================================================
-        // LINCOLN ZEPHYR 3D MODEL WEBGL CUSTOM LAYER (Three.js Engine)
+        // APEX ZEPHYR 3D MODEL WEBGL CUSTOM LAYER (Three.js Engine)
         // High-fidelity automotive 3D vehicle rendering synchronized with map GPS & pitch
         // =========================================================================
-        let lincolnZephyrLayer = null;
+        let apexZephyrLayer = null;
 
-        function initLincolnZephyr3DLayer(mapInstance) {
+        function initApexZephyr3DLayer(mapInstance) {
             if (!mapInstance || !window.THREE || !window.THREE.GLTFLoader) {
-                console.warn("[LincolnZephyr] Three.js or GLTFLoader not ready");
+                console.warn("[ApexZephyr] Three.js or GLTFLoader not ready");
                 return;
             }
 
-            lincolnZephyrLayer = {
-                id: 'lincoln-zephyr-3d-model',
+            apexZephyrLayer = {
+                id: 'apex-zephyr-3d-model',
                 type: 'custom',
                 renderingMode: '3d',
                 onAdd: function (mapInst, gl) {
@@ -3216,26 +3402,43 @@
                     this.scene = new THREE.Scene();
 
                     // Studio 3D Vehicle Lighting:
-                    const ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
-                    this.scene.add(ambientLight);
+                    this.ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
+                    this.scene.add(this.ambientLight);
 
-                    const sunLight = new THREE.DirectionalLight(0xfffaed, 2.6);
-                    sunLight.position.set(30, -50, 100).normalize();
-                    this.scene.add(sunLight);
+                    this.sunLight = new THREE.DirectionalLight(0xfffaed, 2.6);
+                    this.sunLight.position.set(30, -50, 100).normalize();
+                    this.scene.add(this.sunLight);
 
-                    const fillLight = new THREE.DirectionalLight(0xdbeafe, 1.4);
-                    fillLight.position.set(-40, 50, 60).normalize();
-                    this.scene.add(fillLight);
+                    this.fillLight = new THREE.DirectionalLight(0xdbeafe, 1.4);
+                    this.fillLight.position.set(-40, 50, 60).normalize();
+                    this.scene.add(this.fillLight);
 
-                    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x334155, 1.2);
-                    this.scene.add(hemiLight);
+                    this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x334155, 1.2);
+                    this.scene.add(this.hemiLight);
+
+                    this.setNightMode = function(isNight) {
+                        if (isNight) {
+                            if (this.ambientLight) this.ambientLight.intensity = 1.2;
+                            if (this.sunLight) this.sunLight.intensity = 1.0;
+                            if (this.fillLight) this.fillLight.intensity = 0.8;
+                            if (this.hemiLight) this.hemiLight.intensity = 0.6;
+                        } else {
+                            if (this.ambientLight) this.ambientLight.intensity = 2.2;
+                            if (this.sunLight) this.sunLight.intensity = 2.6;
+                            if (this.fillLight) this.fillLight.intensity = 1.4;
+                            if (this.hemiLight) this.hemiLight.intensity = 1.2;
+                        }
+                    };
+                    if (window.currentMapTheme === 'night') {
+                        this.setNightMode(true);
+                    }
 
                     this.carGroup = new THREE.Group();
                     this.scene.add(this.carGroup);
 
                     const loader = new THREE.GLTFLoader();
                     loader.load(
-                        'lincoln_zephyr.glb',
+                        'apex_zephyr.glb',
                         (gltf) => {
                             const rawModel = gltf.scene;
 
@@ -3246,7 +3449,7 @@
                             box.getCenter(center);
                             box.getSize(size);
 
-                            // Real Lincoln Zephyr length is 4.98 meters.
+                            // Real Apex Zephyr length is 4.98 meters.
                             // In this GLTF, size.z is ~19.82 units -> 1 unit = (4.98 / size.z) meters
                             const unitToMeter = 4.98 / (size.z > 0 ? size.z : 19.82);
                             rawModel.scale.set(unitToMeter, unitToMeter, unitToMeter);
@@ -3277,7 +3480,7 @@
                                         mat.depthWrite = true;
                                         mat.depthTest = true;
                                         const matName = (mat.name || '').toLowerCase();
-                                        // Paint Lincoln Zephyr exterior body shell and panels pearl white
+                                        // Paint Apex Zephyr exterior body shell and panels pearl white
                                         if (matName.includes('paint') || 
                                             matName.includes('bodyfrontgrillepaint') || 
                                             matName.includes('carbodyfrostedplastic21') || 
@@ -3299,7 +3502,7 @@
                         },
                         undefined,
                         (err) => {
-                            console.error("[LincolnZephyr] Error loading lincoln_zephyr.glb:", err);
+                            console.error("[ApexZephyr] Error loading apex_zephyr.glb:", err);
                         }
                     );
 
@@ -3387,7 +3590,7 @@
                 }
             };
 
-            mapInstance.addLayer(lincolnZephyrLayer);
+            mapInstance.addLayer(apexZephyrLayer);
         }
 
         // =========================================================================
@@ -4916,7 +5119,7 @@
                         </div>
                         <div class="settings-info-card">
                             <div class="settings-info-card-title">Surround Sound Output</div>
-                            <div class="settings-info-card-text">Guidance audio is routed to the driver-side headrest speakers in the Lincoln Zephyr.</div>
+                            <div class="settings-info-card-text">Guidance audio is routed to the driver-side headrest speakers in the Apex Zephyr.</div>
                         </div>
                     `;
                     document.getElementById("btnSubCycleAudio")?.addEventListener("click", () => {
@@ -4928,7 +5131,7 @@
                     subTitle.textContent = "Your vehicle";
                     subContent.innerHTML = `
                         <div class="settings-info-card" style="margin-top:14px;background:#F0FDF4;border-color:#DCFCE7;">
-                            <div class="settings-info-card-title" style="color:#166534;">Lincoln Zephyr Sedan</div>
+                            <div class="settings-info-card-title" style="color:#166534;">Apex Zephyr Sedan</div>
                             <div class="settings-info-card-text" style="color:#15803D;">Custom 3D GLTF Model active with real-time wheel speed and bearing sync.</div>
                         </div>
                         <div class="settings-row">
@@ -4957,7 +5160,7 @@
                     `;
                     document.getElementById("btnSubRecenterVehicle")?.addEventListener("click", () => {
                         recenterMap();
-                        showToast("Lincoln Zephyr recentered");
+                        showToast("Apex Zephyr recentered");
                     });
                 } else if (type === "route") {
                     subTitle.textContent = "Route options";
@@ -5084,7 +5287,7 @@
                             <div class="settings-info-card-title">Apex Vision IVI System</div>
                             <div class="settings-info-card-text">
                                 <b>Version:</b> 2.4.1 (Google Automotive Edition)<br>
-                                <b>Car Model:</b> Lincoln Zephyr Sedan<br>
+                                <b>Car Model:</b> Apex Zephyr Sedan<br>
                                 <b>Map Provider:</b> Google Places & Routes + MapLibre GL<br>
                                 <b>Status:</b> Online · High-Speed Sensor Fusion
                             </div>
@@ -5951,6 +6154,75 @@
             if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 16.5, pitch: 58.0, bearing: isNorthUp ? 0 : currentHeading, offset: targetOffset, duration: 500 });
         }
 
+        function getExpectedTimeTheme() {
+            const hour = new Date().getHours();
+            // Daytime: 06:00 to 18:00 (6:00 AM - 6:00 PM), Nighttime: 18:00 to 06:00 (6:00 PM - 6:00 AM)
+            return (hour >= 6 && hour < 18) ? 'day' : 'night';
+        }
+
+        let currentMapTheme = getExpectedTimeTheme();
+        window.currentMapTheme = currentMapTheme;
+
+        function checkTimeBasedTheme() {
+            const expectedTheme = getExpectedTimeTheme();
+            if (currentMapTheme !== expectedTheme) {
+                console.log(`[Map Theme] Time transition detected: switching to ${expectedTheme} theme (hour: ${new Date().getHours()})`);
+                setMapTheme(expectedTheme);
+            }
+        }
+        setInterval(checkTimeBasedTheme, 15000);
+
+        function setMapTheme(theme) {
+            const isNight = (theme === 'night');
+            currentMapTheme = isNight ? 'night' : 'day';
+            window.currentMapTheme = currentMapTheme;
+
+            if (map && map.isStyleLoaded()) {
+                applyMapThemeLayers(isNight);
+            } else if (map) {
+                map.once('load', () => applyMapThemeLayers(isNight));
+            }
+
+            document.body.classList.toggle('night-mode', isNight);
+            const mapEl = document.getElementById('map');
+            if (mapEl) {
+                mapEl.style.background = isNight ? '#080C14' : '#E8ECEF';
+            }
+            document.body.style.background = isNight ? '#080C14' : '#E8ECEF';
+
+            if (apexZephyrLayer && typeof apexZephyrLayer.setNightMode === 'function') {
+                apexZephyrLayer.setNightMode(isNight);
+            }
+        }
+
+        function applyMapThemeLayers(isNight) {
+            try {
+                if (map.getLayer('stadia-dark-layer') && map.getLayer('stadia-light-layer')) {
+                    if (isNight) {
+                        map.setLayoutProperty('stadia-dark-layer', 'visibility', 'visible');
+                        map.setPaintProperty('stadia-dark-layer', 'raster-opacity', 1.0);
+                        map.setPaintProperty('stadia-light-layer', 'raster-opacity', 0.0);
+                        setTimeout(() => {
+                            if (currentMapTheme === 'night' && map.getLayer('stadia-light-layer')) {
+                                map.setLayoutProperty('stadia-light-layer', 'visibility', 'none');
+                            }
+                        }, 350);
+                    } else {
+                        map.setLayoutProperty('stadia-light-layer', 'visibility', 'visible');
+                        map.setPaintProperty('stadia-light-layer', 'raster-opacity', 1.0);
+                        map.setPaintProperty('stadia-dark-layer', 'raster-opacity', 0.0);
+                        setTimeout(() => {
+                            if (currentMapTheme === 'day' && map.getLayer('stadia-dark-layer')) {
+                                map.setLayoutProperty('stadia-dark-layer', 'visibility', 'none');
+                            }
+                        }, 350);
+                    }
+                }
+            } catch (err) {
+                console.warn('[Map Theme] Error switching raster layers:', err);
+            }
+        }
+
         window.setVehiclePosition = setVehiclePosition;
         window.setStreetName = setStreetName;
         window.setCompactMode = setCompactMode;
@@ -5958,8 +6230,12 @@
         window.recenterMap = recenterMap;
         window.handleSearchInput = performSearch;
         window.performSearch = performSearch;
+        window.setMapTheme = setMapTheme;
+        window.syncThemeWithTime = checkTimeBasedTheme;
 
         window.addEventListener("DOMContentLoaded", () => {
+            const initialTheme = getExpectedTimeTheme();
+            setMapTheme(initialTheme);
             initializeMap();
             setupListeners();
             setupKeyboard();

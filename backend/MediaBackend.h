@@ -21,6 +21,8 @@ class QNetworkAccessManager;
 class QNetworkReply;
 class QTimer;
 
+class PersistenceManager;
+
 class MediaBackend : public QObject
 {
     Q_OBJECT
@@ -82,10 +84,15 @@ class MediaBackend : public QObject
     Q_PROPERTY(QVariantList onlineSearchResults READ onlineSearchResults NOTIFY onlineSearchResultsChanged)
     Q_PROPERTY(bool isSearchingOnline READ isSearchingOnline NOTIFY isSearchingOnlineChanged)
     Q_PROPERTY(int currentSxmChannelIndex READ currentSxmChannelIndex NOTIFY sxmChannelChanged)
+    Q_PROPERTY(bool bootComplete READ bootComplete WRITE setBootComplete NOTIFY bootCompleteChanged)
 
 public:
-    explicit MediaBackend(VehicleSimulator *simulator, QObject *parent = nullptr);
+    explicit MediaBackend(VehicleSimulator *simulator, PersistenceManager *persistence = nullptr, QObject *parent = nullptr);
     ~MediaBackend() override;
+
+    bool bootComplete() const { return m_bootComplete; }
+    void setBootComplete(bool c);
+    Q_INVOKABLE void startPlaybackAfterBoot();
 
     QString source() const { return m_source; }
     bool isAm() const { return m_source == "AM"; }
@@ -211,6 +218,7 @@ signals:
     void trackTitleChanged();
     void artistChanged();
     void isPlayingChanged();
+    void bootCompleteChanged();
     void isHdRadioChanged();
     void progressChanged();
     void durationChanged();
@@ -324,4 +332,6 @@ private:
     QNetworkAccessManager *m_networkManager{nullptr};
     QNetworkReply *m_icyMetadataReply{nullptr};
     QTimer *m_icyPollTimer{nullptr};
+    PersistenceManager *m_persistence{nullptr};
+    bool m_bootComplete{false};
 };

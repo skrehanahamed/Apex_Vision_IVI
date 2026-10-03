@@ -217,26 +217,33 @@ Window {
                     objectName: "homePage"
                     anchors.fill: parent
                     climateOpen: climateBar.climate3DOpen
-                    visible: opacity > 0.001
+                    visible: pageStack.currentIndex === 0 || opacity > 0.001
                     opacity: pageStack.currentIndex === 0 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 0 ? 0 : (pageStack.currentIndex > 0 ? -36 : 36)
                     enabled: pageStack.currentIndex === 0 && opacity > 0.8
+                    transform: Translate {
+                        x: pageStack.currentIndex === 7 ? -220 : 0
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: 340
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
                         }
                     }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
-                        }
-                    }
                     onOpenPlayerRequested: {
-                        if (MediaBackend.source === "AM" || MediaBackend.source === "FM" || MediaBackend.isSxm || MediaBackend.source === "OrbitXM") {
-                            pageStack.currentIndex = 7;
+                        radioPage.returnIndex = 0;
+                        pageStack.currentIndex = 7;
+                    }
+                    onOpenProfileRequested: {
+                        if (typeof profileSwitcherPage !== "undefined" && profileSwitcherPage) {
+                            profileSwitcherPage.returnIndex = 0;
                         }
+                        pageStack.currentIndex = 11;
                     }
                 }
 
@@ -246,18 +253,11 @@ Window {
                     anchors.fill: parent
                     visible: opacity > 0.001 || (pageStack.currentIndex === 4 && settingsPage.opacity < 0.99)
                     opacity: pageStack.currentIndex === 1 ? 1.0 : (pageStack.currentIndex === 4 ? 1.0 : 0.0)
-                    x: (pageStack.currentIndex === 1 || pageStack.currentIndex === 4) ? 0 : (pageStack.currentIndex > 1 ? -36 : 36)
                     enabled: pageStack.currentIndex === 1 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
-                        }
-                    }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
                         }
                     }
                     onOpenSettingsRequested: {
@@ -272,7 +272,6 @@ Window {
                     anchors.fill: parent
                     visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 2 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 2 ? 0 : (pageStack.currentIndex > 2 ? -36 : 36)
                     enabled: pageStack.currentIndex === 2 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
@@ -280,16 +279,24 @@ Window {
                             easing.type: Easing.InOutCubic
                         }
                     }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
-                        }
-                    }
                     onAppSelected: function(name, icon) {
                         var targetIdx = -1;
-                        if (name === "Settings" || name === "Bluetooth") {
+                        if (name === "ProfileSwitcher") {
+                            targetIdx = 11;
+                            if (typeof profileSwitcherPage !== "undefined" && profileSwitcherPage) {
+                                profileSwitcherPage.returnIndex = 2;
+                            }
+                        } else if (name === "Settings" || name === "Bluetooth" || name === "Bluetooth Audio") {
                             targetIdx = 4;
+                            if (typeof settingsPage !== "undefined" && settingsPage) {
+                                settingsPage.returnIndex = 2;
+                                if (icon && icon.indexOf("profile") !== -1) {
+                                    settingsPage.returnIndex = 11;
+                                    settingsPage.activeCategory = "profile";
+                                } else if (name === "Bluetooth" || name === "Bluetooth Audio") {
+                                    settingsPage.activeCategory = "bluetooth";
+                                }
+                            }
                         } else if (name === "AM" || name === "RadioAM") {
                             MediaBackend.setSource("AM");
                             targetIdx = 7;
@@ -298,13 +305,20 @@ Window {
                             targetIdx = 7;
                         } else if (name === "SatelliteRadio" || name === "OrbitXM" || name === "SiriusXM") {
                             MediaBackend.setSource("OrbitXM");
+                            targetIdx = 7;
                         } else if (name === "Navigation") {
                             targetIdx = 0;
                             if (homePage) {
                                 homePage.openFullNavigation(false);
                             }
-                        } else if (name === "Media Player" || name === "Media" || name === "CarPlay" || name === "AndroidAuto" || name === "Assistant") {
+                        } else if (name === "Media Player" || name === "Media" || name === "Assistant") {
                             targetIdx = 0;
+                        } else if (name === "CarPlay" || name === "Apple CarPlay" || name === "AppleCarPlay") {
+                            mobileDeviceConnectionPage.projectionType = "carplay";
+                            targetIdx = 12;
+                        } else if (name === "AndroidAuto" || name === "Android Auto") {
+                            mobileDeviceConnectionPage.projectionType = "android_auto";
+                            targetIdx = 12;
                         } else if (name === "Vehicle Status") {
                             targetIdx = 1;
                             if (vehiclePage) {
@@ -316,14 +330,24 @@ Window {
                             targetIdx = 6;
                         } else if (name === "Video" || name === "YouTube") {
                             targetIdx = 8;
-                        } else if (name === "Phone" || name === "Messages") {
+                        } else if (name === "Phone") {
                             targetIdx = 3;
+                        } else if (name === "Messages") {
+                            targetIdx = 13;
                         } else if (name === "Manual") {
                             targetIdx = 10;
-                        } else if (name === "Updates") {
+                        } else if (name === "Updates" || name === "Software Updates") {
                             targetIdx = 4;
+                            if (typeof settingsPage !== "undefined" && settingsPage) {
+                                settingsPage.returnIndex = 2;
+                                settingsPage.activeCategory = "system";
+                                settingsPage.sysSlideDir = 1;
+                                settingsPage.sysCurrentScreen = "system_update";
+                            }
                         } else if (name === "Rejuvenate") {
                             targetIdx = 9;
+                        } else if (name === "Games") {
+                            targetIdx = 14;
                         }
 
                         var iconPath = (icon && icon !== "") ? icon : "qrc:/ApexVision/qml/assets/icons/app_trailer.svg";
@@ -337,7 +361,6 @@ Window {
                     anchors.fill: parent
                     visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 3 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 3 ? 0 : (pageStack.currentIndex > 3 ? -36 : 36)
                     enabled: pageStack.currentIndex === 3 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
@@ -345,10 +368,14 @@ Window {
                             easing.type: Easing.InOutCubic
                         }
                     }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
+                    onBackRequested: {
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                    onOpenBluetoothRequested: {
+                        pageStack.currentIndex = 4; // Settings Page
+                        if (typeof settingsPage !== "undefined" && settingsPage) {
+                            settingsPage.returnIndex = 3;
+                            settingsPage.activeCategory = "bluetooth";
                         }
                     }
                 }
@@ -359,7 +386,6 @@ Window {
                     anchors.fill: parent
                     visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 4 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 4 ? 0 : (pageStack.currentIndex > 4 ? -36 : 36)
                     enabled: pageStack.currentIndex === 4 && opacity > 0.90
                     Behavior on opacity {
                         NumberAnimation {
@@ -367,14 +393,13 @@ Window {
                             easing.type: Easing.InOutCubic
                         }
                     }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+                    returnIndex: 1
                     onBackRequested: {
-                        pageStack.currentIndex = 1;
+                        if (activeCategory === "profile" && returnIndex === 1) {
+                            returnIndex = 11;
+                        }
+                        pageStack.currentIndex = returnIndex;
+                        returnIndex = 1;
                     }
                 }
 
@@ -384,18 +409,11 @@ Window {
                     anchors.fill: parent
                     visible: pageStack.currentIndex === 5 || opacity > 0.001
                     opacity: pageStack.currentIndex === 5 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 5 ? 0 : (pageStack.currentIndex > 5 ? -36 : 36)
                     enabled: pageStack.currentIndex === 5 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
-                        }
-                    }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
                         }
                     }
                     onOpenSettingsRequested: {
@@ -409,21 +427,15 @@ Window {
                 // Page 6: Live News Feed (Free News API)
                 NewsPage {
                     id: newsPage
+                    objectName: "newsPage"
                     anchors.fill: parent
                     visible: pageStack.currentIndex === 6 || opacity > 0.001
                     opacity: pageStack.currentIndex === 6 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 6 ? 0 : (pageStack.currentIndex > 6 ? -36 : 36)
                     enabled: pageStack.currentIndex === 6 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
-                        }
-                    }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
                         }
                     }
                     onBackRequested: {
@@ -438,25 +450,36 @@ Window {
                     anchors.fill: parent
                     visible: pageStack.currentIndex === 7 || opacity > 0.001
                     opacity: pageStack.currentIndex === 7 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 7 ? 0 : (pageStack.currentIndex > 7 ? -36 : 36)
                     enabled: pageStack.currentIndex === 7 && opacity > 0.8
+                    transform: Translate {
+                        x: pageStack.currentIndex === 7 ? 0 : (pageStack.currentIndex < 7 ? 220 : -220)
+                        Behavior on x {
+                            NumberAnimation {
+                                duration: 340
+                                easing.type: Easing.OutCubic
+                            }
+                        }
+                    }
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
                         }
                     }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
-                        }
-                    }
+                    property int returnIndex: 2
                     onBackRequested: {
-                        pageStack.currentIndex = 2; // Return to Apps page
+                        pageStack.currentIndex = returnIndex;
+                        returnIndex = 2; // Return to Apps page default
                     }
                     onOpenSettingsRequested: {
                         pageStack.currentIndex = 4;
+                    }
+                    onOpenBluetoothRequested: {
+                        pageStack.currentIndex = 4;
+                        if (typeof settingsPage !== "undefined" && settingsPage) {
+                            settingsPage.returnIndex = 7;
+                            settingsPage.activeCategory = "bluetooth";
+                        }
                     }
                     onOpenAppsRequested: {
                         pageStack.currentIndex = 2;
@@ -470,18 +493,11 @@ Window {
                     anchors.fill: parent
                     visible: pageStack.currentIndex === 8 || opacity > 0.001
                     opacity: pageStack.currentIndex === 8 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 8 ? 0 : (pageStack.currentIndex > 8 ? -36 : 36)
                     enabled: pageStack.currentIndex === 8 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
-                        }
-                    }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
                         }
                     }
                     onBackRequested: {
@@ -500,18 +516,11 @@ Window {
                     anchors.fill: parent
                     visible: pageStack.currentIndex === 9 || opacity > 0.001
                     opacity: pageStack.currentIndex === 9 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 9 ? 0 : (pageStack.currentIndex > 9 ? -36 : 36)
                     enabled: pageStack.currentIndex === 9 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
-                        }
-                    }
-                    Behavior on x {
-                        NumberAnimation {
-                            duration: 320
-                            easing.type: Easing.OutCubic
                         }
                     }
                     onBackRequested: {
@@ -529,7 +538,6 @@ Window {
                     anchors.fill: parent
                     visible: pageStack.currentIndex === 10 || opacity > 0.001
                     opacity: pageStack.currentIndex === 10 ? 1.0 : 0.0
-                    x: pageStack.currentIndex === 10 ? 0 : (pageStack.currentIndex > 10 ? -36 : 36)
                     enabled: pageStack.currentIndex === 10 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
@@ -537,10 +545,104 @@ Window {
                             easing.type: Easing.InOutCubic
                         }
                     }
-                    Behavior on x {
+                    onBackRequested: {
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                }
+
+                // Page 11: Personal Profiles Switcher & Creation (Separate Modular QML file)
+                ProfileSwitcherPage {
+                    id: profileSwitcherPage
+                    objectName: "profileSwitcherPage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 11 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 11 ? 1.0 : 0.0
+                    enabled: pageStack.currentIndex === 11 && opacity > 0.8
+                    Behavior on opacity {
                         NumberAnimation {
                             duration: 320
-                            easing.type: Easing.OutCubic
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    property int returnIndex: 0
+                    onBackRequested: {
+                        pageStack.currentIndex = returnIndex;
+                        returnIndex = 0;
+                    }
+                    onOpenProfileSettingsRequested: {
+                        if (typeof settingsPage !== "undefined" && settingsPage) {
+                            settingsPage.returnIndex = 11;
+                            settingsPage.activeCategory = "profile";
+                            settingsPage.profCurrentScreen = "main";
+                        }
+                        pageStack.currentIndex = 4;
+                    }
+                }
+
+                // Page 12: Mobile Device Connection (Apple CarPlay & Android Auto)
+                MobileDeviceConnectionPage {
+                    id: mobileDeviceConnectionPage
+                    objectName: "mobileDeviceConnectionPage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 12 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 12 ? 1.0 : 0.0
+                    enabled: pageStack.currentIndex === 12 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    onBackRequested: {
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                    onOpenBluetoothRequested: {
+                        pageStack.currentIndex = 4; // Settings Page
+                        if (typeof settingsPage !== "undefined" && settingsPage) {
+                            settingsPage.returnIndex = 12;
+                            settingsPage.activeCategory = "bluetooth";
+                        }
+                    }
+                }
+
+                // Page 13: Messages (Smartphone Text Messaging)
+                MessagesPage {
+                    id: messagesPage
+                    objectName: "messagesPage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 13 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 13 ? 1.0 : 0.0
+                    enabled: pageStack.currentIndex === 13 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
+                        }
+                    }
+                    onBackRequested: {
+                        pageStack.currentIndex = 2; // Return to Apps page
+                    }
+                    onOpenBluetoothRequested: {
+                        pageStack.currentIndex = 4; // Settings Page
+                        if (typeof settingsPage !== "undefined" && settingsPage) {
+                            settingsPage.returnIndex = 13;
+                            settingsPage.activeCategory = "bluetooth";
+                        }
+                    }
+                }
+
+                // Page 14: Games (In-Cabin Entertainment - Coming Soon)
+                GamesPage {
+                    id: gamesPage
+                    objectName: "gamesPage"
+                    anchors.fill: parent
+                    visible: pageStack.currentIndex === 14 || opacity > 0.001
+                    opacity: pageStack.currentIndex === 14 ? 1.0 : 0.0
+                    enabled: pageStack.currentIndex === 14 && opacity > 0.8
+                    Behavior on opacity {
+                        NumberAnimation {
+                            duration: 320
+                            easing.type: Easing.InOutCubic
                         }
                     }
                     onBackRequested: {
@@ -710,8 +812,9 @@ Window {
             target: typeof RejuvenateController !== "undefined" ? RejuvenateController : null
             function onActiveChanged() {
                 if (RejuvenateController.active || RejuvenateController.isPreparing) {
-                    if (typeof MediaBackend !== "undefined" && MediaBackend.isPlaying) {
+                    if (typeof MediaBackend !== "undefined") {
                         MediaBackend.setIsPlaying(false);
+                        MediaBackend.pausePlayback();
                     }
                     if (typeof VideoBackend !== "undefined" && VideoBackend.playerVisible) {
                         VideoBackend.closePlayer();
@@ -720,12 +823,45 @@ Window {
             }
             function onIsPreparingChanged() {
                 if (RejuvenateController.isPreparing) {
-                    if (typeof MediaBackend !== "undefined" && MediaBackend.isPlaying) {
+                    if (typeof MediaBackend !== "undefined") {
                         MediaBackend.setIsPlaying(false);
+                        MediaBackend.pausePlayback();
                     }
                     if (typeof VideoBackend !== "undefined" && VideoBackend.playerVisible) {
                         VideoBackend.closePlayer();
                     }
+                }
+            }
+        }
+
+        // Auto-fallback from disconnected media sources (Bluetooth, CarPlay, USB) to OrbitXM
+        Connections {
+            target: typeof PhoneBackend !== "undefined" ? PhoneBackend : null
+            function onIsConnectedChanged() {
+                if (PhoneBackend && !PhoneBackend.isConnected) {
+                    if (typeof MediaBackend !== "undefined" && (MediaBackend.source === "Bluetooth" || MediaBackend.source === "CarPlay" || MediaBackend.source === "USB")) {
+                        MediaBackend.setSource("OrbitXM");
+                    }
+                }
+            }
+        }
+
+        // 8. AUTOMOTIVE OEM WELCOME SCREEN & STARTUP ANIMATION (APEX VISION Brand Evolution)
+        WelcomeScreen {
+            id: welcomeScreen
+            anchors.fill: parent
+            z: 10000
+            onFinished: {
+                if (typeof MediaBackend !== "undefined") {
+                    MediaBackend.startPlaybackAfterBoot();
+                }
+            }
+        }
+
+        Component.onCompleted: {
+            if (typeof PhoneBackend !== "undefined" && !PhoneBackend.isConnected) {
+                if (typeof MediaBackend !== "undefined" && (MediaBackend.source === "Bluetooth" || MediaBackend.source === "CarPlay" || MediaBackend.source === "USB")) {
+                    MediaBackend.setSource("OrbitXM");
                 }
             }
         }

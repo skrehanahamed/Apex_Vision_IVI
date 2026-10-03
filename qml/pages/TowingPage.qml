@@ -64,21 +64,31 @@ Item {
             anchors.verticalCenter: parent.verticalCenter
             spacing: 24
 
-            // Small Blue Trailer Badge (Matching Screenshot 2)
-            Rectangle {
-                width: 42
-                height: 42
-                radius: 21
-                color: "#1E88E5"
+            // Signature IVI Back Button (Borderless, no card)
+            Item {
+                id: backBtn
+                width: 38
+                height: 38
                 anchors.verticalCenter: parent.verticalCenter
 
-                Image {
+                Text {
                     anchors.centerIn: parent
-                    width: 26
-                    height: 26
-                    source: "qrc:/ApexVision/qml/assets/icons/app_trailer.svg"
-                    fillMode: Image.PreserveAspectFit
-                    smooth: true
+                    text: "←"
+                    font.family: "Inter"
+                    font.pixelSize: 26
+                    font.weight: Font.DemiBold
+                    color: backMouse.pressed ? "#00D2FF" : (backMouse.containsMouse ? "#FFFFFF" : "#E2E8F0")
+                    scale: backMouse.pressed ? 0.90 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 80 } }
+                    Behavior on color { ColorAnimation { duration: 100 } }
+                }
+
+                MouseArea {
+                    id: backMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.backRequested()
                 }
             }
 
@@ -205,7 +215,7 @@ Item {
             width: parent.width
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            contentWidth: trailersRow.width + 160
+            contentWidth: Math.max(width, trailersRow.width + 80)
             contentHeight: height
             visible: opacity > 0.001
             opacity: root.activeTab === 0 ? 1.0 : 0.0
@@ -218,8 +228,7 @@ Item {
 
             Row {
                 id: trailersRow
-                anchors.left: parent.left
-                anchors.leftMargin: 100
+                anchors.horizontalCenter: parent.horizontalCenter
                 anchors.top: parent.top
                 anchors.topMargin: 36
                 spacing: 52
@@ -276,35 +285,42 @@ Item {
                             radius: 1
                         }
 
-                        // Card Content
+                        // Card Header
                         Column {
                             anchors.top: parent.top
                             anchors.left: parent.left
-                            anchors.margins: 24
-                            spacing: 10
+                            anchors.right: parent.right
+                            anchors.margins: 20
+                            spacing: 4
 
                             Text {
                                 text: model.name
                                 color: "#FFFFFF"
                                 font.family: "Inter"
-                                font.pixelSize: 26
+                                font.pixelSize: 22
                                 font.weight: Font.Bold
                             }
 
                             Text {
-                                text: model.mileage
-                                color: Qt.rgba(255, 255, 255, 0.88)
+                                text: model.mileage + (model.status && model.status !== "---" ? " • " + model.status : "")
+                                color: Qt.rgba(255, 255, 255, 0.70)
                                 font.family: "Inter"
-                                font.pixelSize: 19
+                                font.pixelSize: 14
                                 font.weight: Font.Normal
                             }
+                        }
 
-                            Text {
-                                text: model.status
-                                color: Qt.rgba(255, 255, 255, 0.55)
-                                font.family: "Inter"
-                                font.pixelSize: 19
-                            }
+                        // Trailer Icon Centered in Middle of Card
+                        Image {
+                            anchors.centerIn: parent
+                            width: 86
+                            height: 86
+                            source: "qrc:/ApexVision/qml/assets/icons/app_trailer.svg"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                            sourceSize: Qt.size(172, 172)
+                            opacity: 0.95
                         }
 
                         // Bottom Details Button (Matching Screenshot 2)

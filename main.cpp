@@ -15,6 +15,7 @@
 #include <QFont>
 #include <memory>
 
+#include "backend/PersistenceManager.h"
 #include "backend/VehicleSimulator.h"
 #include "backend/VehicleBackend.h"
 #include "backend/ClimateBackend.h"
@@ -26,8 +27,10 @@
 #include "backend/AmbientLightBackend.h"
 #include "backend/SeatBackend.h"
 #include "backend/RejuvenateController.h"
+#ifdef HAVE_WEBENGINE
 #include <QtWebEngineQuick/qtwebenginequickglobal.h>
 #include <QWebEngineProfile>
+#endif
 #include <QDir>
 #include <QFileInfo>
 #include <QDebug>
@@ -49,16 +52,20 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationName("APEX");
     QGuiApplication::setOrganizationDomain("apex.vision");
 
+#ifdef HAVE_WEBENGINE
     // Autoplay policy for embedded IVI media playback & WebGL acceleration for Google Maps
     qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--autoplay-policy=no-user-gesture-required --disable-features=WebGPU --enable-webgl --ignore-gpu-blocklist");
+#endif
 
     QGuiApplication app(argc, argv);
+#ifdef HAVE_WEBENGINE
     QtWebEngineQuick::initialize();
     // Enable persistent disk caching so Google Maps loads rapidly from local storage
     QWebEngineProfile::defaultProfile()->setHttpCacheType(QWebEngineProfile::DiskHttpCache);
     QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(QWebEngineProfile::AllowPersistentCookies);
     // Modern Chrome desktop user-agent to ensure Google Maps loads in full WebGL 3D mode
     QWebEngineProfile::defaultProfile()->setHttpUserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36");
+#endif
 
     // Dark style for Controls
     QQuickStyle::setStyle("Basic");
@@ -93,13 +100,14 @@ int main(int argc, char *argv[])
     QGuiApplication::setFont(interFont);
 
     // Instantiate simulation and IVI backend services
+    auto persistenceManager = std::make_unique<PersistenceManager>();
     auto simulator = std::make_unique<VehicleSimulator>();
-    auto vehicleBackend = std::make_unique<VehicleBackend>(simulator.get());
+    auto vehicleBackend = std::make_unique<VehicleBackend>(simulator.get(), persistenceManager.get());
     auto climateBackend = std::make_unique<ClimateBackend>();
-    auto mediaBackend = std::make_unique<MediaBackend>(simulator.get());
+    auto mediaBackend = std::make_unique<MediaBackend>(simulator.get(), persistenceManager.get());
     auto navigationBackend = std::make_unique<NavigationBackend>(simulator.get());
     auto phoneBackend = std::make_unique<PhoneBackend>();
-    auto systemBackend = std::make_unique<SystemBackend>();
+    auto systemBackend = std::make_unique<SystemBackend>(persistenceManager.get());
     auto videoBackend = std::make_unique<VideoBackend>();
     auto ambientLightBackend = std::make_unique<AmbientLightBackend>();
     auto seatBackend = std::make_unique<SeatBackend>();
@@ -107,13 +115,16 @@ int main(int argc, char *argv[])
         climateBackend.get(),
         ambientLightBackend.get(),
         seatBackend.get(),
-        vehicleBackend.get()
+        vehicleBackend.get(),
+        mediaBackend.get()
     );
 
     QQmlApplicationEngine engine;
 
     // Register backend services into QML context
     QQmlContext *rootContext = engine.rootContext();
+    rootContext->setContextProperty("PersistenceManager", persistenceManager.get());
+    rootContext->setContextProperty("MemoryManager", persistenceManager.get());
     rootContext->setContextProperty("VehicleBackend", vehicleBackend.get());
     rootContext->setContextProperty("ClimateBackend", climateBackend.get());
     rootContext->setContextProperty("MediaBackend", mediaBackend.get());
@@ -279,6 +290,13 @@ int main(int argc, char *argv[])
             QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
             if (pageStack) {
                 pageStack->setProperty("currentIndex", 1);
+            }
+        }
+
+        if (app.arguments().contains("--page-apps")) {
+            QObject *pageStack = rootObj->findChild<QObject*>("pageStack");
+            if (pageStack) {
+                pageStack->setProperty("currentIndex", 2);
             }
         }
 
@@ -760,6 +778,48 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (app.arguments().contains("--test-welcome")) {
+            QQuickWindow *win = qobject_cast<QQuickWindow*>(rootObj);
+            if (win) {
+                // 0.6s - Laser Ignition
+                QTimer::singleShot(600, [win]() {
+                    win->grabWindow().save("welcome_01_laser_ignition.png");
+                    qInfo() << "[WELCOME TEST] Captured Phase 1: Laser Ignition";
+                });
+                // 1.3s - Laser Trace
+                QTimer::singleShot(1300, [win]() {
+                    win->grabWindow().save("welcome_02_laser_trace.png");
+                    qInfo() << "[WELCOME TEST] Captured Phase 2: Laser Trace";
+                });
+                // 2.2s - Metallic Materialization
+                QTimer::singleShot(2200, [win]() {
+                    win->grabWindow().save("welcome_03_metallic_reveal.png");
+                    qInfo() << "[WELCOME TEST] Captured Phase 3: Metallic Materialization";
+                });
+                // 3.0s - Specular Shine Sweep
+                QTimer::singleShot(3000, [win]() {
+                    win->grabWindow().save("welcome_04_specular_shine.png");
+                    qInfo() << "[WELCOME TEST] Captured Phase 4: Specular Shine";
+                });
+                // 3.8s - Vision S Lock
+                QTimer::singleShot(3800, [win]() {
+                    win->grabWindow().save("welcome_05_vision_s_lock.png");
+                    qInfo() << "[WELCOME TEST] Captured Phase 5: Vision S Lock";
+                });
+                // 4.4s - Brand Hold
+                QTimer::singleShot(4400, [win]() {
+                    win->grabWindow().save("welcome_06_brand_hold.png");
+                    qInfo() << "[WELCOME TEST] Captured Phase 6: Brand Hold";
+                });
+                // 5.2s - Cockpit Revealed
+                QTimer::singleShot(5200, [win, &app]() {
+                    win->grabWindow().save("welcome_07_cockpit_revealed.png");
+                    qInfo() << "[WELCOME TEST] Captured Phase 7: Cockpit Revealed. Test complete!";
+                    app.quit();
+                });
+            }
+        }
+
         if (app.arguments().contains("--page")) {
             int pIdx = app.arguments().indexOf("--page");
             if (pIdx + 1 < app.arguments().size()) {
@@ -867,6 +927,22 @@ int main(int argc, char *argv[])
             });
         }
 
+        if (app.arguments().contains("--test-news-refresh")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 6);
+            }
+            QTimer::singleShot(800, [rootObj, &app]() {
+                QObject *newsPage = rootObj->findChild<QObject*>("newsPage");
+                if (newsPage) {
+                    QMetaObject::invokeMethod(newsPage, "refreshNewsFromApi");
+                    QTimer::singleShot(1600, [&app]() {
+                        app.quit();
+                    });
+                }
+            });
+        }
+
         if (app.arguments().contains("--manual-topics")) {
             QObject *stack = rootObj->findChild<QObject*>("pageStack");
             if (stack) {
@@ -883,16 +959,136 @@ int main(int argc, char *argv[])
         if (app.arguments().contains("--test-nav-app")) {
             QObject *stack = rootObj->findChild<QObject*>("pageStack");
             if (stack) {
-                stack->setProperty("currentIndex", 2);
+                stack->setProperty("currentIndex", 0);
             }
-            QTimer::singleShot(1000, [rootObj]() {
-                QObject *appsPage = rootObj->findChild<QObject*>("appsPage");
-                if (appsPage) {
-                    QMetaObject::invokeMethod(appsPage, "appSelected",
-                        Q_ARG(QString, "Navigation"),
-                        Q_ARG(QString, "qrc:/ApexVision/qml/assets/icons/app_navigation.svg"));
+            bool forceDay = app.arguments().contains("--force-day");
+            QTimer::singleShot(800, [rootObj, forceDay]() {
+                QObject *homePage = rootObj->findChild<QObject*>("homePage");
+                if (homePage) {
+                    QMetaObject::invokeMethod(homePage, "openFullNavigation", Q_ARG(QVariant, false));
+                }
+                if (forceDay) {
+                    QTimer::singleShot(1500, [rootObj]() {
+                        QObject *navPanel = rootObj->findChild<QObject*>("navPanelComponent");
+                        if (navPanel) {
+                            navPanel->setProperty("mapThemePreference", "day");
+                        }
+                    });
                 }
             });
+        }
+
+        if (app.arguments().contains("--test-profile-overview")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 11);
+            }
+            QTimer::singleShot(800, [rootObj]() {
+                QObject *profilePage = rootObj->findChild<QObject*>("profileSwitcherPage");
+                if (profilePage) {
+                    profilePage->setProperty("currentMode", "overview");
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-profile-step1-empty")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 11);
+            }
+            QTimer::singleShot(800, [rootObj]() {
+                QObject *profilePage = rootObj->findChild<QObject*>("profileSwitcherPage");
+                if (profilePage) {
+                    profilePage->setProperty("currentMode", "create_wizard");
+                    profilePage->setProperty("wizardStep", 1);
+                    profilePage->setProperty("newProfileName", "");
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-profile-edit")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 11);
+            }
+            QTimer::singleShot(800, [rootObj]() {
+                QObject *profilePage = rootObj->findChild<QObject*>("profileSwitcherPage");
+                if (profilePage) {
+                    profilePage->setProperty("currentMode", "overview");
+                }
+            });
+            QTimer::singleShot(1400, [rootObj]() {
+                QObject *profilePage = rootObj->findChild<QObject*>("profileSwitcherPage");
+                if (profilePage) {
+                    QMetaObject::invokeMethod(profilePage, "openProfileSettingsRequested");
+                }
+                QObject *stack = rootObj->findChild<QObject*>("pageStack");
+                if (stack) {
+                    stack->setProperty("currentIndex", 4);
+                }
+                QObject *settings = rootObj->findChild<QObject*>("settingsPage");
+                if (settings) {
+                    settings->setProperty("activeCategory", "profile");
+                    settings->setProperty("profCurrentScreen", "main");
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-profile-wizard-step")) {
+            int sIdx = app.arguments().indexOf("--test-profile-wizard-step");
+            int stepNum = (sIdx + 1 < app.arguments().size()) ? app.arguments().at(sIdx + 1).toInt() : 1;
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 11);
+            }
+            QTimer::singleShot(800, [rootObj, stepNum]() {
+                QObject *profilePage = rootObj->findChild<QObject*>("profileSwitcherPage");
+                if (profilePage) {
+                    profilePage->setProperty("currentMode", "create_wizard");
+                    profilePage->setProperty("wizardStep", stepNum);
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-profile-to-lang")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 11);
+            }
+            QTimer::singleShot(1000, [rootObj]() {
+                QObject *profilePage = rootObj->findChild<QObject*>("profileSwitcherPage");
+                if (profilePage) {
+                    QMetaObject::invokeMethod(profilePage, "openLanguageSettings");
+                }
+            });
+        }
+
+        if (app.arguments().contains("--test-android-auto")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 12);
+            }
+            QObject *mobPage = rootObj->findChild<QObject*>("mobileDeviceConnectionPage");
+            if (mobPage) {
+                mobPage->setProperty("projectionType", "android_auto");
+                if (app.arguments().contains("--test-usb")) {
+                    mobPage->setProperty("connectionTab", "usb");
+                }
+            }
+        }
+
+        if (app.arguments().contains("--test-carplay")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 12);
+            }
+            QObject *mobPage = rootObj->findChild<QObject*>("mobileDeviceConnectionPage");
+            if (mobPage) {
+                mobPage->setProperty("projectionType", "carplay");
+                if (app.arguments().contains("--test-usb")) {
+                    mobPage->setProperty("connectionTab", "usb");
+                }
+            }
         }
 
         qInfo() << "[APEX IVI] Root setup complete. Checking screenshot flag:" << app.arguments().contains("--screenshot");

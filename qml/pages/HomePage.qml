@@ -21,6 +21,7 @@ Item {
     property bool pendingNavExpand: false
     property bool inNavTransition: false
     signal openPlayerRequested()
+    signal openProfileRequested()
 
     function setNavExpanded(expanded, openSearch) {
         root.navExpanded = expanded;
@@ -140,6 +141,7 @@ Item {
             Layout.preferredWidth: root.navExpanded ? 0 : 38
             visible: !root.navExpanded
             onOpenPlayerRequested: root.openPlayerRequested()
+            onOpenProfileRequested: root.openProfileRequested()
             onSourceMenuRequested: {
                 sourceMenuModal.visible = true;
             }
@@ -198,6 +200,19 @@ Item {
         visible: false
         z: 950
 
+        readonly property var availableSources: {
+            var list = [
+                { name: "OrbitXM", sourceKey: "OrbitXM", icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" },
+                { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
+                { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" }
+            ];
+            if (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) {
+                list.push({ name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" });
+                list.push({ name: "Bluetooth Audio", sourceKey: "Bluetooth", icon: "qrc:/ApexVision/qml/assets/icons/bluetooth.svg" });
+            }
+            return list;
+        }
+
         Column {
             id: sourceMenuCol
             anchors.top: parent.top
@@ -207,14 +222,7 @@ Item {
             spacing: 2
 
             Repeater {
-                model: [
-                    { name: "OrbitXM", sourceKey: "OrbitXM", icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" },
-                    { name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" },
-                    { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
-                    { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
-                    { name: "USB DISK", sourceKey: "USB", icon: "qrc:/ApexVision/qml/assets/icons/usb_source.svg" },
-                    { name: "Bluetooth Audio", sourceKey: "Bluetooth", icon: "qrc:/ApexVision/qml/assets/icons/bluetooth.svg" }
-                ]
+                model: sourceMenuModal.availableSources
 
                 Item {
                     width: sourceMenuCol.width

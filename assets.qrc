@@ -29,6 +29,8 @@
     <file>qml/assets/fonts/Inter-Regular.ttf</file>
     <file>qml/assets/fonts/Inter-SemiBold.ttf</file>
     <file>qml/assets/icons/apex_logo.png</file>
+    <file>qml/assets/icons/apex_logo_metallic.png</file>
+    <file>qml/assets/icons/apex_vision_metallic.png</file>
     <file>qml/assets/icons/app_am.svg</file>
     <file>qml/assets/icons/app_assistant.svg</file>
     <file>qml/assets/icons/app_bluetooth.svg</file>
@@ -131,6 +133,7 @@
     <file>qml/assets/icons/icon_settings_gear.svg</file>
     <file>qml/assets/icons/icon_software_licenses.svg</file>
     <file>qml/assets/icons/icon_software_update.svg</file>
+    <file>qml/assets/icons/icon_refresh_round.svg</file>
     <file>qml/assets/icons/icon_sound_fader.svg</file>
     <file>qml/assets/icons/icon_steering_heat.png</file>
     <file>qml/assets/icons/icon_storage.svg</file>
@@ -313,6 +316,7 @@
     <file>qml/assets/icons/yt_play.svg</file>
     <file>qml/assets/icons/yt_shift.svg</file>
     <file>qml/assets/image.png</file>
+    <file>qml/assets/icons/image.png</file>
     <file>qml/assets/news_images/photo_1436491865332-7a61a109cc05.jpg</file>
     <file>qml/assets/news_images/photo_1448375240586-882707db888b.jpg</file>
     <file>qml/assets/news_images/photo_1451187580459-43490279c0fa.jpg</file>
@@ -394,6 +398,8 @@
     <file>qml/assets/remote_unlock_all.png</file>
     <file>qml/assets/remote_unlock_driver.png</file>
     <file>qml/assets/sounds/preset_chime.wav</file>
+    <file>qml/assets/sounds/touch_click.wav</file>
+    <file>qml/assets/sounds/welcome_startup.wav</file>
     <file>qml/assets/station_art/art_bhakti.jpg</file>
     <file>qml/assets/station_art/art_cricket_live.jpg</file>
     <file>qml/assets/station_art/art_gtaflash.jpg</file>

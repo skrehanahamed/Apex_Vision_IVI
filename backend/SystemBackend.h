@@ -14,6 +14,8 @@
 #include <QDateTime>
 #include <QProcess>
 
+class PersistenceManager;
+
 class SystemBackend : public QObject
 {
     Q_OBJECT
@@ -31,10 +33,13 @@ class SystemBackend : public QObject
     Q_PROPERTY(bool wifiConnected READ wifiConnected WRITE setWifiConnected NOTIFY wifiConnectedChanged)
     Q_PROPERTY(int brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
     Q_PROPERTY(QString unitsTemperature READ unitsTemperature WRITE setUnitsTemperature NOTIFY unitsTemperatureChanged)
+    Q_PROPERTY(bool touchSoundsEnabled READ touchSoundsEnabled WRITE setTouchSoundsEnabled NOTIFY touchSoundsEnabledChanged)
 
 public:
-    explicit SystemBackend(QObject *parent = nullptr);
+    explicit SystemBackend(PersistenceManager *persistence = nullptr, QObject *parent = nullptr);
     ~SystemBackend() override;
+
+    bool touchSoundsEnabled() const { return m_touchSoundsEnabled; }
 
     QString currentTime() const { return m_currentTime; }
     QString currentDate() const { return m_currentDate; }
@@ -65,6 +70,8 @@ public:
     Q_INVOKABLE void setWifiConnected(bool connected);
     Q_INVOKABLE void setBrightness(int b);
     Q_INVOKABLE void setUnitsTemperature(const QString &unit);
+    Q_INVOKABLE void setTouchSoundsEnabled(bool enabled);
+    Q_INVOKABLE void playTouchSound();
 
 signals:
     void timeChanged();
@@ -79,12 +86,15 @@ signals:
     void wifiConnectedChanged();
     void brightnessChanged();
     void unitsTemperatureChanged();
+    void touchSoundsEnabledChanged();
     void ttsFinished();
 
 private slots:
     void updateClock();
 
 private:
+    PersistenceManager *m_persistence{nullptr};
+
     QTimer m_clockTimer;
     QString m_currentTime{"12:35"};
     QString m_currentDate{"Wednesday, Sep 23"};
@@ -93,14 +103,14 @@ private:
     bool m_autoTimeZoneEnabled{true};
     QString m_selectedTimeZone{"GMT-04:00 Eastern Daylight Time"};
     QString m_selectedLanguage{"English"};
-    QString m_selectedKeyboard{"Gboard"};
-    QString m_selectedAutofill{"Google"};
+    QString m_selectedKeyboard{"Apex Touch Keyboard"};
+    QString m_selectedAutofill{"Apex Cloud"};
     int m_pointerSpeed{50};
     qint64 m_manualTimeOffsetSec{0};
     bool m_hasManualOffset{false};
     bool m_wifiConnected{true};
     int m_brightness{85};
     QString m_unitsTemperature{"Celsius (°C)"};
+    bool m_touchSoundsEnabled{true};
     QProcess *m_ttsProcess{nullptr};
 };
-

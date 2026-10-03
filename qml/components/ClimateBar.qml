@@ -26,6 +26,12 @@ Rectangle {
     readonly property bool anyPopupOpen: driverSeatMenuOpen || passengerSeatMenuOpen || fanMenuOpen
     readonly property bool anySeatMenuOpen: driverSeatMenuOpen || passengerSeatMenuOpen
 
+    function playClick() {
+        if (typeof SystemBackend !== "undefined") {
+            SystemBackend.playTouchSound();
+        }
+    }
+
     // Background dismiss for popups when clicking empty areas of the climate bar
     MouseArea {
         anchors.fill: parent
@@ -73,7 +79,10 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: -10
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: ClimateBackend.decreaseDriverTemperature()
+                        onClicked: {
+                            playClick();
+                            ClimateBackend.decreaseDriverTemperature();
+                        }
                     }
                 }
 
@@ -92,7 +101,10 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: -8
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: ClimateBackend.toggleDriverPower()
+                        onClicked: {
+                            playClick();
+                            ClimateBackend.toggleDriverPower();
+                        }
                     }
                 }
 
@@ -112,7 +124,10 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: -10
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: ClimateBackend.increaseDriverTemperature()
+                        onClicked: {
+                            playClick();
+                            ClimateBackend.increaseDriverTemperature();
+                        }
                     }
                 }
             }
@@ -786,7 +801,10 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: ClimateBackend.toggleAuto()
+                    onClicked: {
+                        playClick();
+                        ClimateBackend.toggleAuto();
+                    }
                 }
             }
         }
@@ -908,7 +926,10 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: ClimateBackend.toggleMaxDefrost()
+                    onClicked: {
+                        playClick();
+                        ClimateBackend.toggleMaxDefrost();
+                    }
                 }
             }
         }
@@ -955,7 +976,10 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: ClimateBackend.toggleRearDefrost()
+                    onClicked: {
+                        playClick();
+                        ClimateBackend.toggleRearDefrost();
+                    }
                 }
             }
         }
@@ -1003,7 +1027,10 @@ Rectangle {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: ClimateBackend.toggleAC()
+                    onClicked: {
+                        playClick();
+                        ClimateBackend.toggleAC();
+                    }
                 }
             }
         }
@@ -1344,7 +1371,10 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: -10
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: ClimateBackend.decreasePassengerTemperature()
+                        onClicked: {
+                            playClick();
+                            ClimateBackend.decreasePassengerTemperature();
+                        }
                     }
                 }
 
@@ -1363,7 +1393,10 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: -8
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: ClimateBackend.togglePassengerPower()
+                        onClicked: {
+                            playClick();
+                            ClimateBackend.togglePassengerPower();
+                        }
                     }
                 }
 
@@ -1383,7 +1416,10 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: -10
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: ClimateBackend.increasePassengerTemperature()
+                        onClicked: {
+                            playClick();
+                            ClimateBackend.increasePassengerTemperature();
+                        }
                     }
                 }
             }

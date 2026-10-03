@@ -17,6 +17,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include "PersistenceManager.h"
 #include <QUrl>
 #include <QDebug>
 #include <QTimer>
@@ -24,9 +25,17 @@
 #include <QRegularExpression>
 #include <algorithm>
 
-MediaBackend::MediaBackend(VehicleSimulator *simulator, QObject *parent)
+MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *persistence, QObject *parent)
     : QObject(parent)
+    , m_persistence(persistence)
 {
+    if (m_persistence) {
+        QString lastSource = m_persistence->getSetting(QStringLiteral("last_media_source"), QStringLiteral("OrbitXM")).toString();
+        if (!lastSource.isEmpty()) {
+            m_source = lastSource;
+        }
+    }
+
     if (simulator) {
         connect(simulator, &VehicleSimulator::mediaProgressUpdated,
                 this, &MediaBackend::onMediaProgressUpdated);
@@ -54,11 +63,15 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, QObject *parent)
             emit isAmAudioPlayingChanged();
         }
         if (state == QMediaPlayer::PlayingState) {
-            m_isPlaying = true;
-            emit isPlayingChanged();
-        } else if (state == QMediaPlayer::PausedState) {
-            m_isPlaying = false;
-            emit isPlayingChanged();
+            if (!m_isPlaying) {
+                m_isPlaying = true;
+                emit isPlayingChanged();
+            }
+        } else {
+            if (m_isPlaying) {
+                m_isPlaying = false;
+                emit isPlayingChanged();
+            }
         }
     });
 
@@ -97,6 +110,36 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, QObject *parent)
     });
     m_icyPollTimer->start(20000);
 
+    // Prepare metadata displays without playing audio during boot
+    m_isPlaying = false;
+    if (m_source == "AM") {
+        syncAmWithMedia();
+    } else if (m_source == "FM") {
+        syncFmWithMedia();
+    } else if (m_source == "OrbitXM" || m_source == "SXM") {
+        syncSxmWithMedia();
+    }
+}
+
+void MediaBackend::setBootComplete(bool c)
+{
+    if (m_bootComplete != c) {
+        m_bootComplete = c;
+        emit bootCompleteChanged();
+        if (m_bootComplete) {
+            startPlaybackAfterBoot();
+        } else {
+            setIsPlaying(false);
+            pausePlayback();
+        }
+    }
+}
+
+void MediaBackend::startPlaybackAfterBoot()
+{
+    m_bootComplete = true;
+    emit bootCompleteChanged();
+    qInfo() << "[MediaBackend] Boot sequence complete. Initiating playback for last active player:" << m_source;
     if (m_source == "AM") {
         syncAmWithMedia();
         playCurrentAmStation();
@@ -186,7 +229,21 @@ void MediaBackend::setSource(const QString &source)
     }
 
     m_source = source;
+    if (m_persistence) {
+        m_persistence->setSetting(QStringLiteral("last_media_source"), source);
+    }
     emit sourceChanged();
+
+    if (!m_bootComplete) {
+        if (m_source == "AM") {
+            syncAmWithMedia();
+        } else if (m_source == "FM") {
+            syncFmWithMedia();
+        } else if (m_source == "OrbitXM" || m_source == "SXM") {
+            syncSxmWithMedia();
+        }
+        return;
+    }
 
     if (m_source == "AM") {
         syncAmWithMedia();
@@ -277,6 +334,9 @@ void MediaBackend::syncFmWithMedia()
 
 void MediaBackend::playCurrentAmStation()
 {
+    if (!m_bootComplete) {
+        return;
+    }
     if (m_currentAmStationIndex >= 0 && m_currentAmStationIndex < m_amStations.size()) {
         QVariantMap s = m_amStations[m_currentAmStationIndex].toMap();
         QString streamUrl = s["streamUrl"].toString();
@@ -493,6 +553,9 @@ void MediaBackend::initDefaultRadioPresets()
 
 void MediaBackend::playCurrentFmStation()
 {
+    if (!m_bootComplete) {
+        return;
+    }
     if (m_currentFmStationIndex >= 0 && m_currentFmStationIndex < m_fmStations.size()) {
         QVariantMap s = m_fmStations[m_currentFmStationIndex].toMap();
         QString streamUrl = s["streamUrl"].toString();
@@ -858,19 +921,27 @@ void MediaBackend::setArtist(const QString &art)
 
 void MediaBackend::setIsPlaying(bool playing)
 {
+    if (playing && !m_bootComplete) {
+        return;
+    }
+
     if (m_isPlaying != playing) {
         m_isPlaying = playing;
         emit isPlayingChanged();
+    }
 
-        if (m_source == "AM" || m_source == "FM") {
-            if (m_isPlaying) {
-                if (m_mediaPlayer && m_mediaPlayer->playbackState() != QMediaPlayer::PlayingState) {
-                    m_mediaPlayer->play();
-                }
-            } else {
-                if (m_mediaPlayer) {
-                    m_mediaPlayer->pause();
-                }
+    if (!playing) {
+        if (m_mediaPlayer) {
+            m_mediaPlayer->pause();
+        }
+        if (m_isAmAudioPlaying) {
+            m_isAmAudioPlaying = false;
+            emit isAmAudioPlayingChanged();
+        }
+    } else {
+        if (m_source == "AM" || m_source == "FM" || m_source == "OrbitXM" || m_source == "SXM") {
+            if (m_mediaPlayer && m_mediaPlayer->playbackState() != QMediaPlayer::PlayingState) {
+                m_mediaPlayer->play();
             }
         }
     }
@@ -878,6 +949,9 @@ void MediaBackend::setIsPlaying(bool playing)
 
 void MediaBackend::togglePlay()
 {
+    if (!m_bootComplete) {
+        return;
+    }
     if (m_source == "AM" || m_source == "FM") {
         toggleAmPlay();
     } else if (m_source == "OrbitXM" || m_source == "SXM") {
@@ -1020,6 +1094,7 @@ void MediaBackend::fadeOutAndPause(int fadeDurationMs)
 
 void MediaBackend::pausePlayback()
 {
+    setIsPlaying(false);
     if (m_mediaPlayer) {
         m_mediaPlayer->pause();
     }
@@ -1518,6 +1593,10 @@ void MediaBackend::syncSxmWithMedia()
 void MediaBackend::playCurrentSxmChannel()
 {
     syncSxmWithMedia();
+
+    if (!m_bootComplete) {
+        return;
+    }
 
     if (m_currentSxmChannelIndex >= 0 && m_currentSxmChannelIndex < m_sxmChannels.size()) {
         QVariantMap ch = m_sxmChannels[m_currentSxmChannelIndex].toMap();

@@ -13,28 +13,40 @@
 #include "AmbientLightBackend.h"
 #include "SeatBackend.h"
 #include "VehicleBackend.h"
+#include "MediaBackend.h"
 
 #include <QDir>
 #include <QCoreApplication>
 #include <QDebug>
 #include <QtMath>
+#include <QMediaPlayer>
+#include <QAudioOutput>
 
 RejuvenateController::RejuvenateController(ClimateBackend *climate,
                                            AmbientLightBackend *ambient,
                                            SeatBackend *seat,
                                            VehicleBackend *vehicle,
+                                           MediaBackend *media,
                                            QObject *parent)
     : QObject(parent)
     , m_climate(climate)
     , m_ambient(ambient)
     , m_seat(seat)
     , m_vehicle(vehicle)
+    , m_media(media)
 {
     m_sessionTimer.setInterval(1000);
     connect(&m_sessionTimer, &QTimer::timeout, this, &RejuvenateController::onTickSecond);
 
     m_fadeTimer.setInterval(40);
     connect(&m_fadeTimer, &QTimer::timeout, this, &RejuvenateController::onFadeStep);
+
+    // Audio Engine for Rejuvenate ambient soundtracks
+    m_audioOutput = new QAudioOutput(this);
+    m_audioPlayer = new QMediaPlayer(this);
+    m_audioPlayer->setAudioOutput(m_audioOutput);
+    m_audioPlayer->setLoops(QMediaPlayer::Infinite);
+    m_audioOutput->setVolume(0.85f);
 
     // Test bench mode: drive simulation checks disabled
     m_vehicleStationary = true;
@@ -45,6 +57,9 @@ RejuvenateController::RejuvenateController(ClimateBackend *climate,
 
 RejuvenateController::~RejuvenateController()
 {
+    if (m_audioPlayer) {
+        m_audioPlayer->stop();
+    }
     if (m_sessionTimer.isActive()) {
         m_sessionTimer.stop();
     }
@@ -101,6 +116,10 @@ void RejuvenateController::setSelectedThemeIndex(int index)
         emit selectedThemeChanged();
         emit videoSourceChanged();
         emit audioSourceChanged();
+        if (m_audioPlayer && (active() || m_audioPlayer->playbackState() == QMediaPlayer::PlayingState)) {
+            m_audioPlayer->setSource(m_themeList[index]->audioUrl());
+            m_audioPlayer->play();
+        }
     }
 }
 
@@ -196,6 +215,12 @@ bool RejuvenateController::startSession(int durationSeconds)
     // 1. Capture current vehicle settings before session changes them
     capturePreviousVehicleState();
 
+    // 1b. Stop any background media/radio playback
+    if (m_media) {
+        m_media->setIsPlaying(false);
+        m_media->pausePlayback();
+    }
+
     // 2. Setup session timer
     if (durationSeconds > 0) {
         m_totalSeconds = durationSeconds;
@@ -206,6 +231,14 @@ bool RejuvenateController::startSession(int durationSeconds)
     emit totalSecondsChanged();
     emit remainingSecondsChanged();
     emit progressChanged();
+
+    // Start ambient soundtrack
+    if (m_audioPlayer && theme) {
+        m_audioPlayer->setSource(theme->audioUrl());
+        m_audioOutput->setVolume(0.1f);
+        m_audioPlayer->play();
+        qInfo() << "[RejuvenateController] Started ambient audio playback:" << theme->audioUrl();
+    }
 
     // 3. Transition IDLE -> PREPARING
     setState(Preparing);
@@ -234,6 +267,9 @@ void RejuvenateController::pauseSession()
     if (m_state == Active || m_state == Preparing) {
         setState(Paused);
         m_sessionTimer.stop();
+        if (m_audioPlayer) {
+            m_audioPlayer->pause();
+        }
         if (m_seat) {
             m_seat->stopMassage();
         }
@@ -246,6 +282,13 @@ void RejuvenateController::pauseSession()
 void RejuvenateController::resumeSession()
 {
     if (m_state == Paused) {
+        if (m_media) {
+            m_media->setIsPlaying(false);
+            m_media->pausePlayback();
+        }
+        if (m_audioPlayer) {
+            m_audioPlayer->play();
+        }
         setState(Active);
         updatePhase();
         m_sessionTimer.start();
@@ -266,6 +309,9 @@ void RejuvenateController::endSession(bool confirmed)
     Q_UNUSED(confirmed);
     if (m_state == Idle) return;
 
+    if (m_audioPlayer) {
+        m_audioPlayer->stop();
+    }
     m_sessionTimer.stop();
     startFade(0.0, 0.0, 1200);
 
@@ -281,6 +327,30 @@ void RejuvenateController::endSession(bool confirmed)
     });
 
     qInfo() << "[RejuvenateController] Session ended by user";
+}
+
+void RejuvenateController::startPreviewAudio()
+{
+    if (m_media) {
+        m_media->setIsPlaying(false);
+        m_media->pausePlayback();
+    }
+    auto theme = m_themeList.value(m_selectedThemeIndex);
+    if (m_audioPlayer && theme) {
+        m_audioPlayer->setSource(theme->audioUrl());
+        if (m_audioOutput) {
+            m_audioOutput->setVolume(0.80f);
+        }
+        m_audioPlayer->play();
+        qInfo() << "[RejuvenateController] Preview ambient audio started:" << theme->audioUrl();
+    }
+}
+
+void RejuvenateController::stopPreviewAudio()
+{
+    if (m_audioPlayer && !active()) {
+        m_audioPlayer->stop();
+    }
 }
 
 void RejuvenateController::dismissSafetyAlert()
@@ -544,6 +614,9 @@ void RejuvenateController::onFadeStep()
         audioDone = true;
     }
     emit audioVolumeChanged();
+    if (m_audioOutput) {
+        m_audioOutput->setVolume(static_cast<float>(qBound(0.0, m_audioVolume, 1.0)));
+    }
 
     // Advance video opacity
     m_videoOpacity += m_videoStep;

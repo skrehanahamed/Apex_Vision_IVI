@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Effects
 import ApexVision
+import "../components"
 
 Item {
     id: root
@@ -12,6 +13,7 @@ Item {
     // Default category matching user photo ("connectivity")
     property string activeCategory: "sound"
     property string activeInfoText: ""
+    property int returnIndex: 1
 
     // Driver assistance settings states (matching hierarchical user photos)
     property string daCurrentScreen: "main" // "main" | "cruise_control" | "speed_limit_assist" | "speed_adjustment" | "lane_keeping_system" | "lane_keeping_mode" | "lane_keeping_intensity"
@@ -108,23 +110,133 @@ Item {
     // Profile settings states (matching OEM reference photos)
     property string profCurrentScreen: "main" // "main" | "avatar" | "security" | "lock_type" | "pattern" | "pin" | "password" | "link_profile" | "accounts" | "name"
     property int profSlideDir: 1
-    property string currentProfileName: "Profile 1"
-    property string currentProfileRole: "Signed in as admin"
-    property string currentProfileAvatar: "monogram"
-    property string selectedAvatarPreview: "monogram"
-    property string currentLockType: "None" // "None" | "Pattern" | "PIN" | "Password"
-    property string profilePinCode: "1234"
+    property string currentProfileName: (typeof VehicleBackend !== "undefined") ? VehicleBackend.driverProfileName : "Profile 1"
+    property string currentProfileRole: (typeof VehicleBackend !== "undefined" && typeof VehicleBackend.currentProfileRole !== "undefined") ? VehicleBackend.currentProfileRole : "Signed in as admin"
+    property string currentProfileAvatar: (typeof VehicleBackend !== "undefined") ? VehicleBackend.driverProfileAvatar : "monogram"
+    property string selectedAvatarPreview: (typeof VehicleBackend !== "undefined") ? VehicleBackend.driverProfileAvatar : "monogram"
+    property string currentLockType: (typeof VehicleBackend !== "undefined" && typeof VehicleBackend.currentLockType !== "undefined") ? VehicleBackend.currentLockType : "None"
+    property string profilePinCode: (typeof VehicleBackend !== "undefined" && typeof VehicleBackend.profilePinCode !== "undefined") ? VehicleBackend.profilePinCode : "1234"
     property string tempPinEntry: ""
     property var patternNodes: []
-    property string profilePassword: ""
+    property string profilePassword: (typeof VehicleBackend !== "undefined" && typeof VehicleBackend.profilePassword !== "undefined") ? VehicleBackend.profilePassword : ""
     property string tempPasswordEntry: ""
-    property bool keyFobLinked: true
-    property bool phoneKeyLinked: true
-    property bool btDeviceLinked: true
+    property bool keyFobLinked: (typeof VehicleBackend !== "undefined" && typeof VehicleBackend.keyFobLinked !== "undefined") ? VehicleBackend.keyFobLinked : true
+    property bool phoneKeyLinked: (typeof VehicleBackend !== "undefined" && typeof VehicleBackend.phoneKeyLinked !== "undefined") ? VehicleBackend.phoneKeyLinked : true
+    property bool btDeviceLinked: (typeof VehicleBackend !== "undefined" && typeof VehicleBackend.btDeviceLinked !== "undefined") ? VehicleBackend.btDeviceLinked : true
     property bool deleteProfileModalOpen: false
     property bool editProfileNameOpen: false
     property string tempProfileNameInput: "Profile 1"
     property string profileToastMessage: ""
+
+    function saveSetting(key, val) {
+        if (typeof PersistenceManager !== "undefined") {
+            PersistenceManager.setSetting(key, val);
+        }
+    }
+
+    Connections {
+        target: (typeof VehicleBackend !== "undefined") ? VehicleBackend : null
+        function onDriverProfileChanged() {
+            root.currentProfileName = VehicleBackend.driverProfileName;
+            root.currentProfileAvatar = VehicleBackend.driverProfileAvatar;
+            root.selectedAvatarPreview = VehicleBackend.driverProfileAvatar;
+            if (typeof VehicleBackend.currentLockType !== "undefined") root.currentLockType = VehicleBackend.currentLockType;
+            if (typeof VehicleBackend.profilePinCode !== "undefined") root.profilePinCode = VehicleBackend.profilePinCode;
+            if (typeof VehicleBackend.profilePassword !== "undefined") root.profilePassword = VehicleBackend.profilePassword;
+            if (typeof VehicleBackend.keyFobLinked !== "undefined") root.keyFobLinked = VehicleBackend.keyFobLinked;
+            if (typeof VehicleBackend.phoneKeyLinked !== "undefined") root.phoneKeyLinked = VehicleBackend.phoneKeyLinked;
+            if (typeof VehicleBackend.btDeviceLinked !== "undefined") root.btDeviceLinked = VehicleBackend.btDeviceLinked;
+        }
+        function onProfileSecurityChanged() {
+            if (typeof VehicleBackend.currentLockType !== "undefined") root.currentLockType = VehicleBackend.currentLockType;
+            if (typeof VehicleBackend.profilePinCode !== "undefined") root.profilePinCode = VehicleBackend.profilePinCode;
+            if (typeof VehicleBackend.profilePassword !== "undefined") root.profilePassword = VehicleBackend.profilePassword;
+            if (typeof VehicleBackend.keyFobLinked !== "undefined") root.keyFobLinked = VehicleBackend.keyFobLinked;
+            if (typeof VehicleBackend.phoneKeyLinked !== "undefined") root.phoneKeyLinked = VehicleBackend.phoneKeyLinked;
+            if (typeof VehicleBackend.btDeviceLinked !== "undefined") root.btDeviceLinked = VehicleBackend.btDeviceLinked;
+        }
+    }
+
+    Component.onCompleted: {
+        if (typeof PersistenceManager !== "undefined") {
+            // Driver assistance
+            root.cruiseControlType = PersistenceManager.getSetting("da_cruiseControlType", root.cruiseControlType);
+            root.laneCenteringEnabled = PersistenceManager.getSetting("da_laneCenteringEnabled", root.laneCenteringEnabled);
+            root.predictiveSpeedAssistEnabled = PersistenceManager.getSetting("da_predictiveSpeedAssistEnabled", root.predictiveSpeedAssistEnabled);
+            root.speedWarningEnabled = PersistenceManager.getSetting("da_speedWarningEnabled", root.speedWarningEnabled);
+            root.speedAdjustment = PersistenceManager.getSetting("da_speedAdjustment", root.speedAdjustment);
+            root.laneKeepingMode = PersistenceManager.getSetting("da_laneKeepingMode", root.laneKeepingMode);
+            root.laneAlertIntensity = PersistenceManager.getSetting("da_laneAlertIntensity", root.laneAlertIntensity);
+            root.autoEmergencyBraking = PersistenceManager.getSetting("da_autoEmergencyBraking", root.autoEmergencyBraking);
+            root.evasiveSteeringAssist = PersistenceManager.getSetting("da_evasiveSteeringAssist", root.evasiveSteeringAssist);
+            root.alertSensitivity = PersistenceManager.getSetting("da_alertSensitivity", root.alertSensitivity);
+            root.preCollisionMode = PersistenceManager.getSetting("da_preCollisionMode", root.preCollisionMode);
+            root.inLaneRepositioningEnabled = PersistenceManager.getSetting("da_inLaneRepositioningEnabled", root.inLaneRepositioningEnabled);
+
+            // Vehicle convenience & hardware
+            root.maxIdleEnabled = PersistenceManager.getSetting("veh_maxIdleEnabled", root.maxIdleEnabled);
+            root.rearOccupantMode = PersistenceManager.getSetting("veh_rearOccupantMode", root.rearOccupantMode);
+            root.autoHighBeamsEnabled = PersistenceManager.getSetting("veh_autoHighBeamsEnabled", root.autoHighBeamsEnabled);
+            root.autolampDelay = PersistenceManager.getSetting("veh_autolampDelay", root.autolampDelay);
+            root.powerLiftgateMode = PersistenceManager.getSetting("veh_powerLiftgateMode", root.powerLiftgateMode);
+            root.handsFreeLiftgateEnabled = PersistenceManager.getSetting("veh_handsFreeLiftgateEnabled", root.handsFreeLiftgateEnabled);
+            root.liftgateChimeEnabled = PersistenceManager.getSetting("veh_liftgateChimeEnabled", root.liftgateChimeEnabled);
+            root.remoteStartEnabled = PersistenceManager.getSetting("veh_remoteStartEnabled", root.remoteStartEnabled);
+            root.autoUnlockEnabled = PersistenceManager.getSetting("veh_autoUnlockEnabled", root.autoUnlockEnabled);
+            root.mirrorAutofoldEnabled = PersistenceManager.getSetting("veh_mirrorAutofoldEnabled", root.mirrorAutofoldEnabled);
+            root.doorKeypadCode = PersistenceManager.getSetting("veh_doorKeypadCode", root.doorKeypadCode);
+            root.runningBoardMode = PersistenceManager.getSetting("veh_runningBoardMode", root.runningBoardMode);
+            root.windowsRemoteOpen = PersistenceManager.getSetting("veh_windowsRemoteOpen", root.windowsRemoteOpen);
+            root.courtesyWipeEnabled = PersistenceManager.getSetting("veh_courtesyWipeEnabled", root.courtesyWipeEnabled);
+            root.rainSensingEnabled = PersistenceManager.getSetting("veh_rainSensingEnabled", root.rainSensingEnabled);
+            root.rearWiperReverseEnabled = PersistenceManager.getSetting("veh_rearWiperReverseEnabled", root.rearWiperReverseEnabled);
+            root.alarmAskOnExit = PersistenceManager.getSetting("veh_alarmAskOnExit", root.alarmAskOnExit);
+            root.alarmMotionSensors = PersistenceManager.getSetting("veh_alarmMotionSensors", root.alarmMotionSensors);
+
+            // System units & keyboard preferences
+            root.unitsMeasurement = PersistenceManager.getSetting("sys_unitsMeasurement", root.unitsMeasurement);
+            root.unitsPressure = PersistenceManager.getSetting("sys_unitsPressure", root.unitsPressure);
+            root.unitsWeight = PersistenceManager.getSetting("sys_unitsWeight", root.unitsWeight);
+            root.speedometerMph = PersistenceManager.getSetting("sys_speedometerMph", root.speedometerMph);
+        }
+    }
+
+    onCruiseControlTypeChanged: saveSetting("da_cruiseControlType", cruiseControlType)
+    onLaneCenteringEnabledChanged: saveSetting("da_laneCenteringEnabled", laneCenteringEnabled)
+    onPredictiveSpeedAssistEnabledChanged: saveSetting("da_predictiveSpeedAssistEnabled", predictiveSpeedAssistEnabled)
+    onSpeedWarningEnabledChanged: saveSetting("da_speedWarningEnabled", speedWarningEnabled)
+    onSpeedAdjustmentChanged: saveSetting("da_speedAdjustment", speedAdjustment)
+    onLaneKeepingModeChanged: saveSetting("da_laneKeepingMode", laneKeepingMode)
+    onLaneAlertIntensityChanged: saveSetting("da_laneAlertIntensity", laneAlertIntensity)
+    onAutoEmergencyBrakingChanged: saveSetting("da_autoEmergencyBraking", autoEmergencyBraking)
+    onEvasiveSteeringAssistChanged: saveSetting("da_evasiveSteeringAssist", evasiveSteeringAssist)
+    onAlertSensitivityChanged: saveSetting("da_alertSensitivity", alertSensitivity)
+    onPreCollisionModeChanged: saveSetting("da_preCollisionMode", preCollisionMode)
+    onInLaneRepositioningEnabledChanged: saveSetting("da_inLaneRepositioningEnabled", inLaneRepositioningEnabled)
+
+    onMaxIdleEnabledChanged: saveSetting("veh_maxIdleEnabled", maxIdleEnabled)
+    onRearOccupantModeChanged: saveSetting("veh_rearOccupantMode", rearOccupantMode)
+    onAutoHighBeamsEnabledChanged: saveSetting("veh_autoHighBeamsEnabled", autoHighBeamsEnabled)
+    onAutolampDelayChanged: saveSetting("veh_autolampDelay", autolampDelay)
+    onPowerLiftgateModeChanged: saveSetting("veh_powerLiftgateMode", powerLiftgateMode)
+    onHandsFreeLiftgateEnabledChanged: saveSetting("veh_handsFreeLiftgateEnabled", handsFreeLiftgateEnabled)
+    onLiftgateChimeEnabledChanged: saveSetting("veh_liftgateChimeEnabled", liftgateChimeEnabled)
+    onRemoteStartEnabledChanged: saveSetting("veh_remoteStartEnabled", remoteStartEnabled)
+    onAutoUnlockEnabledChanged: saveSetting("veh_autoUnlockEnabled", autoUnlockEnabled)
+    onMirrorAutofoldEnabledChanged: saveSetting("veh_mirrorAutofoldEnabled", mirrorAutofoldEnabled)
+    onDoorKeypadCodeChanged: saveSetting("veh_doorKeypadCode", doorKeypadCode)
+    onRunningBoardModeChanged: saveSetting("veh_runningBoardMode", runningBoardMode)
+    onWindowsRemoteOpenChanged: saveSetting("veh_windowsRemoteOpen", windowsRemoteOpen)
+    onCourtesyWipeEnabledChanged: saveSetting("veh_courtesyWipeEnabled", courtesyWipeEnabled)
+    onRainSensingEnabledChanged: saveSetting("veh_rainSensingEnabled", rainSensingEnabled)
+    onRearWiperReverseEnabledChanged: saveSetting("veh_rearWiperReverseEnabled", rearWiperReverseEnabled)
+    onAlarmAskOnExitChanged: saveSetting("veh_alarmAskOnExit", alarmAskOnExit)
+    onAlarmMotionSensorsChanged: saveSetting("veh_alarmMotionSensors", alarmMotionSensors)
+
+    onUnitsMeasurementChanged: saveSetting("sys_unitsMeasurement", unitsMeasurement)
+    onUnitsPressureChanged: saveSetting("sys_unitsPressure", unitsPressure)
+    onUnitsWeightChanged: saveSetting("sys_unitsWeight", unitsWeight)
+    onSpeedometerMphChanged: saveSetting("sys_speedometerMph", speedometerMph)
 
     onProfileToastMessageChanged: {
         if (profileToastMessage !== "") {
@@ -783,12 +895,14 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         visible: true
 
-                        Text {
+                        Image {
                             anchors.centerIn: parent
-                            text: "←"
-                            font.pixelSize: 26
-                            font.weight: Font.DemiBold
-                            color: backMouseArea.pressed ? "#94A3B8" : (backMouseArea.containsMouse ? "#FFFFFF" : "#E2E8F0")
+                            width: 24
+                            height: 24
+                            source: "qrc:/ApexVision/qml/assets/icons/nav_back_arrow.svg"
+                            sourceSize: Qt.size(48, 48)
+                            fillMode: Image.PreserveAspectFit
+                            opacity: backMouseArea.pressed ? 0.6 : (backMouseArea.containsMouse ? 1.0 : 0.85)
                         }
 
                         MouseArea {
@@ -848,7 +962,14 @@ Item {
                                     } else if (root.sysCurrentScreen === "time_zone" || root.sysCurrentScreen === "time_set_time" || root.sysCurrentScreen === "time_set_date") {
                                         root.sysSlideDir = -1;
                                         root.sysCurrentScreen = "time";
-                                    } else if (root.sysCurrentScreen === "storage" || root.sysCurrentScreen === "system_update" || root.sysCurrentScreen === "about" || root.sysCurrentScreen === "legal_info" || root.sysCurrentScreen === "software_licenses" || root.sysCurrentScreen === "phone_link") {
+                                    } else if (root.sysCurrentScreen === "system_update") {
+                                        if (root.returnIndex === 2) {
+                                            root.backRequested();
+                                        } else {
+                                            root.sysSlideDir = -1;
+                                            root.sysCurrentScreen = "main";
+                                        }
+                                    } else if (root.sysCurrentScreen === "storage" || root.sysCurrentScreen === "about" || root.sysCurrentScreen === "legal_info" || root.sysCurrentScreen === "software_licenses" || root.sysCurrentScreen === "phone_link") {
                                         root.sysSlideDir = -1;
                                         root.sysCurrentScreen = "main";
                                     } else if (root.sysCurrentScreen === "factory_reset" || root.sysCurrentScreen === "reset_hotspot" || root.sysCurrentScreen === "reset_paak" || root.sysCurrentScreen === "reset_apps" || root.sysCurrentScreen === "reset_connectivity") {
@@ -858,8 +979,7 @@ Item {
                                         root.sysSlideDir = -1;
                                         root.sysCurrentScreen = "main";
                                     } else {
-                                        root.sysSlideDir = -1;
-                                        root.sysCurrentScreen = "main";
+                                        root.backRequested();
                                     }
                                 } else if (root.activeCategory === "profile") {
                                     if (root.profCurrentScreen === "pattern" || root.profCurrentScreen === "pin" || root.profCurrentScreen === "password") {
@@ -942,6 +1062,12 @@ Item {
                                     }
                                 } else if (root.activeCategory === "assist_911") {
                                     root.backRequested();
+                                } else if (root.activeCategory === "bluetooth") {
+                                    if (root.btPairingActive) {
+                                        root.btPairingActive = false;
+                                    } else {
+                                        root.backRequested();
+                                    }
                                 } else {
                                     root.activeCategory = "driver_assist";
                                     root.daCurrentScreen = "main";
@@ -5544,7 +5670,7 @@ Item {
                                 model: [
                                     "Default ringtone",
                                     "Apex Chime",
-                                    "Lincoln Elegance",
+                                    "Apex Symphony",
                                     "Digital Horizon",
                                     "Acoustic Melody"
                                 ]
@@ -9413,6 +9539,16 @@ Item {
                             }
 
                             SettingRowChevron {
+                                title: "Switch profile"
+                                subtitle: (typeof VehicleBackend !== "undefined" ? VehicleBackend.profileCount : 1) + " of 3 saved profiles · Tap to switch or add"
+                                onClicked: {
+                                    if (typeof pageStack !== "undefined") {
+                                        pageStack.currentIndex = 11;
+                                    }
+                                }
+                            }
+
+                            SettingRowChevron {
                                 title: "Profile name"
                                 subtitle: root.currentProfileName
                                 onClicked: {
@@ -9543,6 +9679,7 @@ Item {
                             Keys.onReturnPressed: {
                                 if (root.tempProfileNameInput.trim().length > 0) {
                                     root.currentProfileName = root.tempProfileNameInput.trim();
+                                    if (typeof VehicleBackend !== "undefined") VehicleBackend.setDriverProfileName(root.currentProfileName);
                                     root.profileToastMessage = "Profile renamed to " + root.currentProfileName;
                                     profToastTimer.restart();
                                 }
@@ -9831,6 +9968,7 @@ Item {
                                         onClicked: {
                                             if (root.tempProfileNameInput.trim().length > 0) {
                                                 root.currentProfileName = root.tempProfileNameInput.trim();
+                                                if (typeof VehicleBackend !== "undefined") VehicleBackend.setDriverProfileName(root.currentProfileName);
                                                 root.profileToastMessage = "Profile renamed to " + root.currentProfileName;
                                                 profToastTimer.restart();
                                             }
@@ -9953,6 +10091,7 @@ Item {
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
                                         root.currentProfileAvatar = root.selectedAvatarPreview;
+                                        if (typeof VehicleBackend !== "undefined") VehicleBackend.setDriverProfileAvatar(root.currentProfileAvatar, root.getAvatarPath(root.currentProfileAvatar));
                                         root.profileToastMessage = "Avatar saved successfully";
                                         profToastTimer.restart();
                                         root.profSlideDir = -1;
@@ -10158,6 +10297,7 @@ Item {
                                 showChevron: false
                                 onClicked: {
                                     root.currentLockType = "None";
+                                    if (typeof VehicleBackend !== "undefined") VehicleBackend.setCurrentLockType("None");
                                     root.profileToastMessage = "Screen lock removed";
                                     profToastTimer.restart();
                                     root.profSlideDir = -1;
@@ -10288,6 +10428,7 @@ Item {
                                                 if (root.tempPinEntry.length === 4) {
                                                     root.profilePinCode = root.tempPinEntry;
                                                     root.currentLockType = "PIN";
+                                                    if (typeof VehicleBackend !== "undefined") VehicleBackend.setProfilePinCode(root.profilePinCode);
                                                     root.profileToastMessage = "PIN lock configured";
                                                     profToastTimer.restart();
                                                     root.profSlideDir = -1;
@@ -10393,6 +10534,7 @@ Item {
                                     onClicked: {
                                         if (root.patternNodes.length >= 4) {
                                             root.currentLockType = "Pattern";
+                                            if (typeof VehicleBackend !== "undefined") VehicleBackend.setCurrentLockType("Pattern");
                                             root.profileToastMessage = "Pattern lock set";
                                             profToastTimer.restart();
                                             root.profSlideDir = -1;
@@ -10479,6 +10621,7 @@ Item {
                                         if (root.tempPasswordEntry.length >= 4) {
                                             root.profilePassword = root.tempPasswordEntry;
                                             root.currentLockType = "Password";
+                                            if (typeof VehicleBackend !== "undefined") VehicleBackend.setProfilePassword(root.profilePassword);
                                             root.profileToastMessage = "Password configured";
                                             profToastTimer.restart();
                                             root.profSlideDir = -1;
@@ -10524,21 +10667,30 @@ Item {
                                 title: "Link Key Fob 1"
                                 subtitle: "Automatically select " + root.currentProfileName + " when Key Fob 1 unlocks car"
                                 checked: root.keyFobLinked
-                                onToggled: root.keyFobLinked = !root.keyFobLinked
+                                onToggled: {
+                                    root.keyFobLinked = !root.keyFobLinked;
+                                    if (typeof VehicleBackend !== "undefined") VehicleBackend.setKeyFobLinked(root.keyFobLinked);
+                                }
                             }
 
                             SettingRowSwitch {
                                 title: "Phone As A Key link"
                                 subtitle: "Link smartphone virtual key via Bluetooth Low Energy"
                                 checked: root.phoneKeyLinked
-                                onToggled: root.phoneKeyLinked = !root.phoneKeyLinked
+                                onToggled: {
+                                    root.phoneKeyLinked = !root.phoneKeyLinked;
+                                    if (typeof VehicleBackend !== "undefined") VehicleBackend.setPhoneKeyLinked(root.phoneKeyLinked);
+                                }
                             }
 
                             SettingRowSwitch {
                                 title: "Bluetooth Device link"
                                 subtitle: "Select " + root.currentProfileName + " when Reno's Phone connects"
                                 checked: root.btDeviceLinked
-                                onToggled: root.btDeviceLinked = !root.btDeviceLinked
+                                onToggled: {
+                                    root.btDeviceLinked = !root.btDeviceLinked;
+                                    if (typeof VehicleBackend !== "undefined") VehicleBackend.setBtDeviceLinked(root.btDeviceLinked);
+                                }
                             }
 
                             SettingRowSwitch {
@@ -13067,6 +13219,7 @@ Item {
                                     onClicked: {
                                         if (root.patternNodes.length >= 4) {
                                             root.currentLockType = "Pattern";
+                                            if (typeof VehicleBackend !== "undefined") VehicleBackend.setCurrentLockType("Pattern");
                                             root.secSlideDir = -1;
                                             root.secCurrentScreen = "main";
                                         }
@@ -13161,6 +13314,7 @@ Item {
                                         if (root.tempPasswordEntry.length >= 4) {
                                             root.profilePassword = root.tempPasswordEntry;
                                             root.currentLockType = "Password";
+                                            if (typeof VehicleBackend !== "undefined") VehicleBackend.setProfilePassword(root.profilePassword);
                                             root.secSlideDir = -1;
                                             root.secCurrentScreen = "main";
                                         }
@@ -14442,6 +14596,7 @@ Item {
                             onClicked: {
                                 if (root.tempProfileNameInput.trim().length > 0) {
                                     root.currentProfileName = root.tempProfileNameInput.trim();
+                                    if (typeof VehicleBackend !== "undefined") VehicleBackend.setDriverProfileName(root.currentProfileName);
                                     root.profileToastMessage = "Profile renamed to " + root.currentProfileName;
                                     profToastTimer.restart();
                                     root.editProfileNameOpen = false;
@@ -14535,11 +14690,13 @@ Item {
                             anchors.fill: parent
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
-                                root.currentProfileName = "Profile 1";
-                                root.currentProfileAvatar = "monogram";
-                                root.currentLockType = "None";
+                                if (typeof VehicleBackend !== "undefined") {
+                                    VehicleBackend.deleteProfile(VehicleBackend.currentProfileId);
+                                    root.currentProfileName = VehicleBackend.driverProfileName;
+                                    root.currentProfileAvatar = VehicleBackend.driverProfileAvatar;
+                                }
                                 root.deleteProfileModalOpen = false;
-                                root.profileToastMessage = "Profile reset to defaults";
+                                root.profileToastMessage = "Profile removed";
                                 profToastTimer.restart();
                             }
                         }

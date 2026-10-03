@@ -10,7 +10,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtMultimedia
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 Item {
     id: root
@@ -50,6 +50,38 @@ Item {
         if (root.isPreviewMode) {
             root.previewActiveIndex = Math.min(11, Math.floor(root.previewProgress * 12));
         }
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            if (typeof MediaBackend !== "undefined") {
+                MediaBackend.setIsPlaying(false);
+                MediaBackend.pausePlayback();
+            }
+        } else {
+            if (root.isPreviewMode) {
+                root.isPreviewMode = false;
+            }
+            if (typeof RejuvenateController !== "undefined" && !RejuvenateController.active) {
+                RejuvenateController.stopPreviewAudio();
+            }
+        }
+    }
+
+    onIsPreviewModeChanged: {
+        if (root.isPreviewMode) {
+            if (typeof MediaBackend !== "undefined") {
+                MediaBackend.setIsPlaying(false);
+                MediaBackend.pausePlayback();
+            }
+            RejuvenateController.startPreviewAudio();
+        } else if (!RejuvenateController.active) {
+            RejuvenateController.stopPreviewAudio();
+        }
+    }
+
+    Component.onDestruction: {
+        RejuvenateController.stopPreviewAudio();
     }
 
     // 1. LIVE CONTINUOUS BACKGROUND VIDEO WITH ARTWORK FALLBACK
@@ -395,9 +427,10 @@ Item {
                                 visible: false
                             }
 
-                            OpacityMask {
+                            MultiEffect {
                                 anchors.fill: parent
                                 source: thumbImg
+                                maskEnabled: true
                                 maskSource: roundMask
                             }
                         }
@@ -543,6 +576,7 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
+                        if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
                         root.pendingDuration = 300;
                         root.showWarningDialog = true;
                     }
@@ -589,6 +623,7 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
+                        if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
                         root.pendingDuration = 600;
                         root.showWarningDialog = true;
                     }
@@ -621,6 +656,7 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
+                        if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
                         root.previewProgress = 0.0;
                         root.previewActiveIndex = 0;
                         root.isPreviewMode = true;
@@ -1981,6 +2017,7 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
+                                if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
                                 root.showWarningDialog = false;
                             }
                         }
@@ -2011,7 +2048,12 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: {
+                                if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
                                 root.showWarningDialog = false;
+                                if (typeof MediaBackend !== "undefined") {
+                                    MediaBackend.setIsPlaying(false);
+                                    MediaBackend.pausePlayback();
+                                }
                                 RejuvenateController.startSession(root.pendingDuration);
                             }
                         }

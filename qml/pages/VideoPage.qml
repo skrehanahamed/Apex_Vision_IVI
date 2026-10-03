@@ -1669,15 +1669,14 @@ Item {
                         anchors.fill: parent
                         backgroundColor: "#000000"
 
-                        settings.javascriptEnabled: true
-                        settings.playbackRequiresUserGesture: false
-                        settings.localContentCanAccessRemoteUrls: true
-                        settings.localContentCanAccessFileUrls: true
-                        settings.pluginsEnabled: true
-                        settings.fullScreenSupportEnabled: true
-                        settings.allowRunningInsecureContent: true
-
-                        profile.httpUserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                        // settings.javascriptEnabled: true
+                        // settings.playbackRequiresUserGesture: false
+                        // settings.localContentCanAccessRemoteUrls: true
+                        // settings.localContentCanAccessFileUrls: true
+                        // settings.pluginsEnabled: true
+                        // settings.fullScreenSupportEnabled: true
+                        // settings.allowRunningInsecureContent: true
+                        // profile.httpUserAgent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 
                         onLoadingChanged: function(loadRequest) {
                             if (loadRequest.status === WebEngineView.LoadSucceededStatus) {

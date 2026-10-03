@@ -642,12 +642,14 @@ Item {
                     height: 36
                     anchors.verticalCenter: parent.verticalCenter
 
-                    Text {
+                    Image {
                         anchors.centerIn: parent
-                        text: "←"
-                        font.pixelSize: 26
-                        font.weight: Font.DemiBold
-                        color: statusBackMouseArea.pressed ? "#94A3B8" : (statusBackMouseArea.containsMouse ? "#FFFFFF" : "#E2E8F0")
+                        width: 24
+                        height: 24
+                        source: "qrc:/ApexVision/qml/assets/icons/nav_back_arrow.svg"
+                        sourceSize: Qt.size(48, 48)
+                        fillMode: Image.PreserveAspectFit
+                        opacity: statusBackMouseArea.pressed ? 0.6 : (statusBackMouseArea.containsMouse ? 1.0 : 0.85)
                     }
 
                     MouseArea {

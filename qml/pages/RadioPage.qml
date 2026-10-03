@@ -20,6 +20,7 @@ Item {
 
     signal openSettingsRequested()
     signal openAppsRequested()
+    signal openBluetoothRequested()
     signal backRequested()
 
     SoundEffect {
@@ -316,6 +317,19 @@ Item {
         visible: false
         z: 95
 
+        readonly property var availableSources: {
+            var list = [
+                { name: "OrbitXM", sourceKey: "OrbitXM", icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" },
+                { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
+                { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" }
+            ];
+            if (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) {
+                list.push({ name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" });
+                list.push({ name: "Bluetooth Audio", sourceKey: "Bluetooth", icon: "qrc:/ApexVision/qml/assets/icons/bluetooth.svg" });
+            }
+            return list;
+        }
+
         Column {
             id: sourceListCol
             anchors.top: parent.top
@@ -325,14 +339,7 @@ Item {
             spacing: 2
 
             Repeater {
-                model: [
-                    { name: "OrbitXM", sourceKey: "OrbitXM", icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" },
-                    { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
-                    { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
-                    { name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" },
-                    { name: "USB DISK", sourceKey: "USB", icon: "qrc:/ApexVision/qml/assets/icons/usb_source.svg" },
-                    { name: "Bluetooth Audio", sourceKey: "Bluetooth", icon: "qrc:/ApexVision/qml/assets/icons/bluetooth.svg" }
-                ]
+                model: sourceDropdownMenu.availableSources
 
                 Item {
                     width: sourceListCol.width
@@ -435,7 +442,7 @@ Item {
             anchors.rightMargin: 32
             anchors.top: parent.top
             anchors.bottom: parent.bottom
-            visible: !MediaBackend.isSxm
+            visible: !MediaBackend.isSxm && MediaBackend.source !== "Bluetooth"
 
             Column {
                 anchors.left: parent.left
@@ -662,7 +669,7 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
             width: 290
-            visible: !MediaBackend.isSxm
+            visible: !MediaBackend.isSxm && MediaBackend.source !== "Bluetooth"
 
             Rectangle {
                 id: musicCard
@@ -689,6 +696,305 @@ Item {
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     mipmap: true
+                }
+            }
+        }
+
+        // =====================================================================
+        // BLUETOOTH AUDIO VIEW (Matching MobileDeviceConnectionPage & PhonePage)
+        // =====================================================================
+        Item {
+            id: btAudioContent
+            anchors.fill: parent
+            visible: MediaBackend.source === "Bluetooth"
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 20
+                width: 520
+
+                // Brand Logo (Clean, standalone Bluetooth icon without enclosing card)
+                Image {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: 76
+                    height: 76
+                    source: "qrc:/ApexVision/qml/assets/icons/bluetooth.svg"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
+                    sourceSize: Qt.size(256, 256)
+                }
+
+                // About Section / Headlines
+                Column {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 6
+                    width: parent.width
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Bluetooth Audio"
+                        color: "#FFFFFF"
+                        font.family: "Inter"
+                        font.pixelSize: 22
+                        font.weight: Font.DemiBold
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "To stream music, podcasts, and audio wirelessly, connect your device using Bluetooth."
+                        color: Qt.rgba(225/255, 238/255, 255/255, 0.70)
+                        font.family: "Inter"
+                        font.pixelSize: 14
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+                }
+
+                // Divider line after the about section
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width - 40
+                    height: 1
+                    color: Qt.rgba(255, 255, 255, 0.16)
+                }
+
+                // Connection Status Card (VehicleMenuCard Frosted Glass Theme - No straight line)
+                Rectangle {
+                    id: btAudioStatusCard
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width
+                    height: 82
+                    radius: 18
+                    clip: true
+
+                    // VehicleMenuCard Frosted Glass Gradient Fill
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0.0
+                            color: btAudioCardMouse.pressed ?
+                                Qt.rgba(215/255, 238/255, 255/255, 0.32) :
+                                (btAudioCardMouse.containsMouse ? Qt.rgba(225/255, 242/255, 255/255, 0.24) :
+                                ((typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) ? Qt.rgba(225/255, 242/255, 255/255, 0.22) : Qt.rgba(215/255, 238/255, 255/255, 0.17)))
+                        }
+                        GradientStop {
+                            position: 1.0
+                            color: btAudioCardMouse.pressed ?
+                                Qt.rgba(195/255, 225/255, 255/255, 0.26) :
+                                (btAudioCardMouse.containsMouse ? Qt.rgba(205/255, 232/255, 255/255, 0.18) :
+                                ((typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) ? Qt.rgba(205/255, 232/255, 255/255, 0.16) : Qt.rgba(195/255, 225/255, 255/255, 0.11)))
+                        }
+                    }
+
+                    border.color: btAudioCardMouse.containsMouse ?
+                        Qt.rgba(255, 255, 255, 0.65) :
+                        ((typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) ? Qt.rgba(52/255, 211/255, 153/255, 0.50) : Qt.rgba(225/255, 242/255, 255/255, 0.36))
+                    border.width: 1
+
+                    Behavior on border.color { ColorAnimation { duration: 180 } }
+
+                    scale: btAudioCardMouse.pressed ? 0.98 : (btAudioCardMouse.containsMouse ? 1.015 : 1.0)
+                    Behavior on scale { NumberAnimation { duration: 150; easing.type: Easing.OutQuad } }
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: 20
+                        anchors.rightMargin: 18
+                        spacing: 16
+
+                        // Bluetooth Icon in frosted circular badge
+                        Rectangle {
+                            width: 44
+                            height: 44
+                            radius: 22
+                            anchors.verticalCenter: parent.verticalCenter
+                            color: Qt.rgba(215/255, 238/255, 255/255, 0.16)
+                            border.color: Qt.rgba(225/255, 242/255, 255/255, 0.30)
+                            border.width: 1
+
+                            Image {
+                                anchors.centerIn: parent
+                                source: "qrc:/ApexVision/qml/assets/icons/bluetooth.svg"
+                                width: 20
+                                height: 20
+                                fillMode: Image.PreserveAspectFit
+                            }
+                        }
+
+                        // Device Status Details
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 4
+                            width: 260
+
+                            Text {
+                                text: (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) ? PhoneBackend.deviceName : "No Device Connected"
+                                color: "#F2F5F7"
+                                font.family: "Inter"
+                                font.pixelSize: 16
+                                font.weight: Font.DemiBold
+                            }
+
+                            Text {
+                                text: (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) ?
+                                      "Bluetooth connected • Audio streaming ready" :
+                                      "Bluetooth not connected for media playback"
+                                color: (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) ? "#34D399" : Qt.rgba(225/255, 238/255, 255/255, 0.70)
+                                font.family: "Inter"
+                                font.pixelSize: 12
+                                font.weight: Font.Medium
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true; width: 1 }
+
+                        // Action Button (Pair / Settings)
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 130
+                            height: 38
+                            radius: 19
+                            clip: true
+
+                            gradient: Gradient {
+                                GradientStop {
+                                    position: 0.0
+                                    color: btPairMouse.pressed ?
+                                        Qt.rgba(215/255, 238/255, 255/255, 0.38) :
+                                        (btPairMouse.containsMouse ? Qt.rgba(225/255, 242/255, 255/255, 0.28) : Qt.rgba(215/255, 238/255, 255/255, 0.18))
+                                }
+                                GradientStop {
+                                    position: 1.0
+                                    color: btPairMouse.pressed ?
+                                        Qt.rgba(195/255, 225/255, 255/255, 0.30) :
+                                        (btPairMouse.containsMouse ? Qt.rgba(205/255, 232/255, 255/255, 0.20) : Qt.rgba(195/255, 225/255, 255/255, 0.12))
+                                }
+                            }
+
+                            border.color: btPairMouse.containsMouse ?
+                                Qt.rgba(255, 255, 255, 0.65) :
+                                Qt.rgba(225/255, 242/255, 255/255, 0.36)
+                            border.width: 1
+
+                            scale: btPairMouse.pressed ? 0.96 : (btPairMouse.containsMouse ? 1.03 : 1.0)
+                            Behavior on scale { NumberAnimation { duration: 140 } }
+                            Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) ? "Manage Devices" : "Pair Device"
+                                color: "#F2F5F7"
+                                font.family: "Inter"
+                                font.pixelSize: 13
+                                font.weight: Font.DemiBold
+                            }
+
+                            MouseArea {
+                                id: btPairMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.openBluetoothRequested()
+                            }
+                        }
+                    }
+
+                    MouseArea {
+                        id: btAudioCardMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.openBluetoothRequested()
+                    }
+                }
+
+                // Setup Instructions Card (VehicleMenuCard Frosted Glass - No straight line)
+                Rectangle {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    width: parent.width
+                    height: 96
+                    radius: 18
+                    clip: true
+
+                    gradient: Gradient {
+                        GradientStop {
+                            position: 0.0
+                            color: Qt.rgba(215/255, 238/255, 255/255, 0.15)
+                        }
+                        GradientStop {
+                            position: 1.0
+                            color: Qt.rgba(195/255, 225/255, 255/255, 0.09)
+                        }
+                    }
+
+                    border.color: Qt.rgba(225/255, 242/255, 255/255, 0.30)
+                    border.width: 1
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 8
+                        width: parent.width - 40
+
+                        Row {
+                            spacing: 10
+                            Rectangle {
+                                width: 6; height: 6; radius: 3; color: "#38BDF8"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "1. Turn on Bluetooth on your mobile phone."
+                                color: Qt.rgba(225/255, 238/255, 255/255, 0.85)
+                                font.family: "Inter"
+                                font.pixelSize: 13
+                            }
+                        }
+
+                        Row {
+                            spacing: 10
+                            Rectangle {
+                                width: 6; height: 6; radius: 3; color: "#38BDF8"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "2. Connect to APEX IVI in Bluetooth Settings."
+                                color: Qt.rgba(225/255, 238/255, 255/255, 0.85)
+                                font.family: "Inter"
+                                font.pixelSize: 13
+                            }
+                        }
+
+                        Row {
+                            spacing: 10
+                            Rectangle {
+                                width: 6; height: 6; radius: 3; color: "#38BDF8"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "3. Open your favorite music app on your phone and press Play."
+                                color: Qt.rgba(225/255, 238/255, 255/255, 0.85)
+                                font.family: "Inter"
+                                font.pixelSize: 13
+                            }
+                        }
+                    }
+                }
+
+                // Quick Link to Bluetooth Settings
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Open Bluetooth Settings"
+                    color: btAudioLinkMouse.containsMouse ? "#38BDF8" : Qt.rgba(225/255, 238/255, 255/255, 0.75)
+                    font.family: "Inter"
+                    font.pixelSize: 13
+                    font.weight: Font.Medium
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    MouseArea {
+                        id: btAudioLinkMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.openBluetoothRequested()
+                    }
                 }
             }
         }
