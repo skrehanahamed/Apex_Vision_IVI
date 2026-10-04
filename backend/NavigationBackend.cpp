@@ -21,6 +21,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTimer>
 
 NavigationBackend::NavigationBackend(VehicleSimulator *simulator, QObject *parent)
     : QObject(parent)
@@ -46,17 +47,25 @@ NavigationBackend::NavigationBackend(VehicleSimulator *simulator, QObject *paren
         }
     }
 
+    // Default to verified Google Maps Platform Key if not provided via env or config.json
+    if (m_apiKey.isEmpty()) {
+        m_apiKey = QStringLiteral("AIzaSyBceQMF1xBiSWOQ4AjdhxCdUnRUIL_eltY");
+    }
+
     if (m_simulator) {
         connect(m_simulator, &VehicleSimulator::gpsUpdated,
                 this, &NavigationBackend::onGpsUpdated);
     }
 
-    // Only auto-override if explicitly requested via environment variable
-    const char *envIpGeo = std::getenv("ENABLE_IP_GEO");
-    if (envIpGeo && (std::strcmp(envIpGeo, "1") == 0 || std::strcmp(envIpGeo, "true") == 0)) {
-        fetchRealLocation();
-        requestReverseGeocode(m_latitude, m_longitude);
-    }
+    // Auto-detect real physical location on startup via internet geolocation
+    fetchRealLocation();
+
+    // Retry once after 3.5s in case network was still acquiring DHCP lease during boot
+    QTimer::singleShot(3500, this, [this]() {
+        if (!m_hasRealLocation) {
+            fetchRealLocation();
+        }
+    });
 }
 
 QUrl NavigationBackend::mapUrl() const

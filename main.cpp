@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
     QGuiApplication::setOrganizationDomain("apex.vision");
 
 #ifdef HAVE_WEBENGINE
-    // Autoplay policy for embedded IVI media playback & WebGL acceleration for Google Maps
-    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox --autoplay-policy=no-user-gesture-required --disable-features=WebGPU --enable-webgl --ignore-gpu-blocklist");
+    // Autoplay policy for embedded IVI media playback & WebGL acceleration for Google Maps & CORS bypass for local file:// HTML map
+    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox --disable-web-security --allow-file-access-from-files --autoplay-policy=no-user-gesture-required --disable-features=WebGPU --enable-webgl --ignore-gpu-blocklist");
     QtWebEngineQuick::initialize();
 #endif
 

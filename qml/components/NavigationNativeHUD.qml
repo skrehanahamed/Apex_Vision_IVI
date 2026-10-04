@@ -73,8 +73,8 @@ Item {
                 anchors.fill: parent
                 clip: true
 
-                property real centerLat: (typeof NavigationBackend !== "undefined" && NavigationBackend.latitude !== 0) ? NavigationBackend.latitude : 37.7749
-                property real centerLon: (typeof NavigationBackend !== "undefined" && NavigationBackend.longitude !== 0) ? NavigationBackend.longitude : -122.4194
+                property real centerLat: (typeof NavigationBackend !== "undefined" && NavigationBackend.latitude !== 0) ? NavigationBackend.latitude : 12.9719445
+                property real centerLon: (typeof NavigationBackend !== "undefined" && NavigationBackend.longitude !== 0) ? NavigationBackend.longitude : 77.5936873
                 property int zoom: 16
                 property string mapType: "m" // "m" = Google Road Map, "y" = Google Satellite Hybrid
                 property real panX: 0
@@ -381,8 +381,8 @@ Item {
                         }
 
                         Text {
-                            text: (typeof NavigationBackend !== "undefined" && NavigationBackend.maneuverInstruction) ?
-                                  NavigationBackend.maneuverInstruction : "Bear right onto Tech Blvd"
+                            text: (typeof NavigationBackend !== "undefined" && NavigationBackend.maneuverInstruction && NavigationBackend.maneuverInstruction !== "") ?
+                                  NavigationBackend.maneuverInstruction : "Continue on Kasturba Road"
                             color: Qt.rgba(255/255, 255/255, 255/255, 0.75)
                             font.pixelSize: 13
                             font.family: "Inter"
@@ -431,7 +431,7 @@ Item {
                         }
                         Text {
                             text: (typeof NavigationBackend !== "undefined" && NavigationBackend.speedLimit > 0) ?
-                                  String(NavigationBackend.speedLimit) : "65"
+                                  String(NavigationBackend.speedLimit) : "60"
                             font.pixelSize: 16
                             font.bold: true
                             color: "#000000"
@@ -502,7 +502,7 @@ Item {
                         }
                         Text {
                             text: "• " + ((typeof NavigationBackend !== "undefined" && NavigationBackend.remainingDistance !== "") ?
-                                  NavigationBackend.remainingDistance : "11.4 mi")
+                                  NavigationBackend.remainingDistance : "3.2 km")
                             color: Qt.rgba(255/255, 255/255, 255/255, 0.7)
                             font.pixelSize: 14
                             font.family: "Inter"
@@ -515,7 +515,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: (typeof NavigationBackend !== "undefined" && NavigationBackend.currentStreet !== "") ?
-                              NavigationBackend.currentStreet : "Innovation Pkwy"
+                              NavigationBackend.currentStreet : "Kasturba Road"
                         color: "#FFFFFF"
                         font.pixelSize: 14
                         font.weight: Font.DemiBold
