@@ -722,9 +722,20 @@ We gratefully acknowledge the following open-source projects, tools, and researc
   - Reduced geometric density by **-40%** (312,940 polygons down from 521,135) while preserving 100% of body curves, glass reflections, and detailed interior cabin.
   - Converted 11 solid interior cabin materials to `alphaMode: Opaque` to activate hardware **Early-Z depth culling** on Broadcom VideoCore VII TBDR GPU, eliminating occluded fragment shading.
   - Consolidated lighting rig from 4 lights down to **2 balanced studio lights** (`primaryKeyLight` at `-42°, 35°` and `rimFillLight` at `-28°, -145°`), halving forward lighting passes.
-  - Deep automotive jet-black tires (`#050505`) with preserved Michelin sidewall maps, eliminating emissive blowout.
-  - Restored illuminated rear **APEX** plate (`textureData81.png`) with left "दृष्टि" emblem and right "VISION" badge.
-  - Tuned vehicle scale to `0.205` ensuring comfortable display fit without edge clipping.
+- **Consolidated 9-Draw-Call Exterior & Interior 3D Architecture**:
+  - Replaced 56 separate meshes with 9 consolidated master nodes (`exterior_Body`, `exterior_Glass`, `interior_Cabin`, 4 independent wheels, and illuminated `apex_Emblem` + `apex_Emblem_Backing`), reducing draw call overhead by ~84%.
+  - Restored front illuminated APEX badge on the front grille above the license plate (`apex_emblem_diffuse.png` and `apex_emblem_emissive.png`).
+  - Restored illuminated rear **APEX** plate (`textureData81.png`) with left "दृष्टि" emblem and right "VISION" badge, with deep jet-black tires (`#050505`).
+  - Eliminated vsync/timer mode thrashing by migrating camera inertia physics from software timers to native `FrameAnimation`.
+- **High-Speed OTA Patch Deployment Pipeline (`patch-pi5.sh`)**:
+  - High-speed patch pipeline deploying delta updates in ~2.5–5 seconds (down from 2+ minutes), reducing transfer payload from 133 MB to ~5.1 MB (or ~290 KB for QML-only updates).
+  - Excludes static 3D assets, KTX light probes, web maps, and binary RCC files while activating the full on-screen Cyberpunk OTA update HUD on the Pi 5 screen.
+- **Vehicle Status (Tire Pressure & Oil Life) 3D Alignment & Scale Refinement**:
+  - Calibrated 3D vehicle scale in Tire Pressure mode (`statusTireScale: 0.210`) and Oil Life mode (`statusOilScale: 0.240`) preventing UI boundary and sidebar card overlap.
+  - Compacted tire readout typography from `32px` to `22px` and shortened dash lines from `46px` to `32px`.
+  - Recalibrated screen callout positions for Front Left, Front Right, Rear Left, and Rear Right to precisely track the front and rear wheel axles.
+- **Instantaneous Vehicle Studio Startup Pre-Warming**:
+  - Integrated background scene graph pre-warming in `Main.qml` during the initial 1.8-second boot phase, pre-compiling all PrincipledMaterial shaders, textures, and geometry in Broadcom VideoCore VII GPU VRAM before first user tap, eliminating first-open delay.
 - **Cyberpunk Over-The-Air (OTA) Streaming Update Engine**:
   - Real-time animated OTA cockpit HUD (`CodeUploadScreen.qml`) displaying live transfer progress, transfer speed (MB/s), elapsed time, ETA countdown, and vehicle component status.
   - Interactive streaming pipe (`scripts/pipe-progress.py`) forwarding payload byte counts over SSH to target receiver (`/usr/bin/ota-receiver.py`).

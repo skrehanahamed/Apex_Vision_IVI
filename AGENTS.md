@@ -35,10 +35,16 @@ The host Mac (Darwin arm64) cross-compiles using the Docker container and cached
 
 ## 4. Build & Deploy Commands
 
-### A. Automated One-Command Build & Deploy
-Run the helper script directly from this directory:
+### A. Automated High-Speed Patch Deploy (Recommended - ~5s)
 ```bash
-./deploy-pi5.sh
+./patch-pi5.sh            # Binary + QML patch (~5.1 MB payload, ~5s total)
+./patch-pi5.sh --qml      # Ultra-fast dynamic QML hot-patch (~290 KB payload, ~1s total)
+```
+
+### B. Full Sync Deploy (When adding new textures/video/web assets)
+```bash
+./deploy-pi5.sh           # Standard build & full sync
+./deploy-pi5.sh --full    # Full sync including heavy video assets
 ```
 
 ### B. Manual Docker Cross-Compile Command

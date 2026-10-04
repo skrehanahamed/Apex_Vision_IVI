@@ -47,7 +47,7 @@ Item {
     property real statusTireCamZ: 11.8
     property real statusTireCamPitch: 0.0
     property real statusTireFov: 28.5
-    property real statusTireScale: 0.28
+    property real statusTireScale: 0.210
 
     onStatusTireCamXChanged: if (statusMode && statusTab === "tire") updateCameraPosition(false)
     onStatusTireCamYChanged: if (statusMode && statusTab === "tire") updateCameraPosition(false)
@@ -67,7 +67,7 @@ Item {
     property real statusOilCamZ: 11.5
     property real statusOilCamPitch: 0.0
     property real statusOilFov: 28.0
-    property real statusOilScale: 0.35
+    property real statusOilScale: 0.240
 
 
 
@@ -205,14 +205,14 @@ Item {
                 statusOilCamX = -1.95; statusOilCamY = 0.0; statusOilCamZ = 11.5;
                 statusOilCamPitch = 0.0;
                 statusOilFov = 28.0;
-                statusOilScale = 0.25;
+                statusOilScale = 0.24;
             } else {
                 statusTirePosX = 0.0; statusTirePosY = 0.20; statusTirePosZ = -0.25;
                 statusTirePitch = -68.0; statusTireYaw = 180.0; statusTireRoll = 0.0;
                 statusTireCamX = -1.95; statusTireCamY = 0.0; statusTireCamZ = 11.5;
                 statusTireCamPitch = 0.0;
                 statusTireFov = 28.0;
-                statusTireScale = 0.25;
+                statusTireScale = 0.21;
             }
         }
         updateCameraPosition(true);
@@ -341,7 +341,6 @@ Item {
     onAmbientModeChanged: {
         autoReturnTimer.stop();
         resetYawAnim.stop();
-        inertiaTimer.stop();
         rotateMouseArea.dragActive = false;
         rotateMouseArea.inertiaActive = false;
         rotateMouseArea.velocityX = 0.0;
@@ -364,7 +363,6 @@ Item {
     onStatusModeChanged: {
         autoReturnTimer.stop();
         resetYawAnim.stop();
-        inertiaTimer.stop();
         rotateMouseArea.dragActive = false;
         rotateMouseArea.inertiaActive = false;
         rotateMouseArea.velocityX = 0.0;
@@ -391,8 +389,7 @@ Item {
             id: sceneEnv
             clearColor: "#00000000"
             backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: (rotateMouseArea.dragActive || rotateMouseArea.inertiaActive) ?
-                              SceneEnvironment.NoAA : SceneEnvironment.ProgressiveAA
+            antialiasingMode: SceneEnvironment.NoAA
             antialiasingQuality: SceneEnvironment.Medium
             tonemapMode: SceneEnvironment.TonemapModeLinear
 
@@ -491,147 +488,30 @@ Item {
                 id: groundShadowsContainer
                 visible: !root.ambientMode
 
-                // Contact Shadow Layer 1: Wide Deep Studio Ambient Ground Shadow
+                // Consolidated 60 FPS Ground Contact Shadow Quad
                 Model {
                     id: wideCastShadow
                     source: "#Rectangle"
                     position: Qt.vector3d(0.0, 0.001, 0.0)
-                eulerRotation: Qt.vector3d(-90, 0, 0)
-                scale: Qt.vector3d(0.036, 0.052, 1.0)
-                castsShadows: false
-                receivesShadows: false
-                materials: [
-                    PrincipledMaterial {
-                        lighting: PrincipledMaterial.NoLighting
-                        baseColor: "#000000"
-                        opacity: 0.74
-                        opacityMap: Texture {
-                            source: "images/CarGroundShadowBig.png"
+                    eulerRotation: Qt.vector3d(-90, 0, 0)
+                    scale: Qt.vector3d(0.036, 0.052, 1.0)
+                    castsShadows: false
+                    receivesShadows: false
+                    materials: [
+                        PrincipledMaterial {
+                            lighting: PrincipledMaterial.NoLighting
+                            baseColor: "#000000"
+                            opacity: 0.82
+                            opacityMap: Texture {
+                                source: "images/CarGroundShadowBig.png"
+                            }
+                            opacityChannel: Material.A
+                            alphaMode: PrincipledMaterial.Blend
+                            cullMode: PrincipledMaterial.NoCulling
                         }
-                        opacityChannel: Material.A
-                        alphaMode: PrincipledMaterial.Blend
-                        cullMode: PrincipledMaterial.NoCulling
-                    }
-                ]
+                    ]
+                }
             }
-
-            // Contact Shadow Layer 2: Core Undercarriage Occlusion Shadow
-            Model {
-                id: coreContactShadow
-                source: "#Rectangle"
-                position: Qt.vector3d(0.0, 0.003, 0.0)
-                eulerRotation: Qt.vector3d(-90, 0, 0)
-                scale: Qt.vector3d(0.022, 0.044, 1.0)
-                castsShadows: false
-                receivesShadows: false
-                materials: [
-                    PrincipledMaterial {
-                        lighting: PrincipledMaterial.NoLighting
-                        baseColor: "#000000"
-                        opacity: 0.92
-                        opacityMap: Texture {
-                            source: "images/CarGroundShadowBig.png"
-                        }
-                        opacityChannel: Material.A
-                        alphaMode: PrincipledMaterial.Blend
-                        cullMode: PrincipledMaterial.NoCulling
-                    }
-                ]
-            }
-
-            // Contact Shadow Layer 3: 4 Tire Contact Footprints (Plants wheels firmly on ground)
-            Model {
-                id: frontLeftTireShadow
-                source: "#Rectangle"
-                position: Qt.vector3d(-0.76, 0.004, 1.48)
-                eulerRotation: Qt.vector3d(-90, 0, 0)
-                scale: Qt.vector3d(0.0055, 0.010, 1.0)
-                castsShadows: false
-                receivesShadows: false
-                materials: [
-                    PrincipledMaterial {
-                        lighting: PrincipledMaterial.NoLighting
-                        baseColor: "#000000"
-                        opacity: 0.98
-                        opacityMap: Texture {
-                            source: "images/Ground.png"
-                        }
-                        opacityChannel: Material.A
-                        alphaMode: PrincipledMaterial.Blend
-                        cullMode: PrincipledMaterial.NoCulling
-                    }
-                ]
-            }
-
-            Model {
-                id: frontRightTireShadow
-                source: "#Rectangle"
-                position: Qt.vector3d(0.76, 0.004, 1.48)
-                eulerRotation: Qt.vector3d(-90, 0, 0)
-                scale: Qt.vector3d(0.0055, 0.010, 1.0)
-                castsShadows: false
-                receivesShadows: false
-                materials: [
-                    PrincipledMaterial {
-                        lighting: PrincipledMaterial.NoLighting
-                        baseColor: "#000000"
-                        opacity: 0.98
-                        opacityMap: Texture {
-                            source: "images/Ground.png"
-                        }
-                        opacityChannel: Material.A
-                        alphaMode: PrincipledMaterial.Blend
-                        cullMode: PrincipledMaterial.NoCulling
-                    }
-                ]
-            }
-
-            Model {
-                id: rearLeftTireShadow
-                source: "#Rectangle"
-                position: Qt.vector3d(-0.76, 0.004, -1.48)
-                eulerRotation: Qt.vector3d(-90, 0, 0)
-                scale: Qt.vector3d(0.0055, 0.010, 1.0)
-                castsShadows: false
-                receivesShadows: false
-                materials: [
-                    PrincipledMaterial {
-                        lighting: PrincipledMaterial.NoLighting
-                        baseColor: "#000000"
-                        opacity: 0.98
-                        opacityMap: Texture {
-                            source: "images/Ground.png"
-                        }
-                        opacityChannel: Material.A
-                        alphaMode: PrincipledMaterial.Blend
-                        cullMode: PrincipledMaterial.NoCulling
-                    }
-                ]
-            }
-
-            Model {
-                id: rearRightTireShadow
-                source: "#Rectangle"
-                position: Qt.vector3d(0.76, 0.004, -1.48)
-                eulerRotation: Qt.vector3d(-90, 0, 0)
-                scale: Qt.vector3d(0.0055, 0.010, 1.0)
-                castsShadows: false
-                receivesShadows: false
-                materials: [
-                    PrincipledMaterial {
-                        lighting: PrincipledMaterial.NoLighting
-                        baseColor: "#000000"
-                        opacity: 0.98
-                        opacityMap: Texture {
-                            source: "images/Ground.png"
-                        }
-                        opacityChannel: Material.A
-                        alphaMode: PrincipledMaterial.Blend
-                        cullMode: PrincipledMaterial.NoCulling
-                    }
-                ]
-            }
-        }
 
         // Full Exterior Model
         Scene {
@@ -793,7 +673,6 @@ Item {
         onPressed: function(mouse) {
             autoReturnTimer.stop();
             resetYawAnim.stop();
-            inertiaTimer.stop();
             dragActive = true;
             inertiaActive = false;
             velocityX = 0.0;
@@ -813,7 +692,6 @@ Item {
             dragActive = false;
             if (Math.abs(velocityX) > 0.25) {
                 inertiaActive = true;
-                inertiaTimer.restart();
             } else {
                 autoReturnTimer.restart();
             }
@@ -827,7 +705,6 @@ Item {
 
         onDoubleClicked: {
             autoReturnTimer.stop();
-            inertiaTimer.stop();
             inertiaActive = false;
             var diff = root.getShortestAngleDiff(root.currentYaw, root.heroYaw);
             resetYawAnim.from = root.currentYaw;
@@ -940,16 +817,14 @@ Item {
         }
     }
 
-    Timer {
-        id: inertiaTimer
-        interval: 16
-        repeat: true
+    FrameAnimation {
+        id: inertiaAnimation
+        running: rotateMouseArea.inertiaActive
         onTriggered: {
             rotateMouseArea.velocityX *= 0.93;
             root.currentYaw -= rotateMouseArea.velocityX;
             if (Math.abs(rotateMouseArea.velocityX) < 0.04) {
                 rotateMouseArea.inertiaActive = false;
-                inertiaTimer.stop();
                 autoReturnTimer.restart();
             }
         }

@@ -56,6 +56,18 @@ Window {
         readonly property bool rejuvenateSessionActive: typeof RejuvenateController !== "undefined" && (RejuvenateController.active || RejuvenateController.paused)
         readonly property bool rejuvenateBarsVisible: !rejuvenateSessionActive || (typeof fullScreenRejuvenateSession !== "undefined" && fullScreenRejuvenateSession.hudVisible)
 
+        // Startup Prewarm for 3D Vehicle Studio (Compiles shaders & geometry in background during boot)
+        property bool studioPrewarmed: false
+        Timer {
+            id: studioWarmupTimer
+            interval: 1800
+            running: true
+            repeat: false
+            onTriggered: {
+                mainRoot.studioPrewarmed = true;
+            }
+        }
+
         // 1. BOTTOM CLIMATE CONTROL BAR (Permanent: Full-width, covers entire bottom with zero space)
         ClimateBar {
             id: climateBar
@@ -216,6 +228,7 @@ Window {
                     id: homePage
                     objectName: "homePage"
                     anchors.fill: parent
+                    z: (pageStack.currentIndex === 0) ? 10 : 2
                     climateOpen: climateBar.climate3DOpen
                     visible: pageStack.currentIndex === 0 || opacity > 0.001
                     opacity: pageStack.currentIndex === 0 ? 1.0 : 0.0
@@ -251,8 +264,9 @@ Window {
                 VehiclePage {
                     id: vehiclePage
                     anchors.fill: parent
-                    visible: opacity > 0.001 || (pageStack.currentIndex === 4 && settingsPage.opacity < 0.99)
-                    opacity: pageStack.currentIndex === 1 ? 1.0 : (pageStack.currentIndex === 4 ? 1.0 : 0.0)
+                    z: (pageStack.currentIndex === 1 || pageStack.currentIndex === 4) ? 15 : 1
+                    visible: true
+                    opacity: (pageStack.currentIndex === 1 || pageStack.currentIndex === 4) ? 1.0 : (mainRoot.studioPrewarmed ? 0.0 : 0.002)
                     enabled: pageStack.currentIndex === 1 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {

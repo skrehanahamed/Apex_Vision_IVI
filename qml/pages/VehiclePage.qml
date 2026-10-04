@@ -1208,29 +1208,29 @@ Item {
 
             // 📍 INDIVIDUAL X & Y AXIS CONTROLS FOR EACH TIRE:
             // --- FRONT LEFT (FL) "35 —" (Object_21) ---
-            property real tireFL_X: 18         // X position: shifted further left away from 3D model
-            property real tireFL_Y: -140       // Y position: moved down to align directly with front wheel
+            property real tireFL_X: 78         // X position: aligned close to front left wheel
+            property real tireFL_Y: -110       // Y position: aligned with front axle
 
             // --- FRONT RIGHT (FR) "— 35" (Object_9) ---
-            property real tireFR_X: 495        // X position: symmetrical spacing on right side
-            property real tireFR_Y: -140       // Y position: moved down to align directly with front wheel
+            property real tireFR_X: 390      // X position: brought closer to front right wheel
+            property real tireFR_Y: -110       // Y position: aligned with front axle
 
             // --- REAR LEFT (RL) "41 —" (Object_29) ---
-            property real tireRL_X: -32        // X position: shifted further left away from rear panel
-            property real tireRL_Y: 72         // Y position: aligned to rear axle
+            property real tireRL_X: 58         // X position: brought closer to rear left wheel
+            property real tireRL_Y: 48         // Y position: aligned with rear axle
 
             // --- REAR RIGHT (RR) "— 41" (Object_10) ---
-            property real tireRR_X: 520        // X position: symmetrical spacing on right side
-            property real tireRR_Y: 72         // Y position: aligned to rear axle
+            property real tireRR_X: 430        // X position: brought closer to rear right wheel
+            property real tireRR_Y: 48         // Y position: aligned with rear axle
 
             // 📏 LINE & TEXT STYLING:
-            property real tireLineWidth: 46    // Length of the dash line
+            property real tireLineWidth: 32    // Length of the dash line
             property real tireLineHeight: 2.5  // Thickness of the dash line
-            property real tireSpacing: 14      // Distance between number and line
+            property real tireSpacing: 10      // Distance between number and line
 
             // 📝 BOTTOM SUMMARY POSITION ("psi", "Recommended cold pressure", "Front 33 Rear 40"):
-            property real bottomSummaryX: 275  // Center horizontal position under car
-            property real bottomSummaryY: 255  // Vertical position below rear diffuser
+            property real bottomSummaryX: 255  // Center horizontal position under car
+            property real bottomSummaryY: 230  // Vertical position below rear diffuser
 
             // =================================================================
             // 4 TIRE NUMBERS AND LINES CONTAINER
@@ -1256,7 +1256,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "" + Math.round(vehicleStatusDisplayOverlay.countFL)
                         font.family: "Inter"
-                        font.pixelSize: 32
+                        font.pixelSize: 22
                         font.weight: Font.Bold
                         color: "#FFFFFF"
                     }
@@ -1295,7 +1295,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "" + Math.round(vehicleStatusDisplayOverlay.countFR)
                         font.family: "Inter"
-                        font.pixelSize: 32
+                        font.pixelSize: 22
                         font.weight: Font.Bold
                         color: "#FFFFFF"
                     }
@@ -1316,7 +1316,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "" + Math.round(vehicleStatusDisplayOverlay.countRL)
                         font.family: "Inter"
-                        font.pixelSize: 32
+                        font.pixelSize: 22
                         font.weight: Font.Bold
                         color: "#FFFFFF"
                     }
@@ -1355,7 +1355,7 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         text: "" + Math.round(vehicleStatusDisplayOverlay.countRR)
                         font.family: "Inter"
-                        font.pixelSize: 32
+                        font.pixelSize: 22
                         font.weight: Font.Bold
                         color: "#FFFFFF"
                     }
