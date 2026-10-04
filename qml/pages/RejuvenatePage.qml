@@ -404,20 +404,24 @@ Item {
                         Behavior on border.color { ColorAnimation { duration: 150 } }
                         Behavior on scale { NumberAnimation { duration: 120 } }
 
-                        // Circular thumbnail image with OpacityMask for flawless circular clipping
+                        // Circular thumbnail image with MultiEffect for flawless circular clipping
                         Item {
                             anchors.centerIn: parent
                             width: parent.width - 12
                             height: parent.height - 12
+                            layer.enabled: true
+                            layer.effect: MultiEffect {
+                                maskEnabled: true
+                                maskSource: roundMask
+                            }
 
                             Image {
                                 id: thumbImg
                                 anchors.fill: parent
-                                source: modelData.thumbnailUrl || ""
+                                source: (modelData && (modelData.thumbnailUrl || modelData.thumbnail)) ? (modelData.thumbnailUrl || modelData.thumbnail) : ""
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
                                 asynchronous: true
-                                visible: false
                             }
 
                             Rectangle {
@@ -425,13 +429,7 @@ Item {
                                 anchors.fill: parent
                                 radius: width / 2
                                 visible: false
-                            }
-
-                            MultiEffect {
-                                anchors.fill: parent
-                                source: thumbImg
-                                maskEnabled: true
-                                maskSource: roundMask
+                                layer.enabled: true
                             }
                         }
                     }
