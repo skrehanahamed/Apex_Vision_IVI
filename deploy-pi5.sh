@@ -9,6 +9,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DOCKER_IMAGE="rpi5-yocto-scarthgap-builder"
 PI_HOST="rpi5"
 PI_DEST="/opt/apex_vision_ivi"
+FULL_SYNC=false
+
+if [ "${1:-}" = "--full" ]; then
+  FULL_SYNC=true
+  echo ">> Full sync mode enabled (includes large static video assets)."
+fi
 
 echo "=================================================================="
 echo " 🚀 APEX VISION IVI — Building for Raspberry Pi 5"
@@ -50,14 +56,54 @@ docker run --rm \
     ninja -j 6
 '
 
-echo "=================================================================="
-echo " 📡 Syncing build artifacts to Raspberry Pi 5 (${PI_HOST}:${PI_DEST})..."
-echo "=================================================================="
+echo ">> Packing payload and calculating exact byte size..."
+DEPLOY_ARCHIVE="/tmp/apex_deploy_payload.tar.gz"
+if [ "$FULL_SYNC" = true ]; then
+  tar -czf "${DEPLOY_ARCHIVE}" \
+      -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc assets web \
+      -C "${SCRIPT_DIR}" qml
+else
+  tar --exclude="CarModel_BACKUP" -czf "${DEPLOY_ARCHIVE}" \
+      -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc web \
+      -C "${SCRIPT_DIR}" qml
+fi
 
-tar -czf - -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc assets web \
-          -C "${SCRIPT_DIR}" qml config.json | \
-  ssh "${PI_HOST}" "mkdir -p ${PI_DEST} && tar -xzf - -C ${PI_DEST} && chmod +x ${PI_DEST}/apex_vision_ivi && systemctl restart apex-vision"
+TOTAL_BYTES=$(stat -f%z "${DEPLOY_ARCHIVE}" 2>/dev/null || stat -c%s "${DEPLOY_ARCHIVE}")
+echo ">> Exact payload size: $(python3 -c "print(f'${TOTAL_BYTES} bytes ({${TOTAL_BYTES}/(1024*1024):.2f} MB)')")"
 
 echo "=================================================================="
-echo " ✅ Deployed and restarted apex-vision on ${PI_HOST}"
+echo " 📡 Activating On-Screen OTA Code Upload Display on ${PI_HOST}..."
+echo "=================================================================="
+ssh "${PI_HOST}" "
+  systemctl stop apex-vision 2>/dev/null || true
+  pkill -9 apex_vision_ivi 2>/dev/null || true
+  pkill -9 -f 'qml' 2>/dev/null || true
+  rm -f /tmp/apex_touch_click.wav 2>/dev/null || true
+  nohup /usr/bin/show-upload-screen.sh > /dev/null 2>&1 &
+"
+sleep 0.8
+
+echo ">> Streaming artifacts to ${PI_HOST} with live on-screen HUD..."
+cat "${DEPLOY_ARCHIVE}" | \
+  python3 "${SCRIPT_DIR}/scripts/pipe-progress.py" "${TOTAL_BYTES}" | \
+  ssh "${PI_HOST}" "python3 /usr/bin/ota-receiver.py ${TOTAL_BYTES} ${PI_DEST} && chmod +x ${PI_DEST}/apex_vision_ivi"
+
+rm -f "${DEPLOY_ARCHIVE}"
+
+echo "=================================================================="
+echo " 🚀 Update Completed! Transitioning to Apex Digital Cockpit..."
+echo "=================================================================="
+sleep 1.2
+ssh "${PI_HOST}" "
+  if [ -f /tmp/upload_screen.pid ]; then
+    kill -9 \$(cat /tmp/upload_screen.pid) 2>/dev/null || true
+    rm -f /tmp/upload_screen.pid
+  fi
+  pkill -9 -f 'qml' 2>/dev/null || true
+  sleep 0.4
+  systemctl start apex-vision
+"
+
+echo "=================================================================="
+echo " ✅ Deployed and active on ${PI_HOST}"
 echo "=================================================================="

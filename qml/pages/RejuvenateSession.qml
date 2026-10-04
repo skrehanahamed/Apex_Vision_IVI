@@ -58,10 +58,11 @@ Item {
     // 1. Background Video Playback with Qt Multimedia (4K UHD)
     MediaPlayer {
         id: player
-        source: RejuvenateController.videoSource
+        source: (typeof RejuvenateController !== "undefined" && (RejuvenateController.active || RejuvenateController.paused)) ? RejuvenateController.videoSource : ""
         loops: MediaPlayer.Infinite
         audioOutput: audioOut
         videoOutput: videoOut
+
 
         onMediaStatusChanged: {
             if (mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) {

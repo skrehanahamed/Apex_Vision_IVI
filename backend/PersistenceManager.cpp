@@ -103,7 +103,7 @@ void PersistenceManager::seedDefaultsIfEmpty()
         m_globalSettings[QStringLiteral("sys_is24HourFormat")] = true;
         m_globalSettings[QStringLiteral("sys_autoTimeEnabled")] = true;
         m_globalSettings[QStringLiteral("sys_autoTimeZoneEnabled")] = true;
-        m_globalSettings[QStringLiteral("sys_selectedTimeZone")] = QStringLiteral("GMT-04:00 Eastern Daylight Time");
+        m_globalSettings[QStringLiteral("sys_selectedTimeZone")] = QStringLiteral("GMT+05:30 India Standard Time (IST)");
         m_globalSettings[QStringLiteral("sys_selectedLanguage")] = QStringLiteral("English");
         m_globalSettings[QStringLiteral("sys_selectedKeyboard")] = QStringLiteral("Apex Touch Keyboard");
         m_globalSettings[QStringLiteral("sys_selectedAutofill")] = QStringLiteral("Apex Cloud");

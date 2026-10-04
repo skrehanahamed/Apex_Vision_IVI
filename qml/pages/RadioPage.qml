@@ -37,7 +37,7 @@ Item {
     }
 
     Component.onCompleted: {
-        if (MediaBackend.source === "AM" && !MediaBackend.isAmAudioPlaying) {
+        if (MediaBackend.source === "AM" && MediaBackend.isPlaying && !MediaBackend.isAmAudioPlaying) {
             MediaBackend.startAmPlayback();
         }
         if (sxmPresetListView) sxmPresetListView.updatePaging();
@@ -151,7 +151,7 @@ Item {
                 anchors.centerIn: parent
                 spacing: 10
 
-                // Circular Blue Badge with Icon (when not SXM)
+                // Circular Badge with Icon (when not SXM)
                 Rectangle {
                     width: 28
                     height: 28
@@ -164,7 +164,7 @@ Item {
                         anchors.centerIn: parent
                         width: 16
                         height: 16
-                        source: "qrc:/ApexVision/qml/assets/icons/radio_source.svg"
+                        source: MediaBackend.source === "AM" ? "qrc:/ApexVision/qml/assets/icons/radio_am.svg" : "qrc:/ApexVision/qml/assets/icons/radio_fm.svg"
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                     }
@@ -320,8 +320,8 @@ Item {
         readonly property var availableSources: {
             var list = [
                 { name: "OrbitXM", sourceKey: "OrbitXM", icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" },
-                { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
-                { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" }
+                { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_fm.svg" },
+                { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_am.svg" }
             ];
             if (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) {
                 list.push({ name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" });
@@ -362,18 +362,18 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 18
 
-                        // Circular Blue Badge with Icon (OrbitXM renders directly without redundant outer blue background)
+                        // Circular Badge with Icon (OrbitXM renders directly without redundant outer background)
                         Rectangle {
                             width: 40
                             height: 40
                             radius: 20
-                            color: modelData.sourceKey === "OrbitXM" ? "transparent" : "#1976D2"
+                            color: modelData.sourceKey === "OrbitXM" ? "transparent" : "#1E88E5"
                             anchors.verticalCenter: parent.verticalCenter
 
                             Image {
                                 anchors.centerIn: parent
-                                width: modelData.sourceKey === "OrbitXM" ? 40 : 22
-                                height: modelData.sourceKey === "OrbitXM" ? 40 : 22
+                                width: modelData.sourceKey === "OrbitXM" ? 40 : 24
+                                height: modelData.sourceKey === "OrbitXM" ? 40 : 24
                                 source: modelData.icon
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
@@ -410,8 +410,8 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            MediaBackend.setSource(modelData.sourceKey);
                             sourceDropdownMenu.visible = false;
+                            MediaBackend.setSource(modelData.sourceKey);
                         }
                     }
                 }
@@ -426,13 +426,13 @@ Item {
     Item {
         id: mainContent
         anchors.top: topBar.bottom
-        anchors.bottom: MediaBackend.isSxm ? presetBar.top : parent.bottom
+        anchors.bottom: presetBar.top
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.leftMargin: 40
         anchors.rightMargin: 40
         anchors.topMargin: 10
-        anchors.bottomMargin: MediaBackend.isSxm ? 10 : 32
+        anchors.bottomMargin: 10
 
         // LEFT COLUMN: Station Frequency, Info, and Controls
         Item {
@@ -494,9 +494,9 @@ Item {
 
                 Item { width: 1; height: 10 }
 
-                // Transport Controls: |<<   :::   >>|   ☆+ Save as preset
+                // Transport Controls: |<<   ▶/❚❚   >>|   ::: Keypad   ☆+ Save as preset
                 Row {
-                    spacing: 34
+                    spacing: 24
                     anchors.left: parent.left
 
                     // Previous Station Button |<<
@@ -532,7 +532,7 @@ Item {
                         }
                     }
 
-                    // Direct Frequency Keypad Button :::
+                    // Primary Play / Pause Button ▶ / ❚❚ (Identical sleek style to OrbitXM)
                     Item {
                         width: 56
                         height: 56
@@ -541,27 +541,30 @@ Item {
                         Rectangle {
                             anchors.fill: parent
                             radius: 28
-                            color: keypadMouse.pressed ? Qt.rgba(255, 255, 255, 0.16) :
-                                   (keypadMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.08) : "transparent")
-                            scale: keypadMouse.pressed ? 0.9 : 1.0
+                            color: playMouse.pressed ? Qt.rgba(255, 255, 255, 0.20) :
+                                   (playMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.10) : "transparent")
+                            scale: playMouse.pressed ? 0.92 : (playMouse.containsMouse ? 1.05 : 1.0)
                             Behavior on scale { NumberAnimation { duration: 80 } }
                         }
 
                         Image {
                             anchors.centerIn: parent
+                            anchors.horizontalCenterOffset: MediaBackend.isPlaying ? 0 : 2
                             width: 28
                             height: 28
-                            source: "qrc:/ApexVision/qml/assets/icons/radio_keypad.svg"
+                            source: MediaBackend.isPlaying ?
+                                    "qrc:/ApexVision/qml/assets/icons/pause.svg" :
+                                    "qrc:/ApexVision/qml/assets/icons/play.svg"
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                         }
 
                         MouseArea {
-                            id: keypadMouse
+                            id: playMouse
                             anchors.fill: parent
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
-                            onClicked: keypadModal.openKeypad()
+                            onClicked: MediaBackend.togglePlay()
                         }
                     }
 
@@ -595,6 +598,39 @@ Item {
                             hoverEnabled: true
                             cursorShape: Qt.PointingHandCursor
                             onClicked: MediaBackend.nextRadioStation()
+                        }
+                    }
+
+                    // Direct Frequency Keypad Button :::
+                    Item {
+                        width: 56
+                        height: 56
+                        anchors.verticalCenter: parent.verticalCenter
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 28
+                            color: keypadMouse.pressed ? Qt.rgba(255, 255, 255, 0.16) :
+                                   (keypadMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.08) : "transparent")
+                            scale: keypadMouse.pressed ? 0.9 : 1.0
+                            Behavior on scale { NumberAnimation { duration: 80 } }
+                        }
+
+                        Image {
+                            anchors.centerIn: parent
+                            width: 28
+                            height: 28
+                            source: "qrc:/ApexVision/qml/assets/icons/radio_keypad.svg"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                        }
+
+                        MouseArea {
+                            id: keypadMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: keypadModal.openKeypad()
                         }
                     }
 
@@ -1359,6 +1395,17 @@ Item {
                                 maskSource: sxmArtMask
                             }
 
+                            // Prior image retained during transitions to prevent black/emblem strobe
+                            Image {
+                                id: sxmArtImgPrev
+                                anchors.fill: parent
+                                source: ""
+                                fillMode: Image.PreserveAspectCrop
+                                smooth: true
+                                mipmap: true
+                                visible: source !== "" && sxmArtImg.status !== Image.Ready
+                            }
+
                             Image {
                                 id: sxmArtImg
                                 anchors.fill: parent
@@ -1366,6 +1413,13 @@ Item {
                                 fillMode: Image.PreserveAspectCrop
                                 smooth: true
                                 mipmap: true
+                                opacity: status === Image.Ready ? 1.0 : 0.0
+                                Behavior on opacity { NumberAnimation { duration: 180 } }
+                                onStatusChanged: {
+                                    if (status === Image.Ready) {
+                                        sxmArtImgPrev.source = source;
+                                    }
+                                }
                             }
                         }
 
@@ -1377,12 +1431,12 @@ Item {
                             layer.enabled: true
                         }
 
-                        // Fallback subtle emblem if image is loading (no channel title text overlay)
+                        // Fallback subtle emblem only if NO image is available
                         Item {
                             anchors.centerIn: parent
                             width: 80
                             height: 80
-                            visible: sxmArtImg.status !== Image.Ready
+                            visible: sxmArtImg.status !== Image.Ready && sxmArtImgPrev.source === ""
 
                             Image {
                                 anchors.centerIn: parent
@@ -1450,7 +1504,93 @@ Item {
         anchors.rightMargin: MediaBackend.isSxm ? 24 : 40
         anchors.bottomMargin: 14
         height: 72
-        visible: MediaBackend.isSxm
+        visible: MediaBackend.isRadio || MediaBackend.isSxm
+
+        // Unified Radio Presets Bar (FM & AM)
+        Item {
+            id: radioPresetsContainer
+            anchors.fill: parent
+            visible: !MediaBackend.isSxm
+
+            ListView {
+                id: radioPresetListView
+                anchors.fill: parent
+                orientation: ListView.Horizontal
+                spacing: 12
+                clip: true
+                boundsBehavior: Flickable.DragAndOvershootBounds
+                flickDeceleration: 1600
+                maximumFlickVelocity: 3500
+                pixelAligned: true
+                model: MediaBackend.radioPresets
+
+                delegate: Item {
+                    width: 148
+                    height: 54
+
+                    readonly property bool isActive: (MediaBackend.activeRadioPresetIndex === index)
+
+                    // Preset Chip Container (Borderless Glass Tile matching OrbitXM)
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: 12
+                        color: radioPresetMouse.pressed ? Qt.rgba(255, 255, 255, 0.16) :
+                               (radioPresetMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.08) :
+                               (isActive ? Qt.rgba(255, 255, 255, 0.12) : Qt.rgba(15/255, 25/255, 50/255, 0.45)))
+                        border.width: 0
+
+                        scale: radioPresetMouse.pressed ? 0.95 : 1.0
+                        Behavior on scale { NumberAnimation { duration: 80 } }
+                    }
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: (modelData.frequency || "") + " " + (modelData.band || "")
+                            color: isActive ? "#FFFFFF" : "#CBD5E1"
+                            font.family: "Inter"
+                            font.pixelSize: 14
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: modelData.name || "Preset"
+                            color: isActive ? "#38BDF8" : "#94A3B8"
+                            font.family: "Inter"
+                            font.pixelSize: 12
+                            font.weight: Font.Medium
+                            elide: Text.ElideRight
+                            width: 136
+                            horizontalAlignment: Text.AlignHCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: radioPresetMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        preventStealing: false
+                        onClicked: {
+                            MediaBackend.selectRadioPreset(index);
+                        }
+                        onPressAndHold: {
+                            if (typeof SystemBackend !== "undefined") {
+                                SystemBackend.playSound("preset_chime");
+                            } else {
+                                presetChimeSound.play();
+                            }
+                            MediaBackend.saveCurrentAsPreset();
+                            saveNotification.showToast("Preset " + (index + 1) + " updated");
+                        }
+                    }
+                }
+            }
+        }
 
         // OrbitXM Presets Bar (Matches 10 PM reference image media_1790872779168.png with authentic channel logos)
         Item {
@@ -1497,10 +1637,14 @@ Item {
                 orientation: ListView.Horizontal
                 spacing: 12
                 clip: true
-                boundsBehavior: Flickable.StopAtBounds
+                boundsBehavior: Flickable.DragAndOvershootBounds
+                flickDeceleration: 1600
+                maximumFlickVelocity: 3500
+                pixelAligned: true
                 model: MediaBackend.sxmPresets
 
                 Behavior on contentX {
+                    enabled: !sxmPresetListView.dragging && !sxmPresetListView.flicking
                     NumberAnimation { duration: 250; easing.type: Easing.OutQuad }
                 }
 
@@ -1577,13 +1721,13 @@ Item {
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             mipmap: true
-                            visible: source != "" && status === Image.Ready
+                            visible: source != ""
                         }
 
-                        // Fallback text if logo image is loading or empty
+                        // Fallback text only if logo URL is absent
                         Text {
                             anchors.centerIn: parent
-                            visible: !presetLogoImg.visible
+                            visible: !modelData.logoUrl || modelData.logoUrl === ""
                             text: modelData.name || ("Ch " + modelData.number)
                             color: parent.parent.isActive ? "#FFFFFF" : "#E2E8F0"
                             font.family: "Inter"
@@ -1600,12 +1744,16 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
+                        preventStealing: false
                         onClicked: {
                             MediaBackend.selectSxmPreset(index);
                         }
                         onPressAndHold: {
-                            MediaBackend.saveCurrentSxmPreset(index);
-                            presetChimeSound.play();
+                            if (typeof SystemBackend !== "undefined") {
+                                SystemBackend.playSound("preset_chime");
+                            } else {
+                                presetChimeSound.play();
+                            }
                             saveNotification.showToast("Preset " + (index + 1) + " saved: " + MediaBackend.sxmChannelName);
                         }
                     }
@@ -1815,7 +1963,7 @@ Item {
                     }
 
                     Text {
-                        text: "Tap the song and/or artist to get a notification every time the song/artist airs on SiriusXM."
+                        text: "Tap the song and/or artist to get a notification every time the song/artist airs on OrbitXM."
                         color: "#94A3B8"
                         font.family: "Inter"
                         font.pixelSize: 14
@@ -3170,10 +3318,14 @@ Item {
                 orientation: ListView.Horizontal
                 spacing: 18
                 clip: true
-                boundsBehavior: Flickable.StopAtBounds
+                boundsBehavior: Flickable.DragAndOvershootBounds
+                flickDeceleration: 1600
+                maximumFlickVelocity: 3500
+                pixelAligned: true
                 model: MediaBackend.sxmChannels
 
                 Behavior on contentX {
+                    enabled: !channelsFullListView.dragging && !channelsFullListView.flicking
                     NumberAnimation { duration: 320; easing.type: Easing.OutCubic }
                 }
 
@@ -3251,6 +3403,7 @@ Item {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
+                                preventStealing: false
                                 onClicked: {
                                     MediaBackend.tuneSxmChannelNumber(modelData.number);
                                     channelsViewModal.closeModal();
@@ -3531,7 +3684,7 @@ Item {
                     }
                 }
 
-                // Circular Blue Badge with Antenna Icon
+                // Circular Badge with FM/AM Icon
                 Rectangle {
                     width: 32
                     height: 32
@@ -3543,7 +3696,7 @@ Item {
                         anchors.centerIn: parent
                         width: 18
                         height: 18
-                        source: "qrc:/ApexVision/qml/assets/icons/radio_source.svg"
+                        source: MediaBackend.source === "AM" ? "qrc:/ApexVision/qml/assets/icons/radio_am.svg" : "qrc:/ApexVision/qml/assets/icons/radio_fm.svg"
                         fillMode: Image.PreserveAspectFit
                         smooth: true
                     }

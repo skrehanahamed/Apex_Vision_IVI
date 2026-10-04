@@ -73,8 +73,8 @@ Item {
                 anchors.fill: parent
                 clip: true
 
-                property real centerLat: (typeof NavigationBackend !== "undefined" && NavigationBackend.latitude !== 0) ? NavigationBackend.latitude : 12.9719445
-                property real centerLon: (typeof NavigationBackend !== "undefined" && NavigationBackend.longitude !== 0) ? NavigationBackend.longitude : 77.5936873
+                property real centerLat: (typeof NavigationBackend !== "undefined" && NavigationBackend.latitude !== 0) ? NavigationBackend.latitude : 13.06464
+                property real centerLon: (typeof NavigationBackend !== "undefined" && NavigationBackend.longitude !== 0) ? NavigationBackend.longitude : 77.60159
                 property int zoom: 16
                 property string mapType: "m" // "m" = Google Road Map, "y" = Google Satellite Hybrid
                 property real panX: 0
@@ -155,6 +155,7 @@ Item {
                     anchors.margins: 16
                     spacing: 8
                     z: 20
+                    visible: false
 
                     Rectangle {
                         color: Qt.rgba(0, 0, 0, 0.70)
@@ -342,6 +343,7 @@ Item {
                 color: Qt.rgba(11/255, 18/255, 34/255, 0.88)
                 border.color: Qt.rgba(0/255, 229/255, 255/255, 0.35)
                 border.width: 1.5
+                visible: false
 
                 Row {
                     anchors.fill: parent
@@ -382,7 +384,7 @@ Item {
 
                         Text {
                             text: (typeof NavigationBackend !== "undefined" && NavigationBackend.maneuverInstruction && NavigationBackend.maneuverInstruction !== "") ?
-                                  NavigationBackend.maneuverInstruction : "Continue on Kasturba Road"
+                                  NavigationBackend.maneuverInstruction : "Continue on Amruthahalli Main Road"
                             color: Qt.rgba(255/255, 255/255, 255/255, 0.75)
                             font.pixelSize: 13
                             font.family: "Inter"
@@ -482,6 +484,7 @@ Item {
                 color: Qt.rgba(11/255, 18/255, 34/255, 0.92)
                 border.color: Qt.rgba(255, 255, 255, 0.18)
                 border.width: 1
+                visible: false
 
                 Row {
                     anchors.fill: parent
@@ -515,7 +518,7 @@ Item {
                     Text {
                         anchors.verticalCenter: parent.verticalCenter
                         text: (typeof NavigationBackend !== "undefined" && NavigationBackend.currentStreet !== "") ?
-                              NavigationBackend.currentStreet : "Kasturba Road"
+                              NavigationBackend.currentStreet : "Amruthahalli, 560092"
                         color: "#FFFFFF"
                         font.pixelSize: 14
                         font.weight: Font.DemiBold

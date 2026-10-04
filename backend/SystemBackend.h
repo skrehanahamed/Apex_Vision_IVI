@@ -31,6 +31,9 @@ class SystemBackend : public QObject
     Q_PROPERTY(QString selectedAutofill READ selectedAutofill WRITE setSelectedAutofill NOTIFY selectedAutofillChanged)
     Q_PROPERTY(int pointerSpeed READ pointerSpeed WRITE setPointerSpeed NOTIFY pointerSpeedChanged)
     Q_PROPERTY(bool wifiConnected READ wifiConnected WRITE setWifiConnected NOTIFY wifiConnectedChanged)
+    Q_PROPERTY(QString wifiBand READ wifiBand WRITE setWifiBand NOTIFY wifiBandChanged)
+    Q_PROPERTY(int wifiSignalBars READ wifiSignalBars WRITE setWifiSignalBars NOTIFY wifiSignalBarsChanged)
+    Q_PROPERTY(QString wifiSsid READ wifiSsid NOTIFY wifiSsidChanged)
     Q_PROPERTY(int brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
     Q_PROPERTY(QString unitsTemperature READ unitsTemperature WRITE setUnitsTemperature NOTIFY unitsTemperatureChanged)
     Q_PROPERTY(bool touchSoundsEnabled READ touchSoundsEnabled WRITE setTouchSoundsEnabled NOTIFY touchSoundsEnabledChanged)
@@ -61,6 +64,9 @@ public:
     QString selectedAutofill() const { return m_selectedAutofill; }
     int pointerSpeed() const { return m_pointerSpeed; }
     bool wifiConnected() const { return m_wifiConnected; }
+    QString wifiBand() const { return m_wifiBand; }
+    int wifiSignalBars() const { return m_wifiSignalBars; }
+    QString wifiSsid() const { return m_wifiSsid; }
     int brightness() const { return m_brightness; }
     QString unitsTemperature() const { return m_unitsTemperature; }
 
@@ -77,10 +83,16 @@ public:
     Q_INVOKABLE void setManualTime(int hour, int minute);
     Q_INVOKABLE void setManualDate(int year, int month, int day);
     Q_INVOKABLE void setWifiConnected(bool connected);
+    Q_INVOKABLE void setWifiBand(const QString &band);
+    Q_INVOKABLE void setWifiSignalBars(int bars);
+    Q_INVOKABLE void refreshWifiStatus();
     Q_INVOKABLE void setBrightness(int b);
     Q_INVOKABLE void setUnitsTemperature(const QString &unit);
     Q_INVOKABLE void setTouchSoundsEnabled(bool enabled);
     Q_INVOKABLE void playTouchSound();
+    Q_INVOKABLE void playSound(const QString &soundName);
+
+    Q_INVOKABLE void syncTimeFromInternet();
 
 signals:
     void timeChanged();
@@ -93,6 +105,9 @@ signals:
     void selectedAutofillChanged();
     void pointerSpeedChanged();
     void wifiConnectedChanged();
+    void wifiBandChanged();
+    void wifiSignalBarsChanged();
+    void wifiSsidChanged();
     void brightnessChanged();
     void unitsTemperatureChanged();
     void touchSoundsEnabledChanged();
@@ -100,17 +115,22 @@ signals:
 
 private slots:
     void updateClock();
+    void updateWifiStatus();
 
 private:
+    static int parseGmtOffset(const QString &tzStr);
+
     PersistenceManager *m_persistence{nullptr};
 
     QTimer m_clockTimer;
+    QTimer m_internetSyncTimer;
+    class QNetworkAccessManager *m_networkManager{nullptr};
     QString m_currentTime{"12:35"};
     QString m_currentDate{"Wednesday, Sep 23"};
     bool m_is24HourFormat{true};
     bool m_autoTimeEnabled{true};
     bool m_autoTimeZoneEnabled{true};
-    QString m_selectedTimeZone{"GMT-04:00 Eastern Daylight Time"};
+    QString m_selectedTimeZone{"GMT+05:30 India Standard Time (IST)"};
     QString m_selectedLanguage{"English"};
     QString m_selectedKeyboard{"Apex Touch Keyboard"};
     QString m_selectedAutofill{"Apex Cloud"};
@@ -118,8 +138,13 @@ private:
     qint64 m_manualTimeOffsetSec{0};
     bool m_hasManualOffset{false};
     bool m_wifiConnected{true};
+    QString m_wifiBand{"5G"};
+    int m_wifiSignalBars{4};
+    QString m_wifiSsid{"Knspg 4 th floor_5G"};
+    QTimer m_wifiStatusTimer;
     int m_brightness{85};
     QString m_unitsTemperature{"Celsius (°C)"};
     bool m_touchSoundsEnabled{true};
     QProcess *m_ttsProcess{nullptr};
 };
+

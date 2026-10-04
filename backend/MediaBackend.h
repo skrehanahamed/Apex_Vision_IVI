@@ -13,6 +13,7 @@
 #include <QStringList>
 #include <QVariantList>
 #include <QVariantMap>
+#include <QPointer>
 
 class VehicleSimulator;
 class QMediaPlayer;
@@ -272,6 +273,7 @@ private:
     void fetchOnlineSxmArt(const QString &artist, const QString &title);
     void fetchLiveIcyMetadata(const QString &streamUrl);
     void updateActiveSxmPresetIndex();
+    void switchAudioStream();
 
     QString m_source{"OrbitXM"};
     QString m_preset{"P1"};
@@ -283,7 +285,7 @@ private:
     bool m_isHdRadio{true};
     int m_progress{142};
     int m_duration{245};
-    int m_volume{45};
+    int m_volume{100};
     bool m_phoneConnected{false};
     QString m_connectedPhoneName{"iPhone 16 Pro"};
 
@@ -331,7 +333,11 @@ private:
     QAudioOutput *m_audioOutput{nullptr};
     QNetworkAccessManager *m_networkManager{nullptr};
     QNetworkReply *m_icyMetadataReply{nullptr};
+    QPointer<QNetworkReply> m_onlineArtReply{nullptr};
+    int m_artRequestChannelIndex{-1};
+    QString m_lastIcyTitle;
     QTimer *m_icyPollTimer{nullptr};
+    QTimer *m_audioSwitchTimer{nullptr};
     PersistenceManager *m_persistence{nullptr};
     bool m_bootComplete{false};
 };

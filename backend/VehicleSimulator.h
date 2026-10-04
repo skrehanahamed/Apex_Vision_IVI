@@ -50,8 +50,8 @@ private:
     double m_outsideTemp{21.5};
     int m_batteryLevel{88};
 
-    double m_latitude{12.9719445};
-    double m_longitude{77.5936873};
+    double m_latitude{13.06464};
+    double m_longitude{77.60159};
     double m_heading{42.0};
 
     int m_mediaPosition{142};

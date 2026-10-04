@@ -206,6 +206,8 @@
     <file>qml/assets/icons/preset_star_arrow.svg</file>
     <file>qml/assets/icons/radio_keypad.svg</file>
     <file>qml/assets/icons/radio_source.svg</file>
+    <file>qml/assets/icons/radio_fm.svg</file>
+    <file>qml/assets/icons/radio_am.svg</file>
     <file>qml/assets/icons/rej_fragrance.svg</file>
     <file>qml/assets/icons/rej_head_airflow.svg</file>
     <file>qml/assets/icons/rej_seat_cushion.svg</file>

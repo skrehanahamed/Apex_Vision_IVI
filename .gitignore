@@ -47,3 +47,4 @@ temp/
 .env.local
 config.json
 apex_settings.json
+CarModel_BACKUP/

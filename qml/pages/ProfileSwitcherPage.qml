@@ -2037,21 +2037,21 @@ Item {
                 Column {
                     id: avatarPreviewCol
                     anchors.left: parent.left
-                    anchors.leftMargin: 20
+                    anchors.leftMargin: 24
                     anchors.verticalCenter: parent.verticalCenter
-                    width: 340
-                    spacing: 20
+                    width: 300
+                    spacing: 18
 
-                    // Large Circular Avatar (160x160)
+                    // Large Circular Avatar (140x140)
                     Item {
-                        width: 160
-                        height: 160
+                        width: 140
+                        height: 140
                         anchors.horizontalCenter: parent.horizontalCenter
 
                         // Monogram Fallback
                         Rectangle {
                             anchors.fill: parent
-                            radius: 80
+                            radius: 70
                             visible: root.newProfileAvatar === "monogram"
                             gradient: Gradient {
                                 GradientStop { position: 0.0; color: "#2563EB" }
@@ -2068,7 +2068,7 @@ Item {
                                 }
                                 color: "#FFFFFF"
                                 font.family: "Inter"
-                                font.pixelSize: 64
+                                font.pixelSize: 56
                                 font.weight: Font.DemiBold
                             }
                         }
@@ -2084,12 +2084,14 @@ Item {
                                 source: root.newProfileAvatarPath
                                 fillMode: Image.PreserveAspectCrop
                                 visible: false
+                                smooth: true
+                                mipmap: true
                             }
 
                             Rectangle {
                                 id: previewMask
                                 anchors.fill: parent
-                                radius: 80
+                                radius: 70
                                 visible: false
                                 layer.enabled: true
                             }
@@ -2103,7 +2105,7 @@ Item {
 
                             Rectangle {
                                 anchors.fill: parent
-                                radius: 80
+                                radius: 70
                                 color: "transparent"
                                 border.color: "#38BDF8"
                                 border.width: 3
@@ -2116,7 +2118,7 @@ Item {
                         text: root.newProfileName.length > 0 ? root.newProfileName : ("Profile " + (VehicleBackend.profileCount + 1))
                         color: "#FFFFFF"
                         font.family: "Inter"
-                        font.pixelSize: 24
+                        font.pixelSize: 22
                         font.weight: Font.DemiBold
                     }
 
@@ -2135,23 +2137,24 @@ Item {
                 // Right Column: Grid of All 16 Luxury Artwork Images + Monogram from Settings
                 Item {
                     anchors.left: avatarPreviewCol.right
-                    anchors.leftMargin: 30
+                    anchors.leftMargin: 24
                     anchors.right: parent.right
                     anchors.rightMargin: 10
                     anchors.verticalCenter: parent.verticalCenter
-                    height: 480
+                    height: 440
 
                     Flickable {
                         anchors.fill: parent
+                        contentWidth: avatarGrid.width
                         contentHeight: avatarGrid.implicitHeight + 20
-                        clip: true
+                        clip: false
                         boundsBehavior: Flickable.StopAtBounds
 
                         Grid {
                             id: avatarGrid
                             anchors.horizontalCenter: parent.horizontalCenter
                             columns: 6
-                            spacing: 16
+                            spacing: 14
                             topPadding: 10
                             bottomPadding: 10
 
@@ -2159,13 +2162,13 @@ Item {
                                 model: root.avatarList
 
                                 Rectangle {
-                                    width: 104
-                                    height: 104
-                                    radius: 52
+                                    width: 78
+                                    height: 78
+                                    radius: 39
                                     color: isSelected ? Qt.rgba(56/255, 189/255, 248/255, 0.20) : Qt.rgba(255, 255, 255, 0.06)
                                     border.color: isSelected ? "#38BDF8" : Qt.rgba(255, 255, 255, 0.20)
-                                    border.width: isSelected ? 3 : 1
-                                    scale: avatarMouse.containsMouse ? 1.05 : 1.0
+                                    border.width: isSelected ? 2.5 : 1
+                                    scale: avatarMouse.containsMouse ? 1.04 : 1.0
                                     Behavior on scale { NumberAnimation { duration: 160 } }
 
                                     readonly property bool isSelected: root.newProfileAvatar === modelData.id
@@ -2183,7 +2186,7 @@ Item {
                                             }
                                             color: "#FFFFFF"
                                             font.family: "Inter"
-                                            font.pixelSize: 36
+                                            font.pixelSize: 28
                                             font.weight: Font.DemiBold
                                         }
                                     }
@@ -2191,7 +2194,7 @@ Item {
                                     // Image Tile with Circular Masking
                                     Item {
                                         anchors.fill: parent
-                                        anchors.margins: isSelected ? 3 : 0
+                                        anchors.margins: isSelected ? 2.5 : 0
                                         visible: modelData.type === "image"
 
                                         Image {
@@ -2200,12 +2203,15 @@ Item {
                                             source: modelData.path
                                             fillMode: Image.PreserveAspectCrop
                                             visible: false
+                                            asynchronous: true
+                                            smooth: true
+                                            mipmap: true
                                         }
 
                                         Rectangle {
                                             id: tileMask
                                             anchors.fill: parent
-                                            radius: 52
+                                            radius: 39
                                             visible: false
                                             layer.enabled: true
                                         }

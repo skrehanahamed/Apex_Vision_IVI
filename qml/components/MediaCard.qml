@@ -289,9 +289,11 @@ Item {
                             smooth: true
                             mipmap: true
                             source: MediaBackend.isSxm ? "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" :
+                                   (MediaBackend.source === "AM" ? "qrc:/ApexVision/qml/assets/icons/radio_am.svg" :
+                                   (MediaBackend.source === "FM" ? "qrc:/ApexVision/qml/assets/icons/radio_fm.svg" :
                                    (MediaBackend.source === "USB" ? "qrc:/ApexVision/qml/assets/icons/usb_source.svg" :
                                    (MediaBackend.source === "Bluetooth" ? "qrc:/ApexVision/qml/assets/icons/bluetooth.svg" :
-                                   "qrc:/ApexVision/qml/assets/icons/radio_source.svg"))
+                                   "qrc:/ApexVision/qml/assets/icons/radio_source.svg"))))
                         }
                     }
 
@@ -348,13 +350,13 @@ Item {
                     width: 136
                     height: 136
 
-                    // Ambient glow behind artwork
+                    // Ambient glow behind artwork (Sleek cyan glow matching OrbitXM)
                     Rectangle {
                         anchors.centerIn: parent
                         width: 144
                         height: 144
                         radius: 28
-                        color: MediaBackend.isSxm ? Qt.rgba(0, 180/255, 255/255, 0.20) : Qt.rgba(255, 109/255, 0, 0.16)
+                        color: Qt.rgba(0, 180/255, 255/255, 0.20)
                         visible: MediaBackend.isPlaying
                     }
 
@@ -377,24 +379,48 @@ Item {
 
                         Rectangle {
                             anchors.fill: parent
-                            color: Qt.rgba(15/255, 30/255, 70/255, 0.7)
+                            color: MediaBackend.isSxm ? Qt.rgba(15/255, 30/255, 70/255, 0.7) : Qt.rgba(20/255, 45/255, 95/255, 0.55)
+                            gradient: Gradient {
+                                GradientStop { position: 0.0; color: MediaBackend.isSxm ? Qt.rgba(15/255, 30/255, 70/255, 0.7) : Qt.rgba(20/255, 45/255, 95/255, 0.55) }
+                                GradientStop { position: 1.0; color: MediaBackend.isSxm ? Qt.rgba(15/255, 30/255, 70/255, 0.7) : Qt.rgba(10/255, 25/255, 60/255, 0.75) }
+                            }
+                            border.color: Qt.rgba(255, 255, 255, 0.20)
+                            border.width: 1.5
                         }
 
                         Image {
+                            id: cardArtImgPrev
+                            anchors.fill: parent
+                            source: ""
+                            fillMode: Image.PreserveAspectCrop
+                            smooth: true
+                            mipmap: true
+                            visible: MediaBackend.isSxm && source !== "" && cardArtImg.status !== Image.Ready
+                        }
+
+                        Image {
+                            id: cardArtImg
                             anchors.fill: parent
                             visible: MediaBackend.isSxm && source != ""
                             source: MediaBackend.sxmArtworkUrl
                             fillMode: Image.PreserveAspectCrop
                             smooth: true
                             mipmap: true
+                            opacity: status === Image.Ready ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 180 } }
+                            onStatusChanged: {
+                                if (status === Image.Ready) {
+                                    cardArtImgPrev.source = source;
+                                }
+                            }
                         }
 
                         Image {
                             anchors.centerIn: parent
-                            width: 68
-                            height: 68
-                            visible: !MediaBackend.isSxm || MediaBackend.sxmArtworkUrl === ""
-                            source: MediaBackend.isRadio ?
+                            width: 72
+                            height: 72
+                            visible: !MediaBackend.isSxm || (MediaBackend.sxmArtworkUrl === "" && cardArtImgPrev.source === "")
+                            source: (MediaBackend.isRadio || MediaBackend.source === "AM" || MediaBackend.source === "FM") ?
                                     "qrc:/ApexVision/qml/assets/icons/music_note_coral.svg" :
                                     "qrc:/ApexVision/qml/assets/icons/radio_source.svg"
                             fillMode: Image.PreserveAspectFit
@@ -404,13 +430,15 @@ Item {
                     }
                 }
 
-                // 2. Channel Logo / Pill Row (Only for OrbitXM)
+                // 2. Channel Logo / Live Pill Row (ONLY for OrbitXM)
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
                     spacing: 8
                     visible: MediaBackend.isSxm
 
+                    // OrbitXM Logo
                     Image {
+                        visible: MediaBackend.isSxm
                         height: 40
                         width: (implicitHeight > 0) ? Math.min(110, Math.round(height * implicitWidth / implicitHeight)) : 90
                         source: MediaBackend.sxmChannelLogoUrl
@@ -478,19 +506,18 @@ Item {
                           (MediaBackend.isAm ? MediaBackend.amStationName : MediaBackend.station)
                     color: "#FFFFFF"
                     font.family: "Inter"
-                    font.pixelSize: 22
-                    font.weight: Font.Bold
+                    font.pixelSize: MediaBackend.isSxm ? 22 : 26
+                    font.weight: MediaBackend.isSxm ? Font.Bold : Font.DemiBold
                     elide: Text.ElideRight
                     width: parent.width - 32
                     horizontalAlignment: Text.AlignHCenter
                 }
 
-                // 4. Artist Name (High-Contrast Crisp Bright Silver-White - No Dim Gray)
+                // 4. Artist Name (High-Contrast Crisp Bright Silver-White - OrbitXM only)
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    text: MediaBackend.isSxm ? MediaBackend.sxmArtist :
-                          (MediaBackend.isAm ? MediaBackend.amStationCity :
-                          (MediaBackend.source === "FM" ? MediaBackend.trackTitle : MediaBackend.station))
+                    visible: MediaBackend.isSxm
+                    text: MediaBackend.sxmArtist || ""
                     color: "#F8FAFC"
                     font.family: "Inter"
                     font.pixelSize: 16
@@ -500,15 +527,19 @@ Item {
                     horizontalAlignment: Text.AlignHCenter
                 }
 
-                // 5. Channel Badge / Frequency Info (Electric Sky Cyan #38BDF8)
+                // 5. Channel Badge / Frequency Info (Electric Sky Cyan for OrbitXM, Silver-Slate for AM/FM)
                 Text {
                     anchors.horizontalCenter: parent.horizontalCenter
                     text: MediaBackend.isSxm ? ("Ch " + MediaBackend.sxmChannelNumber + " • " + MediaBackend.sxmChannelName) :
-                          (MediaBackend.isAm ? (MediaBackend.amFrequency + " kHz") : (MediaBackend.frequency + " MHz"))
-                    color: "#38BDF8"
+                          (MediaBackend.isAm ?
+                           (MediaBackend.amFrequency + " kHz • " + MediaBackend.amStationCity) :
+                           (MediaBackend.source === "FM" ?
+                            (MediaBackend.frequency + " MHz" + (MediaBackend.trackTitle && MediaBackend.trackTitle !== MediaBackend.station ? " • " + MediaBackend.trackTitle : "")) :
+                            (MediaBackend.frequency + " MHz")))
+                    color: MediaBackend.isSxm ? "#38BDF8" : "#94A3B8"
                     font.family: "Inter"
-                    font.pixelSize: 13
-                    font.weight: 600
+                    font.pixelSize: MediaBackend.isSxm ? 13 : 17
+                    font.weight: MediaBackend.isSxm ? 600 : Font.Medium
                     elide: Text.ElideRight
                     width: parent.width - 32
                     horizontalAlignment: Text.AlignHCenter

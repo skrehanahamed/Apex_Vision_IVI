@@ -57,15 +57,17 @@ NavigationBackend::NavigationBackend(VehicleSimulator *simulator, QObject *paren
                 this, &NavigationBackend::onGpsUpdated);
     }
 
-    // Auto-detect real physical location on startup via internet geolocation
-    fetchRealLocation();
-
-    // Retry once after 3.5s in case network was still acquiring DHCP lease during boot
-    QTimer::singleShot(3500, this, [this]() {
-        if (!m_hasRealLocation) {
-            fetchRealLocation();
-        }
-    });
+    // Current location permanently locked to Amruthahalli, Bangalore 560092
+    m_hasRealLocation = true;
+    m_latitude = 13.06464;
+    m_longitude = 77.60159;
+    m_currentStreet = QStringLiteral("Amruthahalli, 560092");
+    if (m_simulator) {
+        m_simulator->setPosition(m_latitude, m_longitude, m_heading);
+    }
+    emit positionChanged();
+    emit gpsUpdated();
+    emit currentStreetChanged();
 }
 
 QUrl NavigationBackend::mapUrl() const

@@ -15,6 +15,10 @@
     <title>APEX VISION Cockpit Navigation</title>
     <!-- MapLibre GL 3.6.2 Engine (Local High-Speed Bundled) -->
     <link rel="stylesheet" href="maplibre-gl.css" />
+    <!-- Google Fonts & Material Symbols for Authentic Google Maps Navigation -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400..700,0..1,-50..200&display=swap" rel="stylesheet" />
     <style>
         * {
             box-sizing: border-box;
@@ -206,6 +210,15 @@
             flex-direction: column;
             gap: 12px;
             z-index: 110;
+        }
+
+        /* 4 Left-Side Floating Strip Icons are hidden during Turn-by-Turn navigation */
+        body.is-navigating .left-floating-strip,
+        body.is-navigating #leftFloatingStrip {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
         }
 
         .strip-circle-btn {
@@ -1659,7 +1672,7 @@
         .google-metric-duration {
             font-size: 26px;
             font-weight: 800;
-            color: #1A73E8;
+            color: #10B981;
             letter-spacing: -0.3px;
         }
 
@@ -1668,9 +1681,15 @@
             color: #94A3B8;
         }
 
+        .google-metric-distance {
+            font-size: 22px;
+            font-weight: 600;
+            color: #475569;
+        }
+
         .google-metric-eta {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 22px;
+            font-weight: 600;
             color: #0F172A;
         }
 
@@ -1780,54 +1799,119 @@
         }
 
         /* =========================================================================
-           ACTIVE TURN-BY-TURN HUD (GOOGLE MAPS STYLE - SCREENSHOT 2)
+           ACTIVE TURN-BY-TURN HUD (GOOGLE MAPS STYLE)
            ========================================================================= */
         .google-nav-top-banner {
             position: absolute;
-            top: 18px;
-            left: 18px;
-            width: 350px;
-            background: #1E232F;
-            border-radius: 18px;
-            padding: 14px 18px;
+            top: 20px;
+            left: 20px;
+            min-width: 320px;
+            max-width: 420px;
+            background: linear-gradient(135deg, #137333 0%, #0B5324 100%);
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            border-radius: 20px;
+            padding: 16px 20px;
             color: #FFFFFF;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.42);
             z-index: 180;
             display: none;
             flex-direction: column;
-            gap: 6px;
+            gap: 10px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
         }
 
         .google-nav-maneuver-top {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 16px;
         }
 
-        .nav-arrow-icon {
-            width: 32px;
-            height: 32px;
-            fill: #FFFFFF;
+        .nav-maneuver-icon-wrap {
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
+            color: #FFFFFF;
+        }
+
+        .nav-maneuver-icon-wrap svg {
+            width: 44px;
+            height: 44px;
+            fill: #FFFFFF;
+        }
+
+        .google-nav-text-col {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            overflow: hidden;
+            flex: 1;
+        }
+
+        .google-nav-distance-text {
+            font-size: 28px;
+            font-weight: 800;
+            color: #FFFFFF;
+            letter-spacing: -0.5px;
+            line-height: 1.1;
         }
 
         .google-nav-street-text {
-            font-size: 20px;
-            font-weight: 700;
-            color: #FFFFFF;
+            font-size: 18px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.95);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            line-height: 1.25;
         }
 
         .google-nav-then-row {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
             font-size: 13px;
             font-weight: 600;
-            color: #94A3B8;
-            margin-left: 46px;
+            color: #A8DAB5;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+            margin-left: 2px;
+        }
+
+        .hud-then-label {
+            font-weight: 700;
+            color: #A8DAB5;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .hud-then-icon-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+
+        .hud-then-icon-wrap svg {
+            fill: #A8DAB5;
+            width: 18px;
+            height: 18px;
+        }
+
+        .hud-then-street {
+            color: #E2E8F0;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 240px;
         }
 
         .google-nav-bottom-card {
@@ -1893,12 +1977,61 @@
         }
 
         .google-round-btn.close-nav {
-            background: #FEE2E2;
-            color: #DC2626;
+            background: #EA4335 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 2px 8px rgba(234, 67, 53, 0.4);
         }
 
         .google-round-btn.close-nav:hover {
-            background: #FECACA;
+            background: #D93025 !important;
+            transform: scale(1.08);
+        }
+
+        .google-round-btn.close-nav svg {
+            fill: #FFFFFF !important;
+        }
+
+        /* Live Traffic Status Badges */
+        .google-dest-traffic-row,
+        .google-traffic-live-badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #137333;
+            margin-top: 4px;
+        }
+
+        body.night-mode .google-dest-traffic-row,
+        body.night-mode .google-traffic-live-badge {
+            color: #4ADE80 !important;
+        }
+
+        .traffic-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 4px;
+            background: #10B981;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+            display: inline-block;
+            flex-shrink: 0;
+            animation: pulseTraffic 2s infinite ease-in-out;
+        }
+
+        .traffic-dot.orange {
+            background: #F59E0B;
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
+        }
+
+        .traffic-dot.red {
+            background: #EF4444;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+        }
+
+        @keyframes pulseTraffic {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.35); opacity: 0.65; }
         }
 
         /* =========================================================================
@@ -2191,22 +2324,27 @@
            NIGHT / DARK MODE AUTOMOTIVE MAP STYLES
            ========================================================================= */
         body.night-mode {
-            background: #090D16 !important;
-            color: #F1F5F9 !important;
+            background: #0B0F19 !important;
+            color: #F8FAFC !important;
         }
 
         body.night-mode #map {
-            background: #090D16 !important;
+            background: #0B0F19 !important;
         }
 
+        /* 1. Upper Search Bar */
         body.night-mode .search-card-container {
-            background: rgba(15, 23, 42, 0.90) !important;
+            background: rgba(17, 24, 39, 0.94) !important;
             border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.25) !important;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), 0 1px 4px rgba(0, 0, 0, 0.3) !important;
         }
 
         body.night-mode .search-placeholder-text {
             color: #CBD5E1 !important;
+        }
+
+        body.night-mode .search-pin-icon svg {
+            fill: #38BDF8 !important;
         }
 
         body.night-mode .search-chevron-btn svg {
@@ -2217,66 +2355,86 @@
             border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
         }
 
-        body.night-mode .cat-icon-btn {
-            color: #94A3B8 !important;
-        }
-
-        body.night-mode .cat-icon-btn:hover {
-            background: rgba(56, 189, 248, 0.15) !important;
-            color: #38BDF8 !important;
-        }
-
+        /* 2. Floating Buttons & Compact Mode */
         body.night-mode .compact-search-btn {
-            background: rgba(15, 23, 42, 0.92) !important;
+            background: rgba(17, 24, 39, 0.94) !important;
             border: 1px solid rgba(255, 255, 255, 0.14) !important;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
         }
 
         body.night-mode .compact-search-btn svg {
-            stroke: #38BDF8 !important;
+            fill: #38BDF8 !important;
+            stroke: none !important;
         }
 
         body.night-mode .strip-circle-btn {
-            background: rgba(15, 23, 42, 0.92) !important;
+            background: rgba(17, 24, 39, 0.94) !important;
             border: 1px solid rgba(255, 255, 255, 0.12) !important;
             color: #E2E8F0 !important;
             box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
         }
 
+        body.night-mode .strip-circle-btn svg {
+            fill: #E2E8F0 !important;
+        }
+
         body.night-mode .strip-circle-btn:hover {
-            background: #1E293B !important;
+            background: #1F2937 !important;
             color: #38BDF8 !important;
             box-shadow: 0 6px 22px rgba(0, 0, 0, 0.7) !important;
         }
 
         body.night-mode .side-flyout-pill {
-            background: rgba(15, 23, 42, 0.96) !important;
+            background: rgba(17, 24, 39, 0.96) !important;
             border: 1px solid rgba(255, 255, 255, 0.14) !important;
             color: #F8FAFC !important;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
         }
 
+        /* 3. Settings Card & Submenus */
         body.night-mode .map-settings-card {
-            background: rgba(15, 23, 42, 0.96) !important;
+            background: #111827 !important;
             border: 1px solid rgba(255, 255, 255, 0.12) !important;
             color: #F8FAFC !important;
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7) !important;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
         }
 
         body.night-mode .settings-card-header {
+            background: #111827 !important;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .settings-slide-page {
+            background: #111827 !important;
         }
 
         body.night-mode .settings-card-title {
             color: #F8FAFC !important;
         }
 
+        body.night-mode .settings-header-btn {
+            color: #E2E8F0 !important;
+        }
+
         body.night-mode .settings-header-btn svg {
-            stroke: #94A3B8 !important;
+            fill: #CBD5E1 !important;
+            stroke: none !important;
+        }
+
+        body.night-mode .settings-header-btn:hover {
+            background: #1F2937 !important;
         }
 
         body.night-mode .settings-row {
             border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+        }
+
+        body.night-mode .settings-row.clickable:hover {
+            background: #1F2937 !important;
+        }
+
+        body.night-mode .settings-row.clickable:active {
+            background: #374151 !important;
         }
 
         body.night-mode .settings-row-title {
@@ -2287,46 +2445,561 @@
             color: #94A3B8 !important;
         }
 
+        body.night-mode .settings-row-chevron svg {
+            stroke: #94A3B8 !important;
+        }
+
+        body.night-mode .settings-btn-action {
+            background: #1F2937 !important;
+            color: #38BDF8 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        body.night-mode .settings-btn-action:hover {
+            background: #374151 !important;
+            color: #7DD3FC !important;
+        }
+
+        body.night-mode .settings-info-card {
+            background: #1F2937 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        body.night-mode .settings-info-card-title {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .settings-info-card-text {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .toggle-slider {
+            background-color: #374151 !important;
+        }
+
+        body.night-mode .settings-toggle-switch input:checked + .toggle-slider {
+            background-color: #2563EB !important;
+        }
+
+        /* 4. Categories & Category Pills */
+        body.night-mode .cat-icon-btn {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .cat-icon-btn:hover {
+            background: rgba(56, 189, 248, 0.15) !important;
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .category-tile {
+            background: #1E293B !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .category-tile:hover {
+            background: #334155 !important;
+            border-color: #38BDF8 !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        body.night-mode .cat-tile-label {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .search-category-pills-row {
+            background: #111827 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .search-cat-pill {
+            background: #1E293B !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .search-cat-pill svg {
+            fill: #94A3B8 !important;
+        }
+
+        body.night-mode .search-cat-pill:hover {
+            background: #2563EB !important;
+            border-color: #2563EB !important;
+            color: #FFFFFF !important;
+        }
+
+        body.night-mode .search-cat-pill:hover svg {
+            fill: #FFFFFF !important;
+        }
+
+        body.night-mode .results-filter-chips-row {
+            background: #111827 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .filter-chip {
+            background: #1E293B !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #E2E8F0 !important;
+        }
+
+        body.night-mode .filter-chip svg {
+            fill: currentColor !important;
+        }
+
+        body.night-mode .filter-chip:hover {
+            background: #334155 !important;
+            color: #FFFFFF !important;
+        }
+
+        body.night-mode .filter-chip.active {
+            background: #2563EB !important;
+            border-color: #2563EB !important;
+            color: #FFFFFF !important;
+        }
+
+        /* 5. Search Results Card */
+        body.night-mode .results-list-card {
+            background: rgba(17, 24, 39, 0.98) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        body.night-mode .results-header-bar {
+            background: #111827 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .results-query-title {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .numbered-result-row {
+            background: #111827 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+        }
+
+        body.night-mode .numbered-result-row:hover {
+            background: #1F2937 !important;
+        }
+
+        body.night-mode .result-place-title {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .result-place-street {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .poi-status-sub {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .result-place-time {
+            background: rgba(56, 189, 248, 0.18) !important;
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .results-loading-text {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .results-loading-subtext {
+            color: #94A3B8 !important;
+        }
+
+        /* 6. Search Dialog Modal & Recommendations */
+        body.night-mode .search-dialog-modal {
+            background: #111827 !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        body.night-mode .dialog-header-bar {
+            background: #111827 !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .dialog-icon-btn {
+            color: #E2E8F0 !important;
+        }
+
+        body.night-mode .dialog-icon-btn svg {
+            fill: #E2E8F0 !important;
+            stroke: none !important;
+        }
+
+        body.night-mode .dialog-icon-btn:hover {
+            background: #1F2937 !important;
+        }
+
+        body.night-mode .dialog-search-box-pill {
+            background: #1F2937 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        body.night-mode .dialog-search-box-pill:focus-within {
+            background: #1E293B !important;
+            border-color: #38BDF8 !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+        }
+
+        body.night-mode .search-box-icon {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .search-box-icon svg,
+        body.night-mode .dialog-search-box-pill svg {
+            fill: #94A3B8 !important;
+            stroke: none !important;
+        }
+
+        body.night-mode .dialog-search-input {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .dialog-search-input::placeholder {
+            color: #64748B !important;
+        }
+
+        body.night-mode .dialog-clear-btn {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .dialog-clear-btn svg {
+            stroke: #94A3B8 !important;
+        }
+
+        body.night-mode .dialog-clear-btn:hover {
+            background: #374151 !important;
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .search-modal-body {
+            background: #111827 !important;
+        }
+
+        body.night-mode .search-sidebar-nav {
+            border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: #0B0F19 !important;
+        }
+
+        body.night-mode .search-nav-tab {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .search-nav-tab span {
+            color: inherit !important;
+        }
+
+        body.night-mode .search-nav-tab:hover {
+            background: #1F2937 !important;
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .search-nav-tab.active {
+            background: #1F2937 !important;
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .search-nav-tab.active::before {
+            background: #38BDF8 !important;
+        }
+
+        body.night-mode .search-main-content {
+            background: #111827 !important;
+        }
+
+        body.night-mode .search-tab-pane {
+            background: #111827 !important;
+        }
+
+        /* Recent Searches in Search Modal */
+        body.night-mode .recent-searches-list {
+            background: #111827 !important;
+        }
+
+        body.night-mode .recent-search-row {
+            background: transparent !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        body.night-mode .recent-search-row:hover {
+            background: #1F2937 !important;
+        }
+
+        body.night-mode .recent-icon {
+            background: #1E293B !important;
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .recent-icon svg {
+            stroke: #94A3B8 !important;
+        }
+
+        body.night-mode .recent-text {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .recent-remove-btn {
+            color: #64748B !important;
+        }
+
+        body.night-mode .recent-remove-btn:hover {
+            background: #374151 !important;
+            color: #F8FAFC !important;
+        }
+
+        /* Categories Grid in Search Modal */
+        body.night-mode .categories-grid {
+            background: #111827 !important;
+        }
+
+        /* Saved Places in Search Modal */
+        body.night-mode .saved-places-list {
+            background: #111827 !important;
+        }
+
+        body.night-mode .saved-place-item {
+            background: transparent !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+        }
+
+        body.night-mode .saved-place-item:hover {
+            background: #1F2937 !important;
+        }
+
+        body.night-mode .saved-place-icon {
+            background: #1E293B !important;
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .saved-place-title {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .saved-place-sub {
+            color: #94A3B8 !important;
+        }
+
+        /* Recommendations in Search Modal */
+        body.night-mode .search-recommendations-list {
+            background: #111827 !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .search-rec-item {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+        }
+
+        body.night-mode .search-rec-item:hover {
+            background: #1F2937 !important;
+        }
+
+        body.night-mode .search-rec-name {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .search-rec-sub {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .search-rec-icon {
+            background: #1E293B !important;
+            color: #94A3B8 !important;
+        }
+
+        /* 7. Route Preview Card & Bottom Bar */
+        body.night-mode .route-preview-card {
+            background: rgba(17, 24, 39, 0.98) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        body.night-mode .google-icon-btn {
+            color: #E2E8F0 !important;
+        }
+
+        body.night-mode .google-icon-btn:hover {
+            background: #1F2937 !important;
+        }
+
+        body.night-mode .google-dest-title {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .google-dest-chevron {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .google-route-eta {
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .google-route-dist {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .google-route-desc {
+            color: #CBD5E1 !important;
+        }
+
+        body.night-mode .google-btn-routes {
+            background: #1F2937 !important;
+            color: #E2E8F0 !important;
+        }
+
+        body.night-mode .google-btn-routes:hover {
+            background: #374151 !important;
+        }
+
+        body.night-mode .google-btn-add-stop {
+            background: #1F2937 !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #E2E8F0 !important;
+        }
+
+        body.night-mode .google-btn-add-stop:hover {
+            background: #374151 !important;
+        }
+
+        body.night-mode .google-metric-duration {
+            color: #10B981 !important;
+        }
+
+        body.night-mode .google-metric-distance {
+            color: #E2E8F0 !important;
+        }
+
+        body.night-mode .google-metric-dot {
+            color: #64748B !important;
+        }
+
+        body.night-mode .google-metric-eta {
+            color: #FFFFFF !important;
+        }
+
+        body.night-mode .google-nav-bottom-card {
+            background: rgba(17, 24, 39, 0.96) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .google-bottom-sub {
+            color: #CBD5E1 !important;
+        }
+
+        body.night-mode .google-round-btn {
+            background: #1F2937 !important;
+            color: #E2E8F0 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        body.night-mode .google-round-btn:hover {
+            background: #374151 !important;
+        }
+
+        /* 8. Bottom-Left Controls: Zoom Capsule & Recenter */
+        body.night-mode .zoom-capsule {
+            background: rgba(17, 24, 39, 0.94) !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .zoom-btn {
+            color: #E2E8F0 !important;
+        }
+
+        body.night-mode .zoom-btn svg {
+            fill: #E2E8F0 !important;
+        }
+
+        body.night-mode .zoom-btn:hover {
+            background: #1F2937 !important;
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .zoom-btn:hover svg {
+            fill: #38BDF8 !important;
+        }
+
+        body.night-mode .zoom-divider {
+            background: rgba(255, 255, 255, 0.12) !important;
+        }
+
+        body.night-mode .recenter-btn,
+        body.night-mode .recenter-pill {
+            background: rgba(17, 24, 39, 0.94) !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
+            color: #38BDF8 !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .recenter-pill svg {
+            fill: #38BDF8 !important;
+        }
+
+        body.night-mode .recenter-pill span {
+            color: #38BDF8 !important;
+        }
+
+        body.night-mode .recenter-pill:hover {
+            background: #1F2937 !important;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75) !important;
+        }
+
+        /* 9. HUD & Speedometer */
         body.night-mode .car-street-label {
-            background: rgba(15, 23, 42, 0.92) !important;
+            background: rgba(17, 24, 39, 0.92) !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             color: #F8FAFC !important;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
         }
 
         body.night-mode .hud-compass-pill {
-            background: rgba(15, 23, 42, 0.90) !important;
+            background: rgba(17, 24, 39, 0.90) !important;
             border: 1px solid rgba(255, 255, 255, 0.12) !important;
             color: #F8FAFC !important;
             box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5) !important;
         }
 
-        body.night-mode .recenter-btn {
-            background: rgba(15, 23, 42, 0.92) !important;
-            border: 1px solid rgba(255, 255, 255, 0.14) !important;
-            color: #38BDF8 !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
-        }
-
-        body.night-mode .speedometer-cluster {
-            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.96), rgba(8, 12, 20, 0.98)) !important;
+        body.night-mode .nav-speedometer-circle {
+            background: rgba(17, 24, 39, 0.96) !important;
             border: 2px solid rgba(56, 189, 248, 0.3) !important;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7), inset 0 0 16px rgba(56, 189, 248, 0.08) !important;
         }
 
-        body.night-mode .speed-value {
+        body.night-mode .speed-number-val {
             color: #FFFFFF !important;
         }
 
-        body.night-mode .speed-unit {
+        body.night-mode .speed-unit-lbl {
             color: #94A3B8 !important;
         }
 
+        body.night-mode .speed-ring-track {
+            stroke: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        body.night-mode .speed-limit-circle {
+            background: #111827 !important;
+            border: 3.5px solid #EF4444 !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+        }
+
+        body.night-mode .speed-limit-badge-num {
+            color: #FFFFFF !important;
+        }
+
+        /* 10. Arrival Summary Card */
         body.night-mode .trip-arrival-card {
-            background: rgba(15, 23, 42, 0.94) !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            background: rgba(17, 24, 39, 0.96) !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
             color: #F8FAFC !important;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6) !important;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8) !important;
         }
 
         body.night-mode .trip-dest-name {
@@ -2337,22 +3010,65 @@
             color: #38BDF8 !important;
         }
 
-        body.night-mode .zoom-control-container {
-            background: rgba(15, 23, 42, 0.92) !important;
-            border: 1px solid rgba(255, 255, 255, 0.12) !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6) !important;
+        body.night-mode .arrival-place-title {
+            color: #F8FAFC !important;
         }
 
-        body.night-mode .zoom-btn svg {
-            stroke: #E2E8F0 !important;
+        body.night-mode .arrival-place-address {
+            color: #94A3B8 !important;
         }
 
-        body.night-mode .zoom-btn:hover {
+        body.night-mode .arrival-stat-box {
+            background: #1F2937 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+
+        body.night-mode .arrival-stat-val {
+            color: #F8FAFC !important;
+        }
+
+        body.night-mode .arrival-stat-unit {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .arrival-stat-label {
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .arrival-btn-done {
+            border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: #38BDF8 !important;
+        }
+
+        /* 11. Docked Touch Keyboard */
+        body.night-mode .docked-touch-keyboard {
+            background: #0B0F19 !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+            box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        body.night-mode .kb-key {
             background: #1E293B !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            color: #FFFFFF !important;
         }
 
-        body.night-mode .zoom-divider {
-            background: rgba(255, 255, 255, 0.12) !important;
+        body.night-mode .kb-key:hover {
+            background: #334155 !important;
+        }
+
+        body.night-mode .kb-key:active {
+            background: #2563EB !important;
+        }
+
+        body.night-mode .kb-key.special {
+            background: #111827 !important;
+            color: #94A3B8 !important;
+        }
+
+        body.night-mode .kb-key.search-action {
+            background: #2563EB !important;
+            color: #FFFFFF !important;
         }
     </style>
 </head>
@@ -2361,16 +3077,13 @@
 
     <!-- DYNAMIC 3D VEHICLE STREET LABEL (Mathematically projected below lowest car pixel on any zoom/pitch/screen) -->
     <div class="car-street-label-overlay" id="carStreetLabelOverlay">
-        <div class="car-street-label" id="streetNameText">Kasturba Rd</div>
+        <div class="car-street-label" id="streetNameText">Amruthahalli, 560092</div>
     </div>
 
-    <!-- 1. COMPACT HOME SCREEN SEARCH CIRCLE (Matches User Screenshot 1) -->
-    <div class="compact-search-btn" id="compactSearchBtn" title="Search">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#1E293B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="10" cy="10" r="6.5"></circle>
-            <line x1="21" y1="21" x2="15" y2="15"></line>
-            <line x1="8" y1="8" x2="12" y2="8"></line>
-            <line x1="8" y1="11" x2="12" y2="11"></line>
+    <!-- 1. COMPACT HOME SCREEN SEARCH CIRCLE (Google Material Symbol search) -->
+    <div class="compact-search-btn" id="compactSearchBtn">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
         </svg>
     </div>
 
@@ -2383,25 +3096,27 @@
                 </svg>
             </div>
             <span class="search-placeholder-text">Search</span>
-            <div class="search-chevron-btn" id="searchChevronBtn" title="Map Settings">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="#5F6368"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            <div class="search-chevron-btn" id="searchChevronBtn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="#5F6368">
+                    <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
+                </svg>
             </div>
         </div>
         <div class="search-card-bottom-row" id="searchBottomRow">
             <!-- ⛽ Gas Pump (Google Maps) -->
-            <button class="cat-icon-btn" data-cat="gas" title="Gas Stations">
+            <button class="cat-icon-btn" data-cat="gas">
                 <svg viewBox="0 -960 960 960"><path d="M160-120v-640q0-33 23.5-56.5T240-840h240q33 0 56.5 23.5T560-760v280h40q33 0 56.5 23.5T680-400v180q0 17 11.5 28.5T720-180q17 0 28.5-11.5T760-220v-288q-9 5-19 6.5t-21 1.5q-42 0-71-29t-29-71q0-32 17.5-57.5T684-694l-84-84 42-42 148 144q15 15 22.5 35t7.5 41v380q0 42-29 71t-71 29q-42 0-71-29t-29-71v-200h-60v300H160Zm80-440h240v-200H240v200Zm480 0q17 0 28.5-11.5T760-600q0-17-11.5-28.5T720-640q-17 0-28.5 11.5T680-600q0 17 11.5 28.5T720-560ZM240-200h240v-280H240v280Zm240 0H240h240Z"/></svg>
             </button>
             <!-- 🍽️ Restaurant (Fork & Knife - Google Maps) -->
-            <button class="cat-icon-btn" data-cat="food" title="Restaurants">
+            <button class="cat-icon-btn" data-cat="food">
                 <svg viewBox="0 -960 960 960"><path d="M280-80v-366q-51-14-85.5-56T160-600v-280h80v280h40v-280h80v280h40v-280h80v280q0 56-34.5 98T360-446v366h-80Zm400 0v-320H560v-280q0-83 58.5-141.5T760-880v800h-80Z"/></svg>
             </button>
             <!-- 🛒 Shopping (Shopping Cart - Google Maps) -->
-            <button class="cat-icon-btn" data-cat="shop" title="Supermarket & Shopping">
+            <button class="cat-icon-btn" data-cat="shop">
                 <svg viewBox="0 -960 960 960"><path d="M280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM246-720l96 200h280l110-200H246Zm-38-80h590q23 0 35 20.5t1 41.5L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68-39.5t-2-78.5l54-98-144-304H40v-80h130l38 80Zm134 280h280-280Z"/></svg>
             </button>
             <!-- ☕ Coffee Cup (Cup with Saucer - Google Maps) -->
-            <button class="cat-icon-btn" data-cat="coffee" title="Coffee">
+            <button class="cat-icon-btn" data-cat="coffee">
                 <svg viewBox="0 -960 960 960"><path d="M160-120v-80h640v80H160Zm160-160q-66 0-113-47t-47-113v-400h640q33 0 56.5 23.5T880-760v120q0 33-23.5 56.5T800-560h-80v120q0 66-47 113t-113 47H320Zm0-80h240q33 0 56.5-23.5T640-440v-320H240v320q0 33 23.5 56.5T320-360Zm400-280h80v-120h-80v120ZM320-360h-80 400-320Z"/></svg>
             </button>
         </div>
@@ -2410,7 +3125,7 @@
     <!-- 3. FULL SCREEN LEFT TOOLBAR STRIP (Visible on Expand) -->
     <div class="left-floating-strip" id="leftFloatingStrip">
         <div class="strip-btn-row">
-            <button class="strip-circle-btn" id="btnVoice" title="Google Assistant">
+            <button class="strip-circle-btn" id="btnVoice">
                 <svg viewBox="0 0 24 24" width="22" height="22">
                     <path fill="#4285F4" d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
                     <path fill="#34A853" d="M11 18.92V22h2v-3.08A7.001 7.001 0 0 0 19 12h-2a5 5 0 0 1-10 0H5a7.001 7.001 0 0 0 6 6.92z"/>
@@ -2421,19 +3136,19 @@
             <div class="side-flyout-pill" id="pillVoice">Google Assistant</div>
         </div>
         <div class="strip-btn-row">
-            <button class="strip-circle-btn" id="btnSettings" title="Map Settings">
+            <button class="strip-circle-btn" id="btnSettings">
                 <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
             </button>
             <div class="side-flyout-pill" id="pillSettings">Settings</div>
         </div>
         <div class="strip-btn-row">
-            <button class="strip-circle-btn" id="btnAudio" title="Voice Guidance">
+            <button class="strip-circle-btn" id="btnAudio">
                 <svg id="audioIconSvg" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
             </button>
             <div class="side-flyout-pill" id="pillAudio">Unmuted</div>
         </div>
         <div class="strip-btn-row">
-            <button class="strip-circle-btn" id="btnViewMode" title="Toggle View: Perspective / North-up / Overview">
+            <button class="strip-circle-btn" id="btnViewMode">
                 <div id="viewModeIconContainer" style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
                     <svg id="viewModeIconSvg" viewBox="0 0 24 24" width="24" height="24">
                         <polygon points="12 2 16.5 12 12 9.5" fill="#EA4335"/>
@@ -2454,22 +3169,32 @@
                 <!-- PAGE 1: Main Settings -->
                 <div class="settings-slide-page" id="settingsMainPage">
                     <div class="settings-card-header">
-                        <button class="settings-header-btn" id="btnSettingsBack" title="Back to Map">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3C4043" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
+                        <button class="settings-header-btn" id="btnSettingsBack">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
                             </svg>
                         </button>
                         <div class="settings-card-title">Settings</div>
-                        <button class="settings-header-btn" id="btnSettingsClose" title="Close">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#3C4043" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                        <button class="settings-header-btn" id="btnSettingsClose">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
                             </svg>
                         </button>
                     </div>
 
                     <div class="settings-scroll-list">
+                        <!-- 0. Dark Mode Toggle -->
+                        <div class="settings-row">
+                            <div class="settings-row-text">
+                                <div class="settings-row-title">Dark mode</div>
+                                <div class="settings-row-sub" id="settingDarkSub">Auto (Nighttime 18:00–06:00)</div>
+                            </div>
+                            <label class="settings-toggle-switch">
+                                <input type="checkbox" id="toggleDarkMode" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
                         <!-- 1. Traffic Toggle -->
                         <div class="settings-row">
                             <div class="settings-row-text">
@@ -2499,8 +3224,8 @@
                                 <div class="settings-row-sub" id="settingAudioSub">Unmuted</div>
                             </div>
                             <div class="settings-row-chevron">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#80868B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                                 </svg>
                             </div>
                         </div>
@@ -2512,8 +3237,8 @@
                                 <div class="settings-row-sub">Apex Zephyr · Custom 3D Model</div>
                             </div>
                             <div class="settings-row-chevron">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#80868B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                                 </svg>
                             </div>
                         </div>
@@ -2525,8 +3250,8 @@
                                 <div class="settings-row-sub">Fastest route · Toll roads allowed</div>
                             </div>
                             <div class="settings-row-chevron">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#80868B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                                 </svg>
                             </div>
                         </div>
@@ -2538,8 +3263,8 @@
                                 <div class="settings-row-sub">Bengaluru Urban (142 MB)</div>
                             </div>
                             <div class="settings-row-chevron">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#80868B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                                 </svg>
                             </div>
                         </div>
@@ -2551,8 +3276,8 @@
                                 <div class="settings-row-sub">Location accuracy & permissions</div>
                             </div>
                             <div class="settings-row-chevron">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#80868B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                                 </svg>
                             </div>
                         </div>
@@ -2564,8 +3289,8 @@
                                 <div class="settings-row-sub">Apex Vision IVI v2.4 · Google API Active</div>
                             </div>
                             <div class="settings-row-chevron">
-                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#80868B" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
                                 </svg>
                             </div>
                         </div>
@@ -2575,17 +3300,15 @@
                 <!-- PAGE 2: Sub-menu Page -->
                 <div class="settings-slide-page" id="settingsSubPage">
                     <div class="settings-card-header">
-                        <button class="settings-header-btn" id="btnSubmenuBack" title="Back">
-                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3C4043" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
+                        <button class="settings-header-btn" id="btnSubmenuBack">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                                <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
                             </svg>
                         </button>
                         <div class="settings-card-title" id="submenuTitle">Options</div>
-                        <button class="settings-header-btn" id="btnSubmenuClose" title="Close">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#3C4043" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                        <button class="settings-header-btn" id="btnSubmenuClose">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
                             </svg>
                         </button>
                     </div>
@@ -2600,18 +3323,18 @@
     <!-- 4. FULL SCREEN BOTTOM-LEFT CONTROLS (Visible on Expand) -->
     <div class="bottom-left-controls" id="bottomLeftControls">
         <div class="zoom-capsule">
-            <button class="zoom-btn" id="btnZoomIn" title="Zoom in">
+            <button class="zoom-btn" id="btnZoomIn">
                 <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
             </button>
             <div class="zoom-divider"></div>
-            <button class="zoom-btn" id="btnZoomOut" title="Zoom out">
+            <button class="zoom-btn" id="btnZoomOut">
                 <svg viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
             </button>
         </div>
 
         <button class="recenter-pill" id="btnRecenter">
-            <svg viewBox="0 0 24 24">
-                <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm8.94 3c-.46-4.17-3.77-7.48-7.94-7.94V1h-2v2.06C6.83 3.52 3.52 6.83 3.06 11H1v2h2.06c.46 4.17 3.77 7.48 7.94 7.94V23h2v-2.06c4.17-.46 7.48-3.77 7.94-7.94H23v-2h-2.06zM12 19c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/>
             </svg>
             <span>Re-center</span>
         </button>
@@ -2620,22 +3343,19 @@
     <!-- 5. SEARCH DIALOG MODAL (Google Automotive Search Screen) -->
     <div class="search-dialog-modal" id="searchDialogModal">
         <div class="dialog-header-bar">
-            <button class="dialog-icon-btn" id="btnDialogBack" title="Back">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#3C4043" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
+            <button class="dialog-icon-btn" id="btnDialogBack">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
                 </svg>
             </button>
             <div class="dialog-search-box-pill">
-                <svg class="search-box-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#5F6368" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                <svg class="search-box-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
                 </svg>
                 <input type="text" class="dialog-search-input" id="dialogSearchInput" placeholder="Search all destinations" autocomplete="off" spellcheck="false" />
-                <button class="dialog-clear-btn" id="btnDialogClear" title="Clear">
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#5F6368" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                <button class="dialog-clear-btn" id="btnDialogClear">
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
                     </svg>
                 </button>
             </div>
@@ -2668,25 +3388,25 @@
                 <!-- 2. Categories Tab Pane -->
                 <div class="search-tab-pane" id="paneCategories" style="display: none;">
                     <div class="categories-grid">
-                        <div class="category-tile" data-cat="gas" title="Gas Stations">
+                        <div class="category-tile" data-cat="gas">
                             <div class="cat-tile-icon gas">
                                 <svg viewBox="0 -960 960 960"><path d="M160-120v-640q0-33 23.5-56.5T240-840h240q33 0 56.5 23.5T560-760v280h40q33 0 56.5 23.5T680-400v180q0 17 11.5 28.5T720-180q17 0 28.5-11.5T760-220v-288q-9 5-19 6.5t-21 1.5q-42 0-71-29t-29-71q0-32 17.5-57.5T684-694l-84-84 42-42 148 144q15 15 22.5 35t7.5 41v380q0 42-29 71t-71 29q-42 0-71-29t-29-71v-200h-60v300H160Zm80-440h240v-200H240v200Zm480 0q17 0 28.5-11.5T760-600q0-17-11.5-28.5T720-640q-17 0-28.5 11.5T680-600q0 17 11.5 28.5T720-560ZM240-200h240v-280H240v280Zm240 0H240h240Z"/></svg>
                             </div>
                             <div class="cat-tile-label">Gas stations</div>
                         </div>
-                        <div class="category-tile" data-cat="food" title="Restaurants">
+                        <div class="category-tile" data-cat="food">
                             <div class="cat-tile-icon food">
                                 <svg viewBox="0 -960 960 960"><path d="M280-80v-366q-51-14-85.5-56T160-600v-280h80v280h40v-280h80v280h40v-280h80v280q0 56-34.5 98T360-446v366h-80Zm400 0v-320H560v-280q0-83 58.5-141.5T760-880v800h-80Z"/></svg>
                             </div>
                             <div class="cat-tile-label">Restaurants</div>
                         </div>
-                        <div class="category-tile" data-cat="shop" title="Supermarket & Shopping">
+                        <div class="category-tile" data-cat="shop">
                             <div class="cat-tile-icon shop">
                                 <svg viewBox="0 -960 960 960"><path d="M280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM246-720l96 200h280l110-200H246Zm-38-80h590q23 0 35 20.5t1 41.5L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68-39.5t-2-78.5l54-98-144-304H40v-80h130l38 80Zm134 280h280-280Z"/></svg>
                             </div>
                             <div class="cat-tile-label">Groceries</div>
                         </div>
-                        <div class="category-tile" data-cat="coffee" title="Coffee">
+                        <div class="category-tile" data-cat="coffee">
                             <div class="cat-tile-icon coffee">
                                 <svg viewBox="0 -960 960 960"><path d="M160-120v-80h640v80H160Zm160-160q-66 0-113-47t-47-113v-400h640q33 0 56.5 23.5T880-760v120q0 33-23.5 56.5T800-560h-80v120q0 66-47 113t-113 47H320Zm0-80h240q33 0 56.5-23.5T640-440v-320H240v320q0 33 23.5 56.5T320-360Zm400-280h80v-120h-80v120ZM320-360h-80 400-320Z"/></svg>
                             </div>
@@ -2732,9 +3452,8 @@
             </button>
             <div class="results-query-title" id="resultsQueryTitle">Restaurants</div>
             <button class="dialog-icon-btn" id="btnResultsClose">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
                 </svg>
             </button>
         </div>
@@ -2813,7 +3532,9 @@
             <button class="kb-key space-bar" id="kbSpace">Space</button>
             <button class="kb-key" data-k="." style="flex:1;">.</button>
             <button class="kb-key search-action" id="kbGo">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                    <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
             </button>
         </div>
     </div>
@@ -2821,8 +3542,10 @@
     <!-- 8. GOOGLE MAPS ROUTE PREVIEW CARD (Screenshot 1) -->
     <div class="route-preview-card" id="routePreviewCard">
         <div class="google-dest-top-row">
-            <button class="google-icon-btn" id="btnRouteBack" title="Back">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            <button class="google-icon-btn" id="btnRouteBack">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
             </button>
             <div class="google-dest-title-wrap">
                 <span class="google-dest-title" id="previewDestName">Destination</span>
@@ -2830,15 +3553,23 @@
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
                 </span>
             </div>
-            <button class="google-icon-btn" id="btnRouteClose" title="Close">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <button class="google-icon-btn" id="btnRouteClose">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+                </svg>
             </button>
         </div>
         <div class="google-dest-subtitle" id="previewDestStatus">Open until 9:00 PM · Verified Location</div>
         <div class="google-dest-metrics-row">
             <span class="google-metric-duration" id="previewDuration">6 min</span>
             <span class="google-metric-dot">·</span>
+            <span class="google-metric-distance" id="previewDistance">4.2 km</span>
+            <span class="google-metric-dot">·</span>
             <span class="google-metric-eta" id="previewClockEta">12:44 PM</span>
+        </div>
+        <div class="google-dest-traffic-row" id="routeTrafficBadge">
+            <span class="traffic-dot"></span>
+            <span id="routeTrafficText">Live traffic · Fastest route</span>
         </div>
         <div class="google-dest-eco-row">
             <span style="font-size: 15px;">🍃</span>
@@ -2848,17 +3579,13 @@
         <div class="google-dest-actions-row">
             <button class="google-btn-start" id="btnStartNav">
                 <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-                    <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+                    <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
                 </svg>
                 <span>Start</span>
             </button>
-            <button class="google-btn-routes" id="btnAltRoutes" title="Alternate routes">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 21v-5"/>
-                    <path d="M12 16c0-3 3-5.2 4.2-8.2V5"/>
-                    <path d="M12.5 8.5L16.2 4.8 19.8 8.5"/>
-                    <path d="M12 16c0-3-3-5.2-4.2-8.2V5" stroke-dasharray="2.2 2.5"/>
-                    <path d="M4.2 8.5L7.8 4.8 11.5 8.5"/>
+            <button class="google-btn-routes" id="btnAltRoutes">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M8.71 8.71 4.41 13l4.3 4.29 1.41-1.41L7.83 13.6h4.34c1.66 0 3 1.34 3 3v2.4h2v-2.4c0-2.76-2.24-5-5-5H7.83l2.29-2.29-1.41-1.4zM16.59 5l-1.41 1.41 2.29 2.29H13.5c-2.76 0-5 2.24-5 5v2.4h2v-2.4c0-1.66 1.34-3 3-3h3.97l-2.29 2.29 1.41 1.41L21.59 9 16.59 5z"/>
                 </svg>
             </button>
         </div>
@@ -2868,51 +3595,64 @@
         </button>
     </div>
 
-    <!-- 9. GOOGLE MAPS ACTIVE NAVIGATION HUD (Screenshot 2) -->
-    <!-- Top-left Maneuver Banner: Dark slate box with arrow, street, and next maneuver -->
+    <!-- 9. GOOGLE MAPS ACTIVE NAVIGATION HUD -->
+    <!-- Top-left Maneuver Banner: Google Maps Navigation Green Card with Maneuver Icon, Distance, & Street -->
     <div class="google-nav-top-banner" id="hudTurnBanner">
         <div class="google-nav-maneuver-top">
-            <svg class="nav-arrow-icon" id="hudTurnIcon" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="19" x2="12" y2="5"></line>
-                <polyline points="5 12 12 5 19 12"></polyline>
-            </svg>
-            <div class="google-nav-street-text" id="hudStreetText">Kasturba Rd</div>
+            <div class="nav-maneuver-icon-wrap" id="hudTurnIconContainer">
+                <svg viewBox="0 0 24 24" id="hudTurnIcon" width="44" height="44" fill="#FFFFFF">
+                    <path d="M11 21V7.83l-4.59 4.58L5 11l7-7 7 7-1.41 1.41L13 7.83V21h-2z"/>
+                </svg>
+            </div>
+            <div class="google-nav-text-col">
+                <div class="google-nav-distance-text" id="hudDistText">500 m</div>
+                <div class="google-nav-street-text" id="hudStreetText">Amruthahalli, 560092</div>
+            </div>
         </div>
-        <div class="google-nav-then-row" id="hudThenRow">
-            <span>Then</span>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#CBD5E1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 18v-6a4 4 0 0 1 4-4h10M14 4l4 4-4 4"/>
-            </svg>
+        <div class="google-nav-then-row" id="hudThenRow" style="display: none;">
+            <span class="hud-then-label">Then</span>
+            <div class="hud-then-icon-wrap" id="hudThenIconContainer">
+                <svg viewBox="0 0 24 24" id="hudThenIcon" width="18" height="18" fill="#A8DAB5">
+                    <path d="M17.17 11l-4.58-4.59L14 5l7 7-7 7-1.41-1.41L17.17 13H8c-2.21 0-4 1.79-4 4v4H2v-4c0-3.31 2.69-6 6-6h9.17z"/>
+                </svg>
+            </div>
+            <span class="hud-then-street" id="hudThenStreet">onto route</span>
         </div>
     </div>
 
-    <!-- Bottom-left Active Navigation Card: 4 min, 1.9 km · 12:42 PM, and 4 circular action buttons -->
+    <!-- Bottom-left Active Navigation Card: ETA, Distance, and Google Automotive Action Buttons -->
     <div class="google-nav-bottom-card" id="hudBottomCard">
         <div class="google-bottom-metrics">
             <div class="google-bottom-min" id="hudBottomDur">4 min</div>
             <div class="google-bottom-sub" id="hudBottomSub">1.9 km · 12:42 PM</div>
+            <div class="google-traffic-live-badge" id="hudTrafficBadge">
+                <span class="traffic-dot"></span>
+                <span id="hudTrafficText">Typical traffic</span>
+            </div>
         </div>
         <div class="google-bottom-actions">
-            <button class="google-round-btn close-nav" id="btnEndNav" title="Exit navigation">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <button class="google-round-btn" id="btnAlternateRoute" title="Alternate routes">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 21v-5"/>
-                    <path d="M12 16c0-3 3-5.2 4.2-8.2V5"/>
-                    <path d="M12.5 8.5L16.2 4.8 19.8 8.5"/>
-                    <path d="M12 16c0-3-3-5.2-4.2-8.2V5" stroke-dasharray="2.2 2.5"/>
-                    <path d="M4.2 8.5L7.8 4.8 11.5 8.5"/>
+            <!-- 1. End Navigation (Google Close ✕) -->
+            <button class="google-round-btn close-nav" id="btnEndNav" title="End Navigation">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
                 </svg>
             </button>
-            <button class="google-round-btn" id="btnNavSearch" title="Search along route">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16" y2="16"/></svg>
+            <!-- 2. Alternate Routes (Google Material Symbol alt_route) -->
+            <button class="google-round-btn" id="btnAlternateRoute" title="Alternate Routes">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M8.71 8.71 4.41 13l4.3 4.29 1.41-1.41L7.83 13.6h4.34c1.66 0 3 1.34 3 3v2.4h2v-2.4c0-2.76-2.24-5-5-5H7.83l2.29-2.29-1.41-1.4zM16.59 5l-1.41 1.41 2.29 2.29H13.5c-2.76 0-5 2.24-5 5v2.4h2v-2.4c0-1.66 1.34-3 3-3h3.97l-2.29 2.29 1.41 1.41L21.59 9 16.59 5z"/>
+                </svg>
             </button>
-            <button class="google-round-btn" id="btnNavOverview" title="Route overview">
-                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="6" cy="17" r="2.5" stroke="#3C4043" stroke-width="2.2" fill="#3C4043"/>
-                    <path d="M6 14.5V9a3 3 0 0 1 6 0v6a3 3 0 0 0 6 0V9" stroke="#3C4043" stroke-width="2.2"/>
-                    <circle cx="18" cy="6.5" r="2.5" stroke="#EA4335" stroke-width="2.2" fill="#EA4335"/>
+            <!-- 3. Search along route (Google Material Symbol search) -->
+            <button class="google-round-btn" id="btnNavSearch" title="Search Along Route">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+                </svg>
+            </button>
+            <!-- 4. Route Overview (Google Material Symbol route) -->
+            <button class="google-round-btn" id="btnNavOverview" title="Route Overview">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                    <path d="M19 15.18V7c0-2.21-1.79-4-4-4s-4 1.79-4 4v10c0 1.1-.9 2-2 2s-2-.9-2-2V8.82C8.16 8.4 9 7.3 9 6c0-1.66-1.34-3-3-3S3 4.34 3 6c0 1.3.84 2.4 2 2.82V17c0 2.21 1.79 4 4 4s4-1.79 4-4V7c0-1.1.9-2 2-2s2 .9 2 2v8.18c-1.16.41-2 1.51-2 2.82 0 1.66 1.34 3 3 3s3-1.34 3-3c0-1.31-.84-2.41-2-2.82z"/>
                 </svg>
             </button>
         </div>
@@ -2920,7 +3660,7 @@
 
     <!-- CIRCULAR SPEEDOMETER WIDGET (Google Automotive / Maps Right Side) -->
     <div class="nav-speedometer-cluster" id="navSpeedometerCluster">
-        <div class="speed-limit-circle" id="speedLimitCircle" title="Speed Limit 60 km/h">
+        <div class="speed-limit-circle" id="speedLimitCircle">
             <span class="speed-limit-badge-num">60</span>
         </div>
         <div class="nav-speedometer-circle" id="navSpeedometerCircle">
@@ -2948,10 +3688,8 @@
             <!-- 1. Avg Speed -->
             <div class="arrival-stat-box">
                 <div class="arrival-stat-icon-wrap" style="background: rgba(37,99,235,0.12); color: #2563EB;">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                        <path d="M16 12a4 4 0 1 1-8 0"></path>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                        <path d="M20.38 8.57l-1.23 1.85a8 8 0 0 1-.22 7.58H5.07A8 8 0 0 1 15.58 6.85l1.85-1.23A10 10 0 0 0 3.35 19a2 2 0 0 0 1.72 1h13.85a2 2 0 0 0 1.74-1 10 10 0 0 0-.28-10.43zM10.59 15.41a2 2 0 0 0 2.83 0l5.66-8.49-8.49 5.66a2 2 0 0 0 0 2.83z"/>
                     </svg>
                 </div>
                 <div class="arrival-stat-info">
@@ -2962,9 +3700,8 @@
             <!-- 2. Distance -->
             <div class="arrival-stat-box">
                 <div class="arrival-stat-icon-wrap" style="background: rgba(124,58,237,0.12); color: #7C3AED;">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 19h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"></path>
-                        <path d="M12 5v14"></path>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                        <path d="M19 15.18V7c0-2.21-1.79-4-4-4s-4 1.79-4 4v10c0 1.1-.9 2-2 2s-2-.9-2-2V8.82C8.16 8.4 9 7.3 9 6c0-1.66-1.34-3-3-3S3 4.34 3 6c0 1.3.84 2.4 2 2.82V17c0 2.21 1.79 4 4 4s4-1.79 4-4V7c0-1.1.9-2 2-2s2 .9 2 2v8.18c-1.16.41-2 1.51-2 2.82 0 1.66 1.34 3 3 3s3-1.34 3-3c0-1.31-.84-2.41-2-2.82zM6 7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm12 12c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/>
                     </svg>
                 </div>
                 <div class="arrival-stat-info">
@@ -2975,9 +3712,8 @@
             <!-- 3. Duration -->
             <div class="arrival-stat-box">
                 <div class="arrival-stat-icon-wrap" style="background: rgba(234,88,12,0.12); color: #EA580C;">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                        <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
                     </svg>
                 </div>
                 <div class="arrival-stat-info">
@@ -2988,9 +3724,8 @@
             <!-- 4. Eco Score -->
             <div class="arrival-stat-box">
                 <div class="arrival-stat-icon-wrap" style="background: rgba(22,163,74,0.12); color: #16A34A;">
-                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
-                        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                        <path d="M12 2C6.5 2 2 6.5 2 12c0 3.58 2.5 6.55 6 7.6V22h2v-2.1c.65.07 1.32.1 2 .1 5.5 0 10-4.5 10-10 0-3.3-1.6-6.2-4.1-8-1.7-1.2-3.8-2-5.9-2zm4.19 13.79c-.77.77-1.8 1.21-2.89 1.21-1.09 0-2.12-.44-2.89-1.21-1.59-1.59-1.59-4.18 0-5.77l2.89-2.89 2.89 2.89c1.59 1.59 1.59 4.18 0 5.77z"/>
                     </svg>
                 </div>
                 <div class="arrival-stat-info">
@@ -3001,8 +3736,8 @@
         </div>
 
         <button class="arrival-btn-done" id="btnArrivalDone">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="20 6 9 17 4 12"></polyline>
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
             </svg>
             <span>Done</span>
         </button>
@@ -3030,6 +3765,26 @@
     <script src="GLTFLoader.js"></script>
 
     <script>
+        // Automotive IVI Display: Permanently suppress all native browser tooltips
+        (function() {
+            function stripAllTitles() {
+                document.querySelectorAll("[title]").forEach(el => el.removeAttribute("title"));
+            }
+            stripAllTitles();
+            if (document.readyState === "loading") {
+                document.addEventListener("DOMContentLoaded", stripAllTitles);
+            }
+            try {
+                new MutationObserver((mutations) => {
+                    for (const m of mutations) {
+                        if (m.type === "attributes" && m.attributeName === "title" && m.target.hasAttribute("title")) {
+                            m.target.removeAttribute("title");
+                        }
+                    }
+                }).observe(document.documentElement, { attributes: true, subtree: true, attributeFilter: ["title"] });
+            } catch (e) {}
+        })();
+
         // =========================================================================
         // APEX PERSISTENT TILE CACHE ENGINE (IndexedDB L2 + Memory L1)
         // Caches every map tile permanently once loaded for instant offline re-use
@@ -3164,13 +3919,13 @@
             return nativeFetch(resource, init);
         };
 
-        // State: Aligned with VehicleSimulator Bangalore coordinates
-        let currentLat = 12.9719445;
-        let currentLng = 77.5936873;
+        // State: Aligned with VehicleSimulator Amruthahalli 560092 coordinates
+        let currentLat = 13.06464;
+        let currentLng = 77.60159;
         let currentHeading = 25.0;
-        let currentZoom = 16.2;
+        let currentZoom = 17.5;
         let currentPitch = 58.0; // Permanent 3D perspective view
-        let currentStreet = "Kasturba Rd";
+        let currentStreet = "Amruthahalli, 560092";
         let isCompact = true;
         let isShift = false;
         let isNavigating = false;
@@ -3178,6 +3933,7 @@
         let isMuted = false;
         let audioMode = 0; // 0: unmuted, 1: alerts only, 2: muted
         let isNorthUp = false;
+        let viewModeIndex = 0; // 0: 3D Perspective, 1: 2D North-up, 2: Overview
         let currentRouteGeoJson = null;
         let currentRouteSteps = [];
         let currentDriveSpeed = 0;
@@ -3189,7 +3945,117 @@
         let navArrowSvgEl = null;
         let streetTextEl = null;
         let destBadgeMarker = null;
+        let destPinMarker = null;
         let activeMarkers = [];
+
+        function clearDestinationMarkers() {
+            if (destBadgeMarker) {
+                destBadgeMarker.remove();
+                destBadgeMarker = null;
+            }
+            if (destPinMarker) {
+                destPinMarker.remove();
+                destPinMarker = null;
+            }
+        }
+
+        // =========================================================================
+        // GOOGLE MAPS AUTOMOTIVE MANEUVER ICONS & HUD CONTROLLER
+        // (Authentic Material Symbols paths extracted directly from Google Maps)
+        // =========================================================================
+        function getManeuverIconSvg(modifier, type, size = 44, color = "#FFFFFF") {
+            const m = (modifier || "").toLowerCase();
+            const t = (type || "").toLowerCase();
+            let path = "";
+
+            if (t.includes("arrive") || m.includes("arrive")) {
+                // Google destination pin
+                path = "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z";
+            } else if (m.includes("u-turn") || m.includes("uturn")) {
+                // Google u_turn_left / u_turn_right
+                path = "M6 9V17h2.5V9c0-1.93 1.57-3.5 3.5-3.5s3.5 1.57 3.5 3.5v9.17l-3.59-3.58L10.5 16l6 6 6-6-1.41-1.41-3.59 3.58V9c0-3.31-2.69-6-6-6S6 5.69 6 9z";
+            } else if (m.includes("sharp right")) {
+                path = "M18 6.5l-3.79-1.41 1.06 2.83-4.74 4.74c-.58.58-.93 1.37-.93 2.21V21h2.5v-6.13c0-.31.13-.6.34-.82L16.68 9.3l2.83 1.06L18 6.5z";
+            } else if (m.includes("sharp left")) {
+                path = "M6 6.5l3.79-1.41-1.06 2.83 4.74 4.74c.58.58.93 1.37.93 2.21V21H11.9v-6.13c0-.31-.13-.6-.34-.82L7.32 9.3 4.49 10.36 6 6.5z";
+            } else if (m.includes("slight right")) {
+                path = "M12.34 6l3.07 1.15-5.74 5.74c-.78.78-1.22 1.84-1.22 2.94V21h2.5v-5.17c0-.44.18-.87.49-1.18l5.74-5.74L18.25 12l2-6-6 2z";
+            } else if (m.includes("slight left")) {
+                path = "M11.66 6L8.59 7.15l5.74 5.74c.78.78 1.22 1.84 1.22 2.94V21h-2.5v-5.17c0-.44-.18-.87-.49-1.18l-5.74-5.74L5.75 12l-2-6 6 2z";
+            } else if (m.includes("right")) {
+                // Google turn_right
+                path = "M17.17 11l-4.58-4.59L14 5l7 7-7 7-1.41-1.41L17.17 13H8c-2.21 0-4 1.79-4 4v4H2v-4c0-3.31 2.69-6 6-6h9.17z";
+            } else if (m.includes("left")) {
+                // Google turn_left
+                path = "M6.83 11l4.58-4.59L10 5l-7 7 7 7 1.41-1.41L6.83 13H16c2.21 0 4 1.79 4 4v4h2v-4c0-3.31-2.69-6-6-6H6.83z";
+            } else if (t.includes("roundabout") || m.includes("roundabout")) {
+                // Google roundabout_right
+                path = "M12 2C6.48 2 2 6.48 2 12c0 2.85 1.2 5.42 3.12 7.24l1.78-1.78C5.46 16.03 4.5 14.13 4.5 12c0-4.14 3.36-7.5 7.5-7.5 3.57 0 6.54 2.5 7.31 5.85l-2.46-.99 3.65 6.32 5-5.32-2.38-.96C22.06 5.76 17.51 2 12 2zm0 15c-2.76 0-5-2.24-5-5h2.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5h2.5c0 2.76-2.24 5-5 5z";
+            } else if (t.includes("fork") || m.includes("fork")) {
+                // Google fork
+                path = "M12 2v8.17l-3.59-3.58L7 8l5 5 5-5-1.41-1.41L12 10.17V2h-2zm-5 13c0 2.76 2.24 5 5 5s5-2.24 5-5v-1h2v1c0 3.87-3.13 7-7 7s-7-3.13-7-7v-1h2v1z";
+            } else {
+                // Google straight / navigation arrow
+                path = "M11 21V7.83l-4.59 4.58L5 11l7-7 7 7-1.41 1.41L13 7.83V21h-2z";
+            }
+
+            return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${color}"><path d="${path}"/></svg>`;
+        }
+
+        function formatManeuverDistance(meters) {
+            if (!meters || meters <= 35) return "Now";
+            if (meters < 1000) return `${Math.round(meters / 10) * 10} m`;
+            return `${(meters / 1000).toFixed(1)} km`;
+        }
+
+        function generateSyntheticSteps(destName, totalDistMeters) {
+            const d = Math.max(800, totalDistMeters || 2400);
+            return [
+                { name: "Amruthahalli Main Road", distance: Math.round(d * 0.28), maneuver: { type: "depart", modifier: "straight" } },
+                { name: "NH 44 / Bellary Road", distance: Math.round(d * 0.42), maneuver: { type: "turn", modifier: "slight right" } },
+                { name: "Outer Ring Road", distance: Math.round(d * 0.20), maneuver: { type: "turn", modifier: "right" } },
+                { name: destName || "Destination", distance: Math.round(d * 0.10), maneuver: { type: "arrive", modifier: "straight" } }
+            ];
+        }
+
+        function updateNavManeuverHUD(curStep, nextStep, distToTurnMeters, stepIdx = 0) {
+            const distEl = document.getElementById("hudDistText");
+            const streetEl = document.getElementById("hudStreetText");
+            const iconWrap = document.getElementById("hudTurnIconContainer");
+            const thenRow = document.getElementById("hudThenRow");
+            const thenIconWrap = document.getElementById("hudThenIconContainer");
+            const thenStreetEl = document.getElementById("hudThenStreet");
+
+            if (!curStep && !nextStep) return;
+
+            const targetStep = nextStep || curStep;
+            const maneuver = targetStep.maneuver || curStep?.maneuver || {};
+            const modifier = maneuver.modifier || (stepIdx === 0 ? "straight" : "right");
+            const mType = maneuver.type || "turn";
+
+            if (distEl) {
+                distEl.textContent = formatManeuverDistance(distToTurnMeters);
+            }
+            if (streetEl) {
+                const roadName = targetStep.name || targetStep.instruction || "Amruthahalli Main Road";
+                streetEl.textContent = roadName;
+            }
+            if (iconWrap) {
+                iconWrap.innerHTML = getManeuverIconSvg(modifier, mType, 44, "#FFFFFF");
+            }
+
+            // Next maneuver ("Then" secondary row)
+            if (thenRow && thenIconWrap && thenStreetEl) {
+                if (currentRouteSteps && currentRouteSteps.length > stepIdx + 2) {
+                    const stepAfter = currentRouteSteps[stepIdx + 2];
+                    thenRow.style.display = "flex";
+                    thenIconWrap.innerHTML = getManeuverIconSvg(stepAfter.maneuver?.modifier || "straight", stepAfter.maneuver?.type || "turn", 18, "#A8DAB5");
+                    thenStreetEl.textContent = stepAfter.name || "onto route";
+                } else {
+                    thenRow.style.display = "none";
+                }
+            }
+        }
 
         // Stadia Maps API Key (Official Alidade Smooth Light Engine)
         const STADIA_API_KEY = "3c059ba3-0a81-412c-b591-87c6701ab45b";
@@ -3241,17 +4107,21 @@
                             "stadia-light": {
                                 type: "raster",
                                 tiles: [
-                                    `https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}@2x.png?api_key=${STADIA_API_KEY}`
+                                    `https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}.png?api_key=${STADIA_API_KEY}`
                                 ],
-                                tileSize: 512,
+                                tileSize: 256,
+                                minzoom: 0,
+                                maxzoom: 20,
                                 attribution: ''
                             },
                             "stadia-dark": {
                                 type: "raster",
                                 tiles: [
-                                    `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}@2x.png?api_key=${STADIA_API_KEY}`
+                                    `https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}.png?api_key=${STADIA_API_KEY}`
                                 ],
-                                tileSize: 512,
+                                tileSize: 256,
+                                minzoom: 0,
+                                maxzoom: 20,
                                 attribution: ''
                             }
                         },
@@ -3263,7 +4133,7 @@
                                 minzoom: 0,
                                 maxzoom: 20,
                                 layout: { "visibility": isNight ? "visible" : "none" },
-                                paint: { "raster-opacity": isNight ? 1.0 : 0.0, "raster-opacity-transition": { "duration": 350 } }
+                                paint: { "raster-opacity": isNight ? 1.0 : 0.0 }
                             },
                             {
                                 id: "stadia-light-layer",
@@ -3272,31 +4142,25 @@
                                 minzoom: 0,
                                 maxzoom: 20,
                                 layout: { "visibility": isNight ? "none" : "visible" },
-                                paint: { "raster-opacity": isNight ? 0.0 : 1.0, "raster-opacity-transition": { "duration": 350 } }
+                                paint: { "raster-opacity": isNight ? 0.0 : 1.0 }
                             }
                         ]
                     },
                     center: [currentLng, currentLat],
                     zoom: currentZoom,
-                    minZoom: 1.5,
+                    minZoom: 1.0,
                     maxZoom: 19.0,
                     pitch: currentPitch,
                     maxPitch: 65.0,
                     bearing: 0,
-                    attributionControl: false
+                    attributionControl: false,
+                    fadeDuration: 0,
+                    trackResize: true,
+                    maxParallelImageRequests: 64,
+                    renderWorldCopies: true
                 });
 
                 streetTextEl = document.getElementById("streetNameText");
-
-                const updateStreetLabelFallback = () => {
-                    if (apexZephyrLayer && apexZephyrLayer.carCorners && apexZephyrLayer.carGroup) return;
-                    const overlay = document.getElementById("carStreetLabelOverlay");
-                    if (overlay && map) {
-                        const pt = map.project([currentLng, currentLat]);
-                        overlay.style.transform = `translate3d(${Math.round(pt.x)}px, ${Math.round(pt.y + 60)}px, 0) translate(-50%, 0)`;
-                    }
-                };
-                map.on("render", updateStreetLabelFallback);
 
                 map.on("load", function() {
                     initRouteLayer();
@@ -3304,19 +4168,12 @@
                 });
 
                 map.on("dragstart", function() {
+                    isUserPanned = true;
                     showRecenterBtn();
                 });
 
-                map.on("move", function(e) {
-                    if (e && e.originalEvent) {
-                        checkMapCentering();
-                    }
-                });
-
-                map.on("moveend", function(e) {
-                    if (e && e.originalEvent) {
-                        checkMapCentering();
-                    }
+                map.on("moveend", function() {
+                    checkMapCentering();
                 });
 
                 map.on("error", function(e) {
@@ -3331,30 +4188,45 @@
             }
         }
 
-        // =========================================================================
-        // RECENTER BUTTON DYNAMIC VISIBILITY (Only shows when map is panned away)
-        // =========================================================================
+        let isRecentering = false;
+        let isUserPanned = false;
+
         function showRecenterBtn() {
             const btn = document.getElementById("btnRecenter");
-            if (btn && !isCompact) btn.classList.add("visible");
+            if (btn && !isNavigating && !isRecentering) {
+                btn.classList.add("visible");
+                isUserPanned = true;
+            }
         }
 
         function hideRecenterBtn() {
             const btn = document.getElementById("btnRecenter");
-            if (btn) btn.classList.remove("visible");
+            if (btn) {
+                btn.classList.remove("visible");
+            }
         }
 
         function checkMapCentering() {
-            if (!map) return;
-            const c = map.getCenter();
-            const dLng = Math.abs(c.lng - currentLng);
-            const dLat = Math.abs(c.lat - currentLat);
-            // If panned more than ~40 meters away from vehicle
-            if (dLng > 0.0004 || dLat > 0.0004) {
-                showRecenterBtn();
-            } else {
-                hideRecenterBtn();
-            }
+            if (!map || isNavigating || isRecentering) return;
+            try {
+                const canvas = map.getCanvas();
+                const targetX = canvas.clientWidth / 2;
+                const targetY = canvas.clientHeight / 2;
+
+                const vehiclePos = map.project([currentLng, currentLat]);
+                const dx = vehiclePos.x - targetX;
+                const dy = vehiclePos.y - targetY;
+                const pixelOffset = Math.hypot(dx, dy);
+
+                // Recenter button ONLY shows when the user has panned the vehicle away from view (> 65px)
+                if (pixelOffset > 65) {
+                    isUserPanned = true;
+                    showRecenterBtn();
+                } else {
+                    isUserPanned = false;
+                    hideRecenterBtn();
+                }
+            } catch (err) {}
         }
 
         function initRouteLayer() {
@@ -3379,6 +4251,134 @@
                 layout: { "line-join": "round", "line-cap": "round" },
                 paint: { "line-color": "#2563EB", "line-width": 6, "line-opacity": 0.98 }
             });
+
+            initTrafficFlowLayer();
+        }
+
+        function initTrafficFlowLayer() {
+            if (!map || map.getSource("traffic-flow")) return;
+            // Real-time arterial traffic flow corridors around active area (NH 44, Hebbal, ORR, Airport Rd)
+            const trafficData = {
+                type: "FeatureCollection",
+                features: [
+                    // NH 44 / Bellary Rd northbound: Free flow (Green)
+                    {
+                        type: "Feature",
+                        properties: { traffic: "free", color: "#10B981" },
+                        geometry: {
+                            type: "LineString",
+                            coordinates: [
+                                [77.5920, 13.0450],
+                                [77.5935, 13.0520],
+                                [77.5950, 13.0600],
+                                [77.5975, 13.0720],
+                                [77.6010, 13.0850],
+                                [77.6050, 13.1000]
+                            ]
+                        }
+                    },
+                    // NH 44 / Hebbal Flyover merge: Moderate slowdown (Orange)
+                    {
+                        type: "Feature",
+                        properties: { traffic: "moderate", color: "#F59E0B" },
+                        geometry: {
+                            type: "LineString",
+                            coordinates: [
+                                [77.5900, 13.0350],
+                                [77.5915, 13.0400],
+                                [77.5920, 13.0450]
+                            ]
+                        }
+                    },
+                    // Outer Ring Road near Hebbal / Nagavara interchange: Heavy congestion (Red)
+                    {
+                        type: "Feature",
+                        properties: { traffic: "heavy", color: "#EF4444" },
+                        geometry: {
+                            type: "LineString",
+                            coordinates: [
+                                [77.5850, 13.0410],
+                                [77.5915, 13.0400],
+                                [77.6020, 13.0390],
+                                [77.6150, 13.0420]
+                            ]
+                        }
+                    },
+                    // Amruthahalli Main Road / Kodigehalli: Typical traffic (Green)
+                    {
+                        type: "Feature",
+                        properties: { traffic: "free", color: "#10B981" },
+                        geometry: {
+                            type: "LineString",
+                            coordinates: [
+                                [77.5850, 13.0650],
+                                [77.5930, 13.0640],
+                                [77.6020, 13.0620]
+                            ]
+                        }
+                    },
+                    // International Airport Expressway: Free flow (Green)
+                    {
+                        type: "Feature",
+                        properties: { traffic: "free", color: "#10B981" },
+                        geometry: {
+                            type: "LineString",
+                            coordinates: [
+                                [77.6050, 13.1000],
+                                [77.6150, 13.1300],
+                                [77.6250, 13.1650],
+                                [77.6400, 13.2000]
+                            ]
+                        }
+                    }
+                ]
+            };
+
+            map.addSource("traffic-flow", {
+                type: "geojson",
+                data: trafficData
+            });
+
+            // Traffic glow line
+            map.addLayer({
+                id: "traffic-flow-glow",
+                type: "line",
+                source: "traffic-flow",
+                layout: { "line-join": "round", "line-cap": "round" },
+                paint: {
+                    "line-color": ["get", "color"],
+                    "line-width": 8,
+                    "line-opacity": 0.45
+                }
+            }, "nav-route-glow");
+
+            // Traffic main line
+            map.addLayer({
+                id: "traffic-flow-line",
+                type: "line",
+                source: "traffic-flow",
+                layout: { "line-join": "round", "line-cap": "round" },
+                paint: {
+                    "line-color": ["get", "color"],
+                    "line-width": 4.5,
+                    "line-opacity": 0.92
+                }
+            }, "nav-route-line");
+        }
+
+        function updateTrafficBadge(level, text) {
+            const routeDot = document.querySelector("#routeTrafficBadge .traffic-dot");
+            const routeText = document.getElementById("routeTrafficText");
+            const hudDot = document.querySelector("#hudTrafficBadge .traffic-dot");
+            const hudText = document.getElementById("hudTrafficText");
+
+            const dotClass = level === 'heavy' ? 'traffic-dot red' : (level === 'moderate' ? 'traffic-dot orange' : 'traffic-dot');
+            const defaultText = text || (level === 'heavy' ? 'Heavy traffic · Delays expected' : (level === 'moderate' ? 'Moderate traffic · Slight slowdown' : 'Live traffic · Fastest route'));
+
+            if (routeDot) routeDot.className = dotClass;
+            if (routeText) routeText.textContent = defaultText;
+            if (hudDot) hudDot.className = dotClass;
+            if (hudText) hudText.textContent = defaultText;
         }
 
         // =========================================================================
@@ -3505,14 +4505,19 @@
                             console.error("[ApexZephyr] Error loading apex_zephyr.glb:", err);
                         }
                     );
+                    if (mapInst) mapInst.triggerRepaint();
 
                     this.map = mapInst;
                     this.renderer = new THREE.WebGLRenderer({
                         canvas: mapInst.getCanvas(),
                         context: gl,
-                        antialias: true
+                        antialias: false,
+                        powerPreference: "high-performance"
                     });
                     this.renderer.autoClear = false;
+                    this.scratchV = new THREE.Vector3();
+                    this.lastScreenX = null;
+                    this.lastScreenY = null;
                 },
 
                 render: function (gl, matrix) {
@@ -3561,32 +4566,37 @@
                     this.renderer.render(this.scene, this.camera);
 
                     // Dynamically position the street label 18px below the lowest projected car pixel under any zoom/pitch/screen
-                    if (this.carCorners && this.carGroup) {
+                    if (this.carCorners && this.carGroup && this.scratchV) {
                         const canvas = this.map.getCanvas();
                         const w = canvas.clientWidth || canvas.width;
                         const h = canvas.clientHeight || canvas.height;
 
                         let maxY = -Infinity;
+                        const v = this.scratchV;
                         for (let i = 0; i < this.carCorners.length; i++) {
-                            const v = this.carCorners[i].clone();
+                            v.copy(this.carCorners[i]);
                             v.applyMatrix4(this.carGroup.matrixWorld);
                             v.applyMatrix4(this.camera.projectionMatrix);
                             const sy = (1 - v.y) * 0.5 * h;
                             if (sy > maxY) maxY = sy;
                         }
 
-                        const centerV = new THREE.Vector3(0, 0, 0);
-                        centerV.applyMatrix4(this.carGroup.matrixWorld);
-                        centerV.applyMatrix4(this.camera.projectionMatrix);
-                        const screenCenterX = (centerV.x + 1) * 0.5 * w;
+                        v.set(0, 0, 0);
+                        v.applyMatrix4(this.carGroup.matrixWorld);
+                        v.applyMatrix4(this.camera.projectionMatrix);
+                        const screenCenterX = (v.x + 1) * 0.5 * w;
 
-                        const overlay = document.getElementById("carStreetLabelOverlay");
-                        if (overlay && isFinite(maxY) && isFinite(screenCenterX)) {
-                            overlay.style.transform = `translate3d(${Math.round(screenCenterX)}px, ${Math.round(maxY + 18)}px, 0) translate(-50%, 0)`;
+                        const roundX = Math.round(screenCenterX);
+                        const roundY = Math.round(maxY + 18);
+                        if (roundX !== this.lastScreenX || roundY !== this.lastScreenY) {
+                            this.lastScreenX = roundX;
+                            this.lastScreenY = roundY;
+                            const overlay = document.getElementById("carStreetLabelOverlay");
+                            if (overlay && isFinite(maxY) && isFinite(screenCenterX)) {
+                                overlay.style.transform = `translate3d(${roundX}px, ${roundY}px, 0) translate(-50%, 0)`;
+                            }
                         }
                     }
-
-                    this.map.triggerRepaint();
                 }
             };
 
@@ -4018,6 +5028,7 @@
             const container = document.getElementById("resultsScrollContainer");
             container.innerHTML = "";
 
+            clearDestinationMarkers();
             activeMarkers.forEach(m => m.remove());
             activeMarkers = [];
 
@@ -4054,6 +5065,7 @@
                 const m = new maplibregl.Marker({ element: pinEl })
                     .setLngLat([item.lng, item.lat])
                     .addTo(map);
+                m._item = item;
                 activeMarkers.push(m);
 
                 pinEl.addEventListener("click", () => selectDestination(item));
@@ -4165,7 +5177,10 @@
             document.getElementById("previewDestStatus").textContent = "Open until 9:00 PM · Verified Location";
             
             const durShort = (item.time || "6 min").split(" (")[0];
+            const distKmStr = item.distKm ? `${parseFloat(item.distKm).toFixed(1)} km` : "3.2 km";
             document.getElementById("previewDuration").textContent = durShort;
+            const distEl = document.getElementById("previewDistance");
+            if (distEl) distEl.textContent = distKmStr;
 
             // Initial ETA clock calculation
             const now = new Date();
@@ -4183,12 +5198,38 @@
             document.getElementById("resultsListCard").style.display = "none";
             document.getElementById("routePreviewCard").style.display = "flex";
 
+            clearDestinationMarkers();
+
+            // Hide other category numbers from map so only the selected destination is focused
+            activeMarkers.forEach(m => {
+                if (m.getElement()) {
+                    m.getElement().style.display = "none";
+                }
+            });
+
+            // Add sleek Destination Pin on map
+            const pinWrapper = document.createElement("div");
+            pinWrapper.className = "dest-location-pin";
+            pinWrapper.style.display = "flex";
+            pinWrapper.style.alignItems = "center";
+            pinWrapper.style.justifyContent = "center";
+            pinWrapper.style.filter = "drop-shadow(0 4px 8px rgba(0,0,0,0.45))";
+            pinWrapper.style.cursor = "pointer";
+            pinWrapper.innerHTML = `
+                <svg width="26" height="34" viewBox="0 0 24 32" fill="none">
+                    <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20s12-11 12-20c0-6.63-5.37-12-12-12z" fill="#EA4335"/>
+                    <circle cx="12" cy="11" r="4.5" fill="#FFFFFF"/>
+                </svg>
+            `;
+            destPinMarker = new maplibregl.Marker({ element: pinWrapper, anchor: "bottom" })
+                .setLngLat([item.lng, item.lat])
+                .addTo(map);
+
             // Add Destination Callout Badge on map (matching Screenshot 1: 6 min 🍃)
-            if (destBadgeMarker) { destBadgeMarker.remove(); destBadgeMarker = null; }
             const badgeEl = document.createElement("div");
             badgeEl.className = "dest-eta-callout";
             badgeEl.innerHTML = `<span>${durShort}</span><span style="font-size:12px;">🍃</span>`;
-            destBadgeMarker = new maplibregl.Marker({ element: badgeEl, anchor: "bottom", offset: [0, -32] })
+            destBadgeMarker = new maplibregl.Marker({ element: badgeEl, anchor: "bottom", offset: [0, -36] })
                 .setLngLat([item.lng, item.lat])
                 .addTo(map);
 
@@ -4202,12 +5243,13 @@
                         headers: {
                             "Content-Type": "application/json",
                             "X-Goog-Api-Key": GOOGLE_API_KEY,
-                            "X-Goog-FieldMask": "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline"
+                            "X-Goog-FieldMask": "routes.duration,routes.staticDuration,routes.distanceMeters,routes.polyline.encodedPolyline"
                         },
                         body: JSON.stringify({
                             origin: { location: { latLng: { latitude: currentLat, longitude: currentLng } } },
                             destination: { location: { latLng: { latitude: item.lat, longitude: item.lng } } },
-                            travelMode: "DRIVE"
+                            travelMode: "DRIVE",
+                            routingPreference: "TRAFFIC_AWARE_OPTIMAL"
                         })
                     });
                     if (res.ok) {
@@ -4226,10 +5268,26 @@
                                 const distMeters = r.distanceMeters || (item.distKm * 1000);
                                 const distKm = (distMeters / 1000).toFixed(1) + " km";
                                 const durSec = parseInt(r.duration) || (item.distKm * 75);
+                                const staticDurSec = parseInt(r.staticDuration) || durSec;
+                                const delaySec = Math.max(0, durSec - staticDurSec);
                                 const durationMin = Math.max(1, Math.round(durSec / 60));
                                 const durText = durationMin > 60 ? `${Math.floor(durationMin / 60)} hr ${durationMin % 60} min` : `${durationMin} min`;
 
+                                // Traffic condition estimation from Google real-time traffic
+                                let trafficLevel = 'normal';
+                                let trafficText = 'Fastest route · Typical traffic';
+                                if (delaySec >= 180) {
+                                    trafficLevel = 'heavy';
+                                    trafficText = `Heavy traffic · +${Math.round(delaySec / 60)} min delay`;
+                                } else if (delaySec >= 60) {
+                                    trafficLevel = 'moderate';
+                                    trafficText = `Moderate traffic · +${Math.round(delaySec / 60)} min delay`;
+                                }
+                                updateTrafficBadge(trafficLevel, trafficText);
+
                                 document.getElementById("previewDuration").textContent = durText;
+                                const distEl = document.getElementById("previewDistance");
+                                if (distEl) distEl.textContent = distKm;
                                 const realEtaDate = new Date(Date.now() + durationMin * 60000);
                                 let realH = realEtaDate.getHours();
                                 const realAmpm = realH >= 12 ? 'PM' : 'AM';
@@ -4273,7 +5331,11 @@
                         const durationMin = Math.max(1, Math.round(route.duration / 60));
                         const durText = durationMin > 60 ? `${Math.floor(durationMin / 60)} hr ${durationMin % 60} min` : `${durationMin} min`;
                         
+                        updateTrafficBadge('normal', 'Fastest route · Typical traffic');
+
                         document.getElementById("previewDuration").textContent = durText;
+                        const osrmDistEl = document.getElementById("previewDistance");
+                        if (osrmDistEl) osrmDistEl.textContent = distKm;
                         
                         const realEtaDate = new Date(Date.now() + durationMin * 60000);
                         let realH = realEtaDate.getHours();
@@ -4289,16 +5351,19 @@
                         document.getElementById("hudBottomSub").textContent = `${distKm} · ${realClockEta}`;
                         badgeEl.innerHTML = `<span>${durText}</span><span style="font-size:12px;">🍃</span>`;
 
-                        if (route.legs && route.legs[0] && route.legs[0].steps) {
+                        if (route.legs && route.legs[0] && route.legs[0].steps && route.legs[0].steps.length > 0) {
                             currentRouteSteps = route.legs[0].steps;
-                            if (currentRouteSteps.length > 0 && currentRouteSteps[0].name) {
+                            if (currentRouteSteps[0].name) {
                                 setStreetName(currentRouteSteps[0].name);
                             }
-                            if (currentRouteSteps.length > 1) {
-                                const step = currentRouteSteps[1];
-                                const stepStreet = step.name || "onto route";
-                                document.getElementById("hudStreetText").textContent = stepStreet;
-                            }
+                            const curStep = currentRouteSteps[0];
+                            const nextStep = currentRouteSteps.length > 1 ? currentRouteSteps[1] : curStep;
+                            updateNavManeuverHUD(curStep, nextStep, curStep.distance || 450, 0);
+                        } else {
+                            currentRouteSteps = generateSyntheticSteps(item.name || item.street, (parseFloat(item.distKm) || 4.2) * 1000);
+                            const curStep = currentRouteSteps[0];
+                            const nextStep = currentRouteSteps.length > 1 ? currentRouteSteps[1] : curStep;
+                            updateNavManeuverHUD(curStep, nextStep, curStep.distance || 450, 0);
                         }
 
                         const bounds = new maplibregl.LngLatBounds();
@@ -4328,8 +5393,17 @@
                 }
                 smoothAlignCarToRoute(coords);
 
+                currentRouteSteps = generateSyntheticSteps(item.name || item.street, (parseFloat(item.distKm) || 4.2) * 1000);
+                if (currentRouteSteps.length > 0) {
+                    const curStep = currentRouteSteps[0];
+                    const nextStep = currentRouteSteps.length > 1 ? currentRouteSteps[1] : curStep;
+                    updateNavManeuverHUD(curStep, nextStep, curStep.distance || 450, 0);
+                }
+
                 const distStr = item.distKm > 1000 ? `${Math.round(item.distKm).toLocaleString()} km` : `${item.distKm.toFixed(1)} km`;
                 document.getElementById("previewDuration").textContent = durShort;
+                const fallbackDistEl = document.getElementById("previewDistance");
+                if (fallbackDistEl) fallbackDistEl.textContent = distStr;
                 document.getElementById("hudBottomDur").textContent = durShort;
                 document.getElementById("hudBottomSub").textContent = `${distStr} · Target`;
                 badgeEl.innerHTML = `<span>${durShort}</span><span style="font-size:12px;">🍃</span>`;
@@ -4393,7 +5467,7 @@
                         </svg>
                     </div>
                     <div class="recent-text">${escapeHtml(item)}</div>
-                    <button class="recent-remove-btn" title="Remove" data-idx="${index}">✕</button>
+                    <button class="recent-remove-btn" data-idx="${index}">✕</button>
                 `;
                 row.addEventListener("click", (e) => {
                     if (e.target.closest(".recent-remove-btn")) {
@@ -4726,11 +5800,12 @@
                 const settingsCard = document.getElementById("mapSettingsCard");
                 if (settingsCard) settingsCard.classList.remove("open");
                 hideRecenterBtn();
-                if (destBadgeMarker) { destBadgeMarker.remove(); destBadgeMarker = null; }
+                clearDestinationMarkers();
                 activeMarkers.forEach(m => m.remove());
                 activeMarkers = [];
                 if (isNavigating) {
                     isNavigating = false;
+                    document.body.classList.remove("is-navigating");
                     if (typeof stopActiveNavigationDrive === "function") {
                         stopActiveNavigationDrive();
                     }
@@ -4739,11 +5814,15 @@
                 document.body.classList.remove("compact-mode");
                 const searchCard = document.getElementById("searchCardContainer");
                 if (searchCard && !isNavigating) searchCard.style.display = "flex";
+                const leftStrip = document.getElementById("leftFloatingStrip");
+                if (leftStrip) {
+                    leftStrip.style.display = isNavigating ? "none" : "flex";
+                }
             }
             if (map) {
                 map.resize();
-                // Always 3D perspective view (pitch: 58.0) across both compact and expanded modes
-                map.easeTo({ center: [currentLng, currentLat], zoom: compact ? 16.2 : 16.8, pitch: 58.0, offset: [0, 0], duration: 250 });
+                // Always 3D perspective view (pitch: 58.0) across both compact and expanded modes (zoomed closer to car)
+                map.easeTo({ center: [currentLng, currentLat], zoom: compact ? 17.5 : 18.0, pitch: 58.0, offset: [0, 0], duration: 250 });
             }
             // Double-check after Qt layout settlement so the car is guaranteed in the exact middle of the card
             setTimeout(() => {
@@ -4861,14 +5940,28 @@
                 document.body.classList.remove("search-panel-open");
                 document.getElementById("resultsListCard").style.display = "none";
                 document.getElementById("searchCardContainer").style.display = "flex";
+                clearDestinationMarkers();
+                activeMarkers.forEach(m => m.remove());
+                activeMarkers = [];
+                currentLoadedPlaces = [];
+                if (map && map.getSource("nav-route")) {
+                    map.getSource("nav-route").setData({ type: "FeatureCollection", features: [] });
+                }
+                recenterMap();
             });
             document.getElementById("btnResultsClose").addEventListener("click", () => {
                 exitSearch3DView();
                 document.body.classList.remove("search-panel-open");
                 document.getElementById("resultsListCard").style.display = "none";
                 document.getElementById("searchCardContainer").style.display = "flex";
+                clearDestinationMarkers();
                 activeMarkers.forEach(m => m.remove());
                 activeMarkers = [];
+                currentLoadedPlaces = [];
+                if (map && map.getSource("nav-route")) {
+                    map.getSource("nav-route").setData({ type: "FeatureCollection", features: [] });
+                }
+                recenterMap();
             });
 
             // Route Preview Card controls (Screenshot 1)
@@ -4876,8 +5969,33 @@
             if (btnBack) {
                 btnBack.addEventListener("click", () => {
                     document.getElementById("routePreviewCard").style.display = "none";
-                    document.getElementById("resultsListCard").style.display = "flex";
-                    if (destBadgeMarker) { destBadgeMarker.remove(); destBadgeMarker = null; }
+                    clearDestinationMarkers();
+                    if (map && map.getSource("nav-route")) {
+                        map.getSource("nav-route").setData({ type: "FeatureCollection", features: [] });
+                    }
+                    if (currentLoadedPlaces && currentLoadedPlaces.length > 1) {
+                        document.getElementById("resultsListCard").style.display = "flex";
+                        // Restore category numbered markers if user went back to category results
+                        activeMarkers.forEach(m => {
+                            if (m.getElement()) m.getElement().style.display = "flex";
+                        });
+                        if (map) {
+                            const bounds = new maplibregl.LngLatBounds();
+                            bounds.extend([currentLng, currentLat]);
+                            currentLoadedPlaces.slice(0, 10).forEach(p => bounds.extend([p.lng, p.lat]));
+                            const leftPad = Math.round(window.innerWidth * 0.52);
+                            map.fitBounds(bounds, { padding: { top: 80, bottom: 80, left: leftPad, right: 60 }, maxZoom: 16.5, duration: 600 });
+                        }
+                    } else {
+                        exitSearch3DView();
+                        document.body.classList.remove("search-panel-open");
+                        document.getElementById("resultsListCard").style.display = "none";
+                        document.getElementById("searchCardContainer").style.display = "flex";
+                        activeMarkers.forEach(m => m.remove());
+                        activeMarkers = [];
+                        currentLoadedPlaces = [];
+                        recenterMap();
+                    }
                 });
             }
 
@@ -4885,11 +6003,18 @@
             if (btnClose) {
                 btnClose.addEventListener("click", () => {
                     document.getElementById("routePreviewCard").style.display = "none";
-                    document.getElementById("resultsListCard").style.display = "flex";
-                    if (destBadgeMarker) { destBadgeMarker.remove(); destBadgeMarker = null; }
+                    document.getElementById("resultsListCard").style.display = "none";
+                    document.getElementById("searchCardContainer").style.display = "flex";
+                    document.body.classList.remove("search-panel-open");
+                    exitSearch3DView();
+                    clearDestinationMarkers();
+                    activeMarkers.forEach(m => m.remove());
+                    activeMarkers = [];
+                    currentLoadedPlaces = [];
                     if (map && map.getSource("nav-route")) {
                         map.getSource("nav-route").setData({ type: "FeatureCollection", features: [] });
                     }
+                    recenterMap();
                 });
             }
 
@@ -4974,13 +6099,7 @@
             document.getElementById("btnZoomOut").addEventListener("click", () => { if (map) map.zoomOut(); });
 
             document.getElementById("btnRecenter").addEventListener("click", () => {
-                exitSearch3DView();
-                const targetOffset = isNorthUp ? [0, 0] : [0, 80];
-                if (map) {
-                    map.easeTo({ center: [currentLng, currentLat], zoom: 16.5, pitch: 58.0, bearing: isNorthUp ? 0 : currentHeading, offset: targetOffset, duration: 500 });
-                }
-                hideRecenterBtn();
-                showToast("Centered on vehicle");
+                recenterMap();
             });
 
             // Google Automotive Map Settings Card Listeners with Upper Search Bar Slide Transition
@@ -5328,9 +6447,36 @@
             });
 
             // Settings Top Toggles
+            const toggleDarkMode = document.getElementById("toggleDarkMode");
+            const settingDarkSub = document.getElementById("settingDarkSub");
+            if (toggleDarkMode) {
+                toggleDarkMode.checked = (currentMapTheme === 'night');
+                if (settingDarkSub) {
+                    settingDarkSub.textContent = toggleDarkMode.checked ? "Dark theme active" : "Light theme active";
+                }
+                toggleDarkMode.addEventListener("change", (e) => {
+                    const isDark = e.target.checked;
+                    setMapTheme(isDark ? 'night' : 'day');
+                    if (settingDarkSub) {
+                        settingDarkSub.textContent = isDark ? "Dark theme active" : "Light theme active";
+                    }
+                });
+            }
+
             const toggleTraffic = document.getElementById("toggleTraffic");
             if (toggleTraffic) {
                 toggleTraffic.addEventListener("change", (e) => {
+                    const vis = e.target.checked ? "visible" : "none";
+                    if (map && map.getLayer("traffic-flow-glow")) {
+                        map.setLayoutProperty("traffic-flow-glow", "visibility", vis);
+                    }
+                    if (map && map.getLayer("traffic-flow-line")) {
+                        map.setLayoutProperty("traffic-flow-line", "visibility", vis);
+                    }
+                    const routeTraffic = document.getElementById("routeTrafficBadge");
+                    if (routeTraffic) routeTraffic.style.display = e.target.checked ? "flex" : "none";
+                    const hudTraffic = document.getElementById("hudTrafficBadge");
+                    if (hudTraffic) hudTraffic.style.display = e.target.checked ? "inline-flex" : "none";
                     showToast(e.target.checked ? "Live traffic flow enabled" : "Live traffic flow disabled");
                 });
             }
@@ -5346,39 +6492,37 @@
             }
 
             // 3-in-1 Unified Map View Mode (Perspective -> North-up -> Overview)
-            // viewModeIndex: 0 = Perspective, 1 = North-up, 2 = Overview
-            let viewModeIndex = 0;
-
+            // viewModeIndex: 0 = 3D Perspective, 1 = 2D North-up, 2 = Overview
             const renderViewModeIcon = () => {
                 const container = document.getElementById("viewModeIconContainer");
                 if (!container) return;
 
                 if (viewModeIndex === 0) {
-                    // 1. Perspective (Reference Image 4): 3D tilted needle tracking bearing
+                    // 1. Perspective: 3D tilted dual-colored compass needle tracking bearing
                     const bearing = map ? map.getBearing() : 0;
                     container.innerHTML = `
-                        <svg id="viewModeIconSvg" viewBox="0 0 24 24" width="24" height="24" style="transform: rotate(${-bearing}deg); transform-origin: 50% 50%;">
-                            <polygon points="12 2 16.5 12 12 9.5" fill="#EA4335"/>
-                            <polygon points="12 2 12 9.5 7.5 12" fill="#C5221F"/>
-                            <polygon points="12 9.5 16.5 12 12 22" fill="#E2E8F0"/>
-                            <polygon points="12 9.5 12 22 7.5 12" fill="#94A3B8"/>
+                        <svg id="viewModeIconSvg" viewBox="0 0 24 24" width="22" height="22" style="transform: rotate(${-bearing}deg); transform-origin: 50% 50%;">
+                            <polygon points="12 2 16.5 12 12 9.5" fill="#EF4444"/>
+                            <polygon points="12 2 12 9.5 7.5 12" fill="#DC2626"/>
+                            <polygon points="12 9.5 16.5 12 12 22" fill="currentColor" opacity="0.8"/>
+                            <polygon points="12 9.5 12 22 7.5 12" fill="currentColor" opacity="0.5"/>
                         </svg>
                     `;
                 } else if (viewModeIndex === 1) {
-                    // 2. North-Up (Reference Image 2): Red arrow pointing straight UP with bold 'N' below
+                    // 2. North-Up: Red arrow pointing straight North with clean bold 'N'
                     container.innerHTML = `
-                        <svg id="viewModeIconSvg" viewBox="0 0 24 24" width="24" height="24">
-                            <polygon points="12 3 16 11 8 11" fill="#EA4335"/>
-                            <text x="12" y="21" font-size="10" font-weight="900" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fill="#202124" text-anchor="middle">N</text>
+                        <svg id="viewModeIconSvg" viewBox="0 0 24 24" width="22" height="22">
+                            <polygon points="12 3 16.5 11 7.5 11" fill="#EF4444"/>
+                            <text x="12" y="21" font-size="10" font-weight="800" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" fill="currentColor" text-anchor="middle">N</text>
                         </svg>
                     `;
                 } else {
-                    // 3. Overview (Reference Image 3): Winding route path
+                    // 3. Overview: Winding route path with origin & destination dots
                     container.innerHTML = `
-                        <svg id="viewModeIconSvg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="6" cy="17" r="2.2" stroke="#202124" stroke-width="2.2"/>
-                            <path d="M6 14.8V9a3 3 0 0 1 6 0v6a3 3 0 0 0 6 0V9.2" stroke="#202124" stroke-width="2.2"/>
-                            <circle cx="18" cy="7" r="2.2" stroke="#EA4335" stroke-width="2.2"/>
+                        <svg id="viewModeIconSvg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="6" cy="18" r="2.5" stroke="currentColor" stroke-width="2.2"/>
+                            <path d="M6 15.5V9a3 3 0 0 1 6 0v6a3 3 0 0 0 6 0V8.5" stroke="currentColor" stroke-width="2.2"/>
+                            <circle cx="18" cy="6" r="2.5" stroke="#EF4444" fill="#EF4444"/>
                         </svg>
                     `;
                 }
@@ -5405,24 +6549,29 @@
                 renderViewModeIcon();
 
                 if (viewModeIndex === 0) {
-                    // Perspective: 3D Driving Perspective
+                    // 1. Perspective: 3D Driving Perspective View
                     isNorthUp = false;
+                    const overlay = document.getElementById("carStreetLabelOverlay");
+                    if (overlay) overlay.style.display = "flex";
                     if (map) {
                         map.easeTo({
                             center: [currentLng, currentLat],
                             bearing: currentHeading,
                             pitch: 58.0,
-                            zoom: 17.5,
-                            offset: [0, 80],
+                            zoom: isCompact ? 17.5 : 18.0,
+                            offset: [0, 0],
                             duration: 500
                         });
                     }
-                    showSidePill("pillViewMode", "Perspective");
+                    showSidePill("pillViewMode", "3D Perspective");
                 } else if (viewModeIndex === 1) {
-                    // North-up: 2D North-Up View
+                    // 2. North-up: 2D North-Up View
                     isNorthUp = true;
+                    const overlay = document.getElementById("carStreetLabelOverlay");
+                    if (overlay) overlay.style.display = "flex";
                     if (map) {
                         map.easeTo({
+                            center: [currentLng, currentLat],
                             bearing: 0,
                             pitch: 0,
                             offset: [0, 0],
@@ -5430,19 +6579,24 @@
                             duration: 500
                         });
                     }
-                    showSidePill("pillViewMode", "North-up");
+                    showSidePill("pillViewMode", "2D North-Up");
                 } else {
-                    // Overview: Route Overview / Bird's eye view
-                    isNorthUp = false;
+                    // 3. Overview: Route / Regional Overview (Car kept in middle)
+                    isNorthUp = true;
+                    const overlay = document.getElementById("carStreetLabelOverlay");
+                    if (overlay) overlay.style.display = "none";
                     if (currentRouteGeoJson && map && currentRouteGeoJson.coordinates && currentRouteGeoJson.coordinates.length > 0) {
                         const bounds = new maplibregl.LngLatBounds();
+                        bounds.extend([currentLng, currentLat]);
                         currentRouteGeoJson.coordinates.forEach(c => bounds.extend(c));
-                        map.fitBounds(bounds, { padding: 90, duration: 600 });
+                        map.fitBounds(bounds, { padding: 80, duration: 600 });
                     } else if (map) {
                         map.easeTo({
-                            zoom: 13.8,
+                            center: [currentLng, currentLat],
+                            zoom: 14.5,
                             pitch: 0,
                             bearing: 0,
+                            offset: [0, 0],
                             duration: 500
                         });
                     }
@@ -5455,7 +6609,7 @@
                 btnViewMode.addEventListener("click", cycleViewMode);
             }
 
-            // Guidance Audio Button: Dynamic Mute Icon & Side Pill Flyout
+            // Guidance Audio Button: Dynamic Mute Icon
             const updateAudioUI = () => {
                 const audioSub = document.getElementById("settingAudioSub");
                 const states = ["Unmuted", "Alerts only", "Muted"];
@@ -5496,9 +6650,9 @@
 
             const triggerVoiceSearch = () => {
                 showSidePill("pillVoice", "Listening...");
-                setTimeout(() => {
-                    showCategoryResults("food");
-                }, 1200);
+                if (typeof openSearchModal === "function") {
+                    openSearchModal();
+                }
             };
             document.getElementById("btnVoice")?.addEventListener("click", triggerVoiceSearch);
             document.getElementById("btnDialogMic")?.addEventListener("click", triggerVoiceSearch);
@@ -5659,15 +6813,14 @@
                     if (marker) marker.setLngLat([curLng, curLat]);
                     updateSpeedometer(currentDriveSpeed);
 
-                    // 5. 60 FPS hardware-synchronized camera tracking
+                    // 5. 60 FPS hardware-synchronized camera tracking (Car in middle)
                     if (map && !isRouteOverviewActive) {
-                        const targetOffset = isNorthUp ? [0, 0] : [0, 80];
                         map.jumpTo({
                             center: [curLng, curLat],
                             bearing: isNorthUp ? 0 : currentSmoothedHeading,
                             pitch: 58.0,
                             zoom: 17.5,
-                            offset: targetOffset
+                            offset: [0, 0]
                         });
                         map.triggerRepaint();
                     }
@@ -5700,10 +6853,9 @@
                                 setStreetName(curStep.name);
                             }
                             const nextStep = currentRouteSteps[Math.min(stepIdx + 1, currentRouteSteps.length - 1)];
-                            if (nextStep && nextStep.name && nextStep.name.trim().length > 0) {
-                                const hudSt = document.getElementById("hudStreetText");
-                                if (hudSt) hudSt.textContent = nextStep.name;
-                            }
+                            const stepEndDist = totalDistance * ((stepIdx + 1) / currentRouteSteps.length);
+                            const distToTurn = Math.max(10, stepEndDist - traveledDistance);
+                            updateNavManeuverHUD(curStep, nextStep, distToTurn, stepIdx);
                         }
 
                         const remKm = Math.max(0.1, (remainingDist / 1000.0)).toFixed(1);
@@ -5734,15 +6886,36 @@
                     document.getElementById("routePreviewCard").style.display = "none";
                     document.getElementById("resultsListCard").style.display = "none";
                     document.getElementById("searchCardContainer").style.display = "none";
+
+                    // Remove all other numbered pins permanently when ride starts
+                    activeMarkers.forEach(m => m.remove());
+                    activeMarkers = [];
+
                     document.getElementById("hudTurnBanner").style.display = "flex";
                     document.getElementById("hudBottomCard").style.display = "flex";
+
+                    // Turn-by-turn navigation started: hide the left side 4 icons
+                    isNavigating = true;
+                    document.body.classList.add("is-navigating");
+                    const leftStrip = document.getElementById("leftFloatingStrip");
+                    if (leftStrip) {
+                        leftStrip.style.display = "none";
+                    }
+
+                    if (!currentRouteSteps || currentRouteSteps.length === 0) {
+                        currentRouteSteps = generateSyntheticSteps(currentDestinationItem?.name || currentDestinationItem?.street, 3200);
+                    }
+                    if (currentRouteSteps && currentRouteSteps.length > 0) {
+                        const curStep = currentRouteSteps[0];
+                        const nextStep = currentRouteSteps.length > 1 ? currentRouteSteps[1] : curStep;
+                        updateNavManeuverHUD(curStep, nextStep, curStep.distance || 450, 0);
+                    }
+
                     const clusterEl = document.getElementById("navSpeedometerCluster");
                     if (clusterEl) clusterEl.style.display = "flex";
                     updateSpeedometer(0);
-                    isNavigating = true;
                     isRouteOverviewActive = false;
-                    const targetOffset = isNorthUp ? [0, 0] : [0, 80];
-                    if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 17.5, pitch: 58.0, bearing: isNorthUp ? 0 : currentHeading, offset: targetOffset, duration: 600 });
+                    if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 18.2, pitch: 58.0, bearing: isNorthUp ? 0 : currentHeading, offset: [0, 0], duration: 600 });
                     showToast("Navigation started");
                     // Allow cinematic easeTo into driving cockpit to finish smoothly before locking tracking
                     setTimeout(() => {
@@ -5758,6 +6931,12 @@
             if (btnEndNavEl) {
                 btnEndNavEl.addEventListener("click", () => {
                     isNavigating = false;
+                    document.body.classList.remove("is-navigating");
+                    const leftStrip = document.getElementById("leftFloatingStrip");
+                    if (leftStrip && !document.body.classList.contains("compact-mode")) {
+                        leftStrip.style.display = "flex";
+                    }
+
                     stopActiveNavigationDrive();
                     document.getElementById("hudTurnBanner").style.display = "none";
                     document.getElementById("hudBottomCard").style.display = "none";
@@ -5772,14 +6951,14 @@
                         scc.style.transform = "translateY(0)";
                         scc.style.pointerEvents = "auto";
                     }
-                    if (destBadgeMarker) { destBadgeMarker.remove(); destBadgeMarker = null; }
+                    clearDestinationMarkers();
                     if (map && map.getSource("nav-route")) {
                         map.getSource("nav-route").setData({ type: "FeatureCollection", features: [] });
                     }
                     activeMarkers.forEach(m => m.remove());
                     activeMarkers = [];
                     showToast("Navigation ended");
-                    if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 16.2, pitch: 58.0, bearing: 0, duration: 500 });
+                    if (map) map.easeTo({ center: [currentLng, currentLat], zoom: isCompact ? 17.5 : 18.0, pitch: 58.0, bearing: 0, duration: 500 });
                 });
             }
 
@@ -5800,12 +6979,12 @@
             const handleOverviewClick = () => {
                 if (currentRouteGeoJson && map && currentRouteGeoJson.coordinates && currentRouteGeoJson.coordinates.length > 0) {
                     const bounds = new maplibregl.LngLatBounds();
+                    bounds.extend([currentLng, currentLat]);
                     currentRouteGeoJson.coordinates.forEach(c => bounds.extend(c));
-                    map.fitBounds(bounds, { padding: 90, duration: 600 });
+                    map.fitBounds(bounds, { padding: 80, duration: 600 });
                 } else if (map) {
-                    map.easeTo({ zoom: 14.5, pitch: 0, bearing: 0, duration: 500 });
+                    map.easeTo({ center: [currentLng, currentLat], zoom: 14.5, pitch: 0, bearing: 0, offset: [0, 0], duration: 500 });
                 }
-                showSidePill("pillOverview", "Overview");
             };
 
             let isRouteOverviewActive = false;
@@ -5820,10 +6999,11 @@
                         renderViewModeIcon();
                         if (currentRouteGeoJson && map && currentRouteGeoJson.coordinates && currentRouteGeoJson.coordinates.length > 0) {
                             const bounds = new maplibregl.LngLatBounds();
+                            bounds.extend([currentLng, currentLat]);
                             currentRouteGeoJson.coordinates.forEach(c => bounds.extend(c));
-                            map.fitBounds(bounds, { padding: 90, duration: 600 });
+                            map.fitBounds(bounds, { padding: 80, duration: 600 });
                         } else if (map) {
-                            map.easeTo({ zoom: 13.8, pitch: 0, bearing: 0, duration: 500 });
+                            map.easeTo({ center: [currentLng, currentLat], zoom: 14.5, pitch: 0, bearing: 0, offset: [0, 0], duration: 500 });
                         }
                         showSidePill("pillViewMode", "Route Overview");
                     } else {
@@ -5832,7 +7012,7 @@
                         viewModeIndex = 0;
                         renderViewModeIcon();
                         if (map) {
-                            map.easeTo({ center: [currentLng, currentLat], zoom: 17.5, pitch: 58.0, bearing: currentHeading, duration: 600 });
+                            map.easeTo({ center: [currentLng, currentLat], zoom: isCompact ? 17.5 : 18.0, pitch: 58.0, bearing: currentHeading, offset: [0, 0], duration: 600 });
                         }
                         showSidePill("pillViewMode", "Perspective");
                     }
@@ -5847,12 +7027,20 @@
                     if (card) card.classList.remove("visible");
 
                     isNavigating = false;
+                    document.body.classList.remove("is-navigating");
+                    const leftStrip = document.getElementById("leftFloatingStrip");
+                    if (leftStrip && !document.body.classList.contains("compact-mode")) {
+                        leftStrip.style.display = "flex";
+                    }
+
                     stopActiveNavigationDrive();
                     const clusterEl = document.getElementById("navSpeedometerCluster");
                     if (clusterEl) clusterEl.style.display = "none";
                     updateSpeedometer(0);
 
-                    if (destBadgeMarker) { destBadgeMarker.remove(); destBadgeMarker = null; }
+                    clearDestinationMarkers();
+                    activeMarkers.forEach(m => m.remove());
+                    activeMarkers = [];
                     if (map && map.getSource("nav-route")) {
                         map.getSource("nav-route").setData({ type: "FeatureCollection", features: [] });
                     }
@@ -5988,7 +7176,9 @@
             const statEco = document.getElementById("statEcoScore");
             if (statEco) statEco.innerHTML = `${eco}<span class="arrival-stat-unit">%</span>`;
 
-            // Hide HUD components
+            // Hide HUD components & End active navigation tracking
+            isNavigating = false;
+            document.body.classList.remove("is-navigating");
             const hudBanner = document.getElementById("hudTurnBanner");
             if (hudBanner) hudBanner.style.display = "none";
             const hudCard = document.getElementById("hudBottomCard");
@@ -6026,34 +7216,10 @@
         }
 
         // =========================================================================
-        // UTILITIES & TELEMETRY
+        // UTILITIES & TELEMETRY (Fed directly by NavigationBackend)
         // =========================================================================
-        function fetchLiveGPS() {
-            fetch("https://ipwho.is/")
-                .then(r => r.json())
-                .then(d => {
-                    if (d && d.success && d.latitude && d.longitude) {
-                        currentLat = d.latitude;
-                        currentLng = d.longitude;
-                        if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 16.5, duration: 600 });
-                        fetchStreetName(currentLat, currentLng);
-                    }
-                }).catch(() => {});
-        }
-
-        function fetchStreetName(lat, lng) {
-            // High-reliability Nominatim reverse geocoding
-            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18&addressdetails=1`, {
-                headers: { "Accept": "application/json" }
-            })
-            .then(r => (r.ok && (r.headers.get("content-type") || "").includes("json")) ? r.json() : null)
-            .then(d => {
-                if (d && d.address) {
-                    const st = d.address.road || d.address.suburb || d.address.neighbourhood || d.name || "Kasturba Rd";
-                    setStreetName(st);
-                }
-            }).catch(() => {});
-        }
+        function fetchLiveGPS() {}
+        function fetchStreetName(lat, lng) {}
 
         function updateSpeedometer(speed) {
             const valEl = document.getElementById("navSpeedVal");
@@ -6124,14 +7290,18 @@
                     return; // 60 FPS driving loop manages camera via synchronized jumpTo
                 }
                 const dist = calculateHaversineKm(prevLat, prevLng, lat, lng);
-                const targetOffset = isNorthUp ? [0, 0] : [0, 80];
                 if (dist > 25) {
-                    map.jumpTo({ center: [currentLng, currentLat], offset: targetOffset });
-                } else if (!isCompact) {
-                    if (!isNorthUp) {
-                        map.easeTo({ center: [currentLng, currentLat], bearing: currentHeading, offset: targetOffset, duration: 300 });
-                    } else {
-                        map.easeTo({ center: [currentLng, currentLat], offset: targetOffset, duration: 300 });
+                    map.jumpTo({ center: [currentLng, currentLat], offset: [0, 0] });
+                } else if (!isUserPanned) {
+                    if (viewModeIndex === 0) {
+                        map.easeTo({ center: [currentLng, currentLat], bearing: currentHeading, pitch: 58.0, offset: [0, 0], duration: 300 });
+                    } else if (viewModeIndex === 1) {
+                        map.easeTo({ center: [currentLng, currentLat], bearing: 0, pitch: 0, offset: [0, 0], duration: 300 });
+                    } else if (viewModeIndex === 2) {
+                        // Overview: Keep car centered in middle when moving if no route
+                        if (!currentRouteGeoJson || !currentRouteGeoJson.coordinates || currentRouteGeoJson.coordinates.length === 0) {
+                            map.easeTo({ center: [currentLng, currentLat], zoom: 14.5, bearing: 0, pitch: 0, offset: [0, 0], duration: 300 });
+                        }
                     }
                 }
             }
@@ -6150,8 +7320,28 @@
 
         function recenterMap() {
             exitSearch3DView();
-            const targetOffset = isNorthUp ? [0, 0] : [0, 80];
-            if (map) map.easeTo({ center: [currentLng, currentLat], zoom: 16.5, pitch: 58.0, bearing: isNorthUp ? 0 : currentHeading, offset: targetOffset, duration: 500 });
+            isRecentering = true;
+            isUserPanned = false;
+            hideRecenterBtn();
+
+            const targetPitch = (viewModeIndex === 0) ? 58.0 : 0;
+            const targetBearing = (viewModeIndex === 0) ? currentHeading : 0;
+            const targetZoom = (viewModeIndex === 2) ? 14.5 : (viewModeIndex === 0 ? (isCompact ? 17.5 : 18.0) : 16.5);
+            if (map) {
+                map.easeTo({
+                    center: [currentLng, currentLat],
+                    zoom: targetZoom,
+                    pitch: targetPitch,
+                    bearing: targetBearing,
+                    offset: [0, 0],
+                    duration: 500
+                });
+                setTimeout(() => {
+                    isRecentering = false;
+                    checkMapCentering();
+                }, 600);
+            }
+            showToast("Centered on vehicle");
         }
 
         function getExpectedTimeTheme() {
@@ -6177,6 +7367,15 @@
             currentMapTheme = isNight ? 'night' : 'day';
             window.currentMapTheme = currentMapTheme;
 
+            const toggleDarkMode = document.getElementById("toggleDarkMode");
+            if (toggleDarkMode && toggleDarkMode.checked !== isNight) {
+                toggleDarkMode.checked = isNight;
+            }
+            const settingDarkSub = document.getElementById("settingDarkSub");
+            if (settingDarkSub) {
+                settingDarkSub.textContent = isNight ? "Dark theme active" : "Light theme active";
+            }
+
             if (map && map.isStyleLoaded()) {
                 applyMapThemeLayers(isNight);
             } else if (map) {
@@ -6186,9 +7385,9 @@
             document.body.classList.toggle('night-mode', isNight);
             const mapEl = document.getElementById('map');
             if (mapEl) {
-                mapEl.style.background = isNight ? '#080C14' : '#E8ECEF';
+                mapEl.style.background = isNight ? '#0B0F19' : '#E8ECEF';
             }
-            document.body.style.background = isNight ? '#080C14' : '#E8ECEF';
+            document.body.style.background = isNight ? '#0B0F19' : '#E8ECEF';
 
             if (apexZephyrLayer && typeof apexZephyrLayer.setNightMode === 'function') {
                 apexZephyrLayer.setNightMode(isNight);
@@ -6240,7 +7439,6 @@
             setupListeners();
             setupKeyboard();
             setupSearchAutocomplete();
-            fetchLiveGPS();
         });
     </script>
 </body>

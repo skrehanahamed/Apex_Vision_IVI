@@ -81,11 +81,20 @@ Item {
         function onCurrentStreetChanged() { root.updateStreetNameInMap(); }
     }
 
+    WebEngineProfile {
+        id: navProfile
+        storageName: "ApexNavProfile"
+        offTheRecord: false
+        httpCacheType: WebEngineProfile.DiskHttpCache
+        persistentCookiesPolicy: WebEngineProfile.ForcePersistentCookies
+    }
+
     WebEngineView {
         id: webEngineView
         anchors.fill: parent
+        profile: navProfile
         url: NavigationBackend.mapUrl
-        backgroundColor: "#F1F5F9"
+        backgroundColor: "#1A2234"
 
         settings.javascriptEnabled: true
         settings.localContentCanAccessRemoteUrls: true

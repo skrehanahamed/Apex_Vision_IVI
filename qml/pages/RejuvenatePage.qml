@@ -58,6 +58,7 @@ Item {
                 MediaBackend.setIsPlaying(false);
                 MediaBackend.pausePlayback();
             }
+            if (bgVideoPlayer) bgVideoPlayer.play();
         } else {
             if (root.isPreviewMode) {
                 root.isPreviewMode = false;
@@ -65,6 +66,7 @@ Item {
             if (typeof RejuvenateController !== "undefined" && !RejuvenateController.active) {
                 RejuvenateController.stopPreviewAudio();
             }
+            if (bgVideoPlayer) bgVideoPlayer.pause();
         }
     }
 
@@ -93,23 +95,26 @@ Item {
 
     MediaPlayer {
         id: bgVideoPlayer
-        source: RejuvenateController.videoSource
+        source: (root.visible && typeof RejuvenateController !== "undefined") ? RejuvenateController.videoSource : ""
         loops: MediaPlayer.Infinite
         audioOutput: bgAudioOut
         videoOutput: bgVideoOutput
 
         onMediaStatusChanged: {
             if (mediaStatus === MediaPlayer.LoadedMedia || mediaStatus === MediaPlayer.BufferedMedia) {
-                if (!RejuvenateController.active && playbackState !== MediaPlayer.PlayingState) {
+                if (root.visible && !RejuvenateController.active && playbackState !== MediaPlayer.PlayingState) {
                     play();
                 }
             }
         }
 
         Component.onCompleted: {
-            play();
+            if (root.visible) {
+                play();
+            }
         }
     }
+
 
     // 1. DYNAMIC BACKGROUND VIDEO CONTAINER WITH SWIPE TRANSITION
     Item {

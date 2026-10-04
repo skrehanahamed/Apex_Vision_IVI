@@ -17,6 +17,7 @@
 #include <QJsonDocument>
 #include <QJsonArray>
 #include <QJsonObject>
+#include <QMediaMetaData>
 #include "PersistenceManager.h"
 #include <QUrl>
 #include <QDebug>
@@ -46,14 +47,21 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *pers
     m_mediaPlayer = new QMediaPlayer(this);
     m_mediaPlayer->setAudioOutput(m_audioOutput);
     m_audioOutput->setMuted(false);
-    m_volume = 80;
-    m_audioOutput->setVolume(0.80f);
+    m_volume = 100;
+    m_audioOutput->setVolume(1.0f);
 
     connect(m_mediaPlayer, &QMediaPlayer::errorOccurred, this, [this](QMediaPlayer::Error error, const QString &errorString) {
         qWarning() << "[MediaBackend] MediaPlayer error:" << error << errorString;
     });
 
-    connect(m_mediaPlayer, &QMediaPlayer::mediaStatusChanged, this, [](QMediaPlayer::MediaStatus /*status*/) {
+    connect(m_mediaPlayer, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
+        qDebug() << "[MediaBackend] MediaStatus changed:" << status;
+        if (status == QMediaPlayer::StalledMedia) {
+            qWarning() << "[MediaBackend] Media playback stalled (network buffer starvation), attempting resume...";
+            if (m_isPlaying && m_mediaPlayer) {
+                m_mediaPlayer->play();
+            }
+        }
     });
 
     connect(m_mediaPlayer, &QMediaPlayer::playbackStateChanged, this, [this](QMediaPlayer::PlaybackState state) {
@@ -67,10 +75,47 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *pers
                 m_isPlaying = true;
                 emit isPlayingChanged();
             }
-        } else {
+        } else if (state == QMediaPlayer::PausedState) {
             if (m_isPlaying) {
                 m_isPlaying = false;
                 emit isPlayingChanged();
+            }
+        }
+    });
+
+    m_audioSwitchTimer = new QTimer(this);
+    m_audioSwitchTimer->setSingleShot(true);
+    connect(m_audioSwitchTimer, &QTimer::timeout, this, &MediaBackend::switchAudioStream);
+
+    connect(m_mediaPlayer, &QMediaPlayer::metaDataChanged, this, [this]() {
+        if (!m_mediaPlayer) return;
+        QMediaMetaData meta = m_mediaPlayer->metaData();
+        QString streamTitle = meta.stringValue(QMediaMetaData::Title).trimmed();
+        if (!streamTitle.isEmpty() && streamTitle != m_lastIcyTitle) {
+            m_lastIcyTitle = streamTitle;
+            QString artist = m_station;
+            QString song = streamTitle;
+            int sep = streamTitle.indexOf(" - ");
+            if (sep != -1) {
+                artist = streamTitle.left(sep).trimmed();
+                song = streamTitle.mid(sep + 3).trimmed();
+            }
+            if (!song.isEmpty()) {
+                if (m_source == "OrbitXM" || m_source == "SXM") {
+                    m_sxmSongTitle = song;
+                    m_sxmArtist = artist;
+                    m_trackTitle = song;
+                    m_artist = artist;
+                    emit sxmTrackChanged();
+                    emit trackTitleChanged();
+                    emit artistChanged();
+                    fetchOnlineSxmArt(artist, song);
+                } else if (m_source == "FM" || m_source == "AM") {
+                    m_trackTitle = song;
+                    m_artist = artist;
+                    emit trackTitleChanged();
+                    emit artistChanged();
+                }
             }
         }
     });
@@ -88,10 +133,10 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *pers
     connect(m_sxmProgressionTimer, &QTimer::timeout, this, [this]() {
         if ((m_source == "OrbitXM" || m_source == "SXM") && m_isPlaying) {
             m_progress++;
-            emit progressChanged();
-            if (m_progress >= m_duration) {
-                nextSxmTrack();
+            if (m_duration > 0 && m_progress > m_duration) {
+                m_progress = m_duration;
             }
+            emit progressChanged();
         }
     });
     m_sxmProgressionTimer->start(1000);
@@ -108,7 +153,8 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *pers
             }
         }
     });
-    m_icyPollTimer->start(20000);
+    // ICY metadata timer disabled to prevent network bandwidth competition with active stream
+    // m_icyPollTimer->start(20000);
 
     // Prepare metadata displays without playing audio during boot
     m_isPlaying = false;
@@ -139,21 +185,28 @@ void MediaBackend::startPlaybackAfterBoot()
 {
     m_bootComplete = true;
     emit bootCompleteChanged();
-    qInfo() << "[MediaBackend] Boot sequence complete. Initiating playback for last active player:" << m_source;
+    qInfo() << "[MediaBackend] Boot sequence complete. Media kept paused/off on boot for source:" << m_source;
     if (m_source == "AM") {
         syncAmWithMedia();
-        playCurrentAmStation();
     } else if (m_source == "FM") {
         syncFmWithMedia();
-        playCurrentFmStation();
     } else if (m_source == "OrbitXM" || m_source == "SXM") {
         syncSxmWithMedia();
-        playCurrentSxmChannel();
     }
+    setIsPlaying(false);
+    pausePlayback();
 }
 
 MediaBackend::~MediaBackend()
 {
+    if (m_audioSwitchTimer) {
+        m_audioSwitchTimer->stop();
+    }
+    if (m_onlineArtReply) {
+        m_onlineArtReply->abort();
+        m_onlineArtReply->deleteLater();
+        m_onlineArtReply = nullptr;
+    }
     if (m_icyMetadataReply) {
         m_icyMetadataReply->abort();
         m_icyMetadataReply->deleteLater();
@@ -247,13 +300,10 @@ void MediaBackend::setSource(const QString &source)
 
     if (m_source == "AM") {
         syncAmWithMedia();
-        playCurrentAmStation();
     } else if (m_source == "FM") {
         syncFmWithMedia();
-        playCurrentFmStation();
     } else if (m_source == "OrbitXM" || m_source == "SXM") {
         syncSxmWithMedia();
-        playCurrentSxmChannel();
     } else {
         if (m_mediaPlayer) {
             m_mediaPlayer->pause();
@@ -279,6 +329,11 @@ void MediaBackend::setSource(const QString &source)
     }
     updateActiveRadioPresetIndex();
     updateActiveSxmPresetIndex();
+
+    // Defer audio stream switch so UI event loop and animations never hitch or lag
+    if (m_audioSwitchTimer) {
+        m_audioSwitchTimer->start(50);
+    }
 }
 
 void MediaBackend::startAmPlayback()
@@ -332,26 +387,55 @@ void MediaBackend::syncFmWithMedia()
     emit isHdRadioChanged();
 }
 
+void MediaBackend::switchAudioStream()
+{
+    if (!m_bootComplete || !m_mediaPlayer) return;
+
+    QUrl targetUrl;
+    if (m_source == "AM") {
+        if (m_currentAmStationIndex >= 0 && m_currentAmStationIndex < m_amStations.size()) {
+            targetUrl = QUrl(m_amStations[m_currentAmStationIndex].toMap()["streamUrl"].toString());
+        }
+    } else if (m_source == "FM") {
+        if (m_currentFmStationIndex >= 0 && m_currentFmStationIndex < m_fmStations.size()) {
+            targetUrl = QUrl(m_fmStations[m_currentFmStationIndex].toMap()["streamUrl"].toString());
+        }
+    } else if (m_source == "OrbitXM" || m_source == "SXM") {
+        if (m_currentSxmChannelIndex >= 0 && m_currentSxmChannelIndex < m_sxmChannels.size()) {
+            targetUrl = QUrl(m_sxmChannels[m_currentSxmChannelIndex].toMap()["streamUrl"].toString());
+        }
+    }
+
+    if (targetUrl.isEmpty()) {
+        m_mediaPlayer->stop();
+        return;
+    }
+
+    bool shouldPlay = m_isPlaying;
+
+    if (m_mediaPlayer->source() == targetUrl) {
+        if (shouldPlay && m_mediaPlayer->playbackState() != QMediaPlayer::PlayingState) {
+            m_mediaPlayer->play();
+        }
+        return;
+    }
+
+    m_mediaPlayer->setSource(targetUrl);
+    if (shouldPlay) {
+        m_mediaPlayer->play();
+    } else {
+        m_mediaPlayer->pause();
+    }
+}
+
 void MediaBackend::playCurrentAmStation()
 {
+    syncAmWithMedia();
     if (!m_bootComplete) {
         return;
     }
-    if (m_currentAmStationIndex >= 0 && m_currentAmStationIndex < m_amStations.size()) {
-        QVariantMap s = m_amStations[m_currentAmStationIndex].toMap();
-        QString streamUrl = s["streamUrl"].toString();
-        if (!streamUrl.isEmpty() && m_mediaPlayer) {
-            QUrl targetUrl(streamUrl);
-            // If already loaded with this exact stream, DO NOT reload it (avoids sudden silence)
-            if (m_mediaPlayer->source() == targetUrl) {
-                if (m_mediaPlayer->playbackState() != QMediaPlayer::PlayingState) {
-                    m_mediaPlayer->play();
-                }
-                return;
-            }
-            m_mediaPlayer->setSource(targetUrl);
-            m_mediaPlayer->play();
-        }
+    if (m_audioSwitchTimer) {
+        m_audioSwitchTimer->start(40);
     }
 }
 
@@ -436,6 +520,9 @@ void MediaBackend::selectAmStation(int index)
 
         updateActiveRadioPresetIndex();
 
+        m_isPlaying = true;
+        emit isPlayingChanged();
+
         if (m_source == "AM") {
             syncAmWithMedia();
             playCurrentAmStation();
@@ -457,9 +544,9 @@ void MediaBackend::initFmStations()
     };
 
     addFm("91.1", "AIR FM Gold", "Delhi Capital Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio00564kbps.m3u8");
-    addFm("93.5", "Superhits FM 93.5", "South Non-Stop Hits", "https://centova.aarenworld.com/proxy/894tamilfm/stream");
-    addFm("95.9", "Bollywood Hits Radio", "Top Bollywood Hits", "https://puma.streemlion.com:4130/stream");
-    addFm("98.3", "Radio A9 Bollywood", "Modern Hindi Beats", "https://a9radio1-a9media.radioca.st/stream");
+    addFm("93.5", "Superhits FM 93.5", "South Non-Stop Hits", "https://drive.uber.radio/uber/bollywoodnow/icecast.audio");
+    addFm("95.9", "Bollywood Hits Radio", "Top Bollywood Hits", "http://stream.zeno.fm/8ty8szwpwfeuv");
+    addFm("98.3", "Radio Mirchi Romance", "Modern Hindi Beats", "https://drive.uber.radio/uber/bollywoodlove/icecast.audio");
     addFm("100.7", "AIR FM Gold Kolkata", "Kolkata Eastern Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio011/hlspbaudio01164kbps.m3u8");
     addFm("101.4", "AIR FM Rainbow Chennai", "Chennai South Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio006/hlspbaudio00664kbps.m3u8");
     addFm("101.9", "AIR FM Rainbow Hyderabad", "Deccan Telangana Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio007/hlspbaudio00764kbps.m3u8");
@@ -553,23 +640,12 @@ void MediaBackend::initDefaultRadioPresets()
 
 void MediaBackend::playCurrentFmStation()
 {
+    syncFmWithMedia();
     if (!m_bootComplete) {
         return;
     }
-    if (m_currentFmStationIndex >= 0 && m_currentFmStationIndex < m_fmStations.size()) {
-        QVariantMap s = m_fmStations[m_currentFmStationIndex].toMap();
-        QString streamUrl = s["streamUrl"].toString();
-        if (!streamUrl.isEmpty() && m_mediaPlayer) {
-            QUrl targetUrl(streamUrl);
-            if (m_mediaPlayer->source() == targetUrl) {
-                if (m_mediaPlayer->playbackState() != QMediaPlayer::PlayingState) {
-                    m_mediaPlayer->play();
-                }
-                return;
-            }
-            m_mediaPlayer->setSource(targetUrl);
-            m_mediaPlayer->play();
-        }
+    if (m_audioSwitchTimer) {
+        m_audioSwitchTimer->start(40);
     }
 }
 
@@ -632,6 +708,9 @@ void MediaBackend::selectFmStation(int index)
         emit trackTitleChanged();
 
         updateActiveRadioPresetIndex();
+
+        m_isPlaying = true;
+        emit isPlayingChanged();
 
         if (m_source == "FM") {
             playCurrentFmStation();
@@ -851,8 +930,12 @@ void MediaBackend::toggleAmPlay()
     if (!m_mediaPlayer) return;
 
     if (m_mediaPlayer->playbackState() == QMediaPlayer::PlayingState) {
+        m_isPlaying = false;
+        emit isPlayingChanged();
         m_mediaPlayer->pause();
     } else {
+        m_isPlaying = true;
+        emit isPlayingChanged();
         if (m_mediaPlayer->source().isEmpty()) {
             if (m_source == "AM") playCurrentAmStation();
             else if (m_source == "FM") playCurrentFmStation();
@@ -1556,6 +1639,8 @@ void MediaBackend::syncSxmWithMedia()
     m_sxmCategory = ch["category"].toString();
     m_sxmTagline = ch["tagline"].toString();
 
+    QString cachedArt = ch["cachedArtwork"].toString();
+
     QVariantList tr = ch["tracks"].toList();
     if (!tr.isEmpty()) {
         if (m_currentSxmTrackIndex < 0 || m_currentSxmTrackIndex >= tr.size()) {
@@ -1567,8 +1652,16 @@ void MediaBackend::syncSxmWithMedia()
         m_sxmAlbum = t["album"].toString();
         m_duration = t["duration"].toInt() > 0 ? t["duration"].toInt() : 180;
         m_progress = 42; // standard progress offset
-        if (!t["artwork"].toString().isEmpty()) {
+        if (!cachedArt.isEmpty()) {
+            m_sxmArtworkUrl = cachedArt;
+        } else if (!t["artwork"].toString().isEmpty()) {
             m_sxmArtworkUrl = t["artwork"].toString();
+        }
+    } else {
+        m_sxmSongTitle = m_sxmChannelName;
+        m_sxmArtist = m_sxmTagline;
+        if (!cachedArt.isEmpty()) {
+            m_sxmArtworkUrl = cachedArt;
         }
     }
 
@@ -1598,25 +1691,17 @@ void MediaBackend::playCurrentSxmChannel()
         return;
     }
 
-    if (m_currentSxmChannelIndex >= 0 && m_currentSxmChannelIndex < m_sxmChannels.size()) {
-        QVariantMap ch = m_sxmChannels[m_currentSxmChannelIndex].toMap();
-        QString streamUrl = ch["streamUrl"].toString();
-        if (!streamUrl.isEmpty() && m_mediaPlayer) {
-            QUrl targetUrl(streamUrl);
-            if (m_mediaPlayer->source() != targetUrl) {
-                m_mediaPlayer->setSource(targetUrl);
-            }
-            m_mediaPlayer->play();
-            m_isPlaying = true;
-            emit isPlayingChanged();
-        }
-        if (!streamUrl.isEmpty()) {
-            fetchLiveIcyMetadata(streamUrl);
-        }
+    if (m_audioSwitchTimer) {
+        m_audioSwitchTimer->start(40);
     }
 
-    // Always fetch fresh album art online as well
-    fetchOnlineSxmArt(m_sxmArtist, m_sxmSongTitle);
+    // Fetch online art if current channel doesn't already have cached artwork
+    if (m_currentSxmChannelIndex >= 0 && m_currentSxmChannelIndex < m_sxmChannels.size()) {
+        QString cached = m_sxmChannels[m_currentSxmChannelIndex].toMap()["cachedArtwork"].toString();
+        if (cached.isEmpty()) {
+            fetchOnlineSxmArt(m_sxmArtist, m_sxmSongTitle);
+        }
+    }
 }
 
 void MediaBackend::fetchLiveIcyMetadata(const QString &streamUrl)
@@ -1740,18 +1825,43 @@ void MediaBackend::fetchOnlineSxmArt(const QString &artist, const QString &title
         return;
     }
 
-    QString query = QString("%1 %2").arg(artist, title);
+    if (m_onlineArtReply) {
+        m_onlineArtReply->abort();
+        m_onlineArtReply->deleteLater();
+        m_onlineArtReply = nullptr;
+    }
+
+    const int reqChannelIdx = m_currentSxmChannelIndex;
+    m_artRequestChannelIndex = reqChannelIdx;
+
+    QString cleanArtist = artist.trimmed();
+    QString cleanTitle = title.trimmed();
+    if (cleanArtist.isEmpty() && cleanTitle.isEmpty()) return;
+
+    QString query = cleanArtist.isEmpty() ? cleanTitle : QString("%1 %2").arg(cleanArtist, cleanTitle);
     QUrl url(QString("https://itunes.apple.com/search?term=%1&entity=song&limit=1")
                  .arg(QString(QUrl::toPercentEncoding(query))));
 
     QNetworkRequest request(url);
     request.setHeader(QNetworkRequest::UserAgentHeader, "ApexVisionIVI/1.0");
 
-    QNetworkReply *reply = m_networkManager->get(request);
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
-        reply->deleteLater();
-        if (reply->error() == QNetworkReply::NoError) {
-            QByteArray data = reply->readAll();
+    m_onlineArtReply = m_networkManager->get(request);
+    QPointer<QNetworkReply> replyPtr(m_onlineArtReply);
+
+    connect(m_onlineArtReply, &QNetworkReply::finished, this, [this, replyPtr, reqChannelIdx]() {
+        if (!replyPtr) return;
+        replyPtr->deleteLater();
+        if (replyPtr == m_onlineArtReply) {
+            m_onlineArtReply = nullptr;
+        }
+
+        // Drop out-of-order replies if user has navigated to another channel
+        if (reqChannelIdx != m_currentSxmChannelIndex) {
+            return;
+        }
+
+        if (replyPtr->error() == QNetworkReply::NoError) {
+            QByteArray data = replyPtr->readAll();
             QJsonDocument doc = QJsonDocument::fromJson(data);
             if (doc.isObject()) {
                 QJsonObject root = doc.object();
@@ -1760,16 +1870,11 @@ void MediaBackend::fetchOnlineSxmArt(const QString &artist, const QString &title
                     QJsonObject item = results[0].toObject();
                     QString art = item["artworkUrl100"].toString();
                     art.replace("100x100bb", "600x600bb");
-                    if (!art.isEmpty()) {
+
+                    bool changed = false;
+                    if (!art.isEmpty() && art != m_sxmArtworkUrl) {
                         m_sxmArtworkUrl = art;
-                    }
-                    if (item.contains("trackName")) {
-                        m_sxmSongTitle = item["trackName"].toString();
-                        m_trackTitle = m_sxmSongTitle;
-                    }
-                    if (item.contains("artistName")) {
-                        m_sxmArtist = item["artistName"].toString();
-                        m_artist = m_sxmArtist;
+                        changed = true;
                     }
                     if (item.contains("collectionName")) {
                         m_sxmAlbum = item["collectionName"].toString();
@@ -1785,15 +1890,22 @@ void MediaBackend::fetchOnlineSxmArt(const QString &artist, const QString &title
                     }
                     if (item.contains("trackTimeMillis")) {
                         int dur = item["trackTimeMillis"].toInt() / 1000;
-                        if (dur > 15) {
+                        if (dur > 15 && dur != m_duration) {
                             m_duration = dur;
                             emit durationChanged();
                         }
                     }
 
-                    emit sxmTrackChanged();
-                    emit trackTitleChanged();
-                    emit artistChanged();
+                    // Cache resolved artwork in channel
+                    if (m_currentSxmChannelIndex >= 0 && m_currentSxmChannelIndex < m_sxmChannels.size()) {
+                        QVariantMap ch = m_sxmChannels[m_currentSxmChannelIndex].toMap();
+                        ch["cachedArtwork"] = m_sxmArtworkUrl;
+                        m_sxmChannels[m_currentSxmChannelIndex] = ch;
+                    }
+
+                    if (changed) {
+                        emit sxmTrackChanged();
+                    }
                 }
             }
         }
@@ -1908,14 +2020,6 @@ void MediaBackend::searchAndPlaySxm(const QString &query)
                         emit trackTitleChanged();
                         emit artistChanged();
                         emit progressChanged();
-
-                        QString preview = item["previewUrl"].toString();
-                        if (!preview.isEmpty() && m_mediaPlayer) {
-                            m_mediaPlayer->setSource(QUrl(preview));
-                            if (m_isPlaying) {
-                                m_mediaPlayer->play();
-                            }
-                        }
                     }
                 }
             }
@@ -1927,7 +2031,7 @@ void MediaBackend::seekProgress(int seconds)
 {
     m_progress = qBound(0, seconds, m_duration);
     emit progressChanged();
-    if (m_mediaPlayer) {
+    if (m_mediaPlayer && m_mediaPlayer->isSeekable()) {
         m_mediaPlayer->setPosition(static_cast<qint64>(m_progress) * 1000);
     }
 }
@@ -1988,7 +2092,7 @@ void MediaBackend::nextSxmTrack()
         if (!tr.isEmpty()) {
             m_currentSxmTrackIndex = (m_currentSxmTrackIndex + 1) % tr.size();
             m_progress = 0;
-            playCurrentSxmChannel();
+            syncSxmWithMedia();
         }
     }
 }
@@ -2001,7 +2105,7 @@ void MediaBackend::prevSxmTrack()
         if (!tr.isEmpty()) {
             m_currentSxmTrackIndex = (m_currentSxmTrackIndex - 1 + tr.size()) % tr.size();
             m_progress = 0;
-            playCurrentSxmChannel();
+            syncSxmWithMedia();
         }
     }
 }
@@ -2024,21 +2128,7 @@ void MediaBackend::saveCurrentSxmPreset(int presetIndex)
     p["number"] = m_sxmChannelNumber;
     p["name"] = m_sxmChannelName;
     p["isHoldToSet"] = false;
-    if (m_sxmChannelNumber == 2) {
-        p["logoType"] = "hits1";
-    } else if (m_sxmChannelNumber == 8) {
-        p["logoType"] = "80son8";
-    } else if (m_sxmChannelNumber == 25) {
-        p["logoType"] = "rewind";
-    } else if (m_sxmChannelNumber == 56) {
-        p["logoType"] = "highway";
-    } else if (m_sxmChannelNumber == 37) {
-        p["logoType"] = "octane";
-    } else if (m_sxmChannelNumber == 51) {
-        p["logoType"] = "bpm";
-    } else {
-        p["logoType"] = "generic";
-    }
+    p["logoUrl"] = m_sxmChannelLogoUrl;
     p["badgeText"] = m_sxmChannelName;
     m_sxmPresets[presetIndex] = p;
     emit sxmPresetsChanged();

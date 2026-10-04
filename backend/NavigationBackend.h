@@ -91,13 +91,13 @@ private slots:
 
 private:
     VehicleSimulator *m_simulator{nullptr};
-    double m_latitude{12.9719445};
-    double m_longitude{77.5936873};
+    double m_latitude{13.06464};
+    double m_longitude{77.60159};
     double m_heading{42.0};
     double m_speed{68.0};
-    bool m_hasRealLocation{false};
+    bool m_hasRealLocation{true};
     QString m_apiKey{""};
-    QString m_currentStreet{"Kasturba Road"};
+    QString m_currentStreet{"Amruthahalli, 560092"};
     QString m_nextStreet{"Cubbon Park Rd"};
     QString m_destination{"Vidhana Soudha"};
     QString m_eta{"12:48"};

@@ -391,9 +391,10 @@ Item {
             id: sceneEnv
             clearColor: "#00000000"
             backgroundMode: SceneEnvironment.Transparent
-            antialiasingMode: SceneEnvironment.MSAA
-            antialiasingQuality: SceneEnvironment.High
-            tonemapMode: SceneEnvironment.TonemapModeFilmic
+            antialiasingMode: (rotateMouseArea.dragActive || rotateMouseArea.inertiaActive) ?
+                              SceneEnvironment.NoAA : SceneEnvironment.ProgressiveAA
+            antialiasingQuality: SceneEnvironment.Medium
+            tonemapMode: SceneEnvironment.TonemapModeLinear
 
             // Studio Light Probe for 360-degree environment reflections & ambient body illumination
             lightProbe: Texture {
@@ -401,12 +402,8 @@ Item {
             }
             probeExposure: 0.45
 
-            // Studio bloom for headlights & lightbar
-            glowEnabled: true
-            glowQualityHigh: true
-            glowStrength: 1.15
-            glowIntensity: 0.85
-            glowBloom: 0.32
+            // Embedded Pi 5 GPU 60 FPS optimization: disable costly multi-pass full-screen bloom
+            glowEnabled: false
         }
 
         // Camera Orbit Rig (Smooth flight between normal hero pose, ambient pose, and status poses)
@@ -460,44 +457,24 @@ Item {
         }
 
         // ---------------------------------------------------------------------
-        // Studio Lighting Rig (Velvety smooth reflections matching reference image)
+        // Studio Lighting Rig (Optimized 2-Light Setup for 60 FPS VideoCore VII GPU)
         // ---------------------------------------------------------------------
-        // 1. Overhead Softbox (sculpts panoramic roof, hood spine and shoulder lines)
+        // 1. Primary Key Light (Overhead & front fascia sculpting)
         DirectionalLight {
-            id: overheadSoftbox
-            eulerRotation: Qt.vector3d(-90, 0, 0)
-            brightness: root.ambientMode ? 0.35 : 1.5
-            color: "#F8FAFC"
-            castsShadow: false
-            Behavior on brightness { NumberAnimation { duration: 600 } }
-        }
-
-        // 2. Front Key Light (sculpts soft metallic pearl highlights on grille and fascia)
-        DirectionalLight {
-            id: frontKeyLight
-            eulerRotation: Qt.vector3d(-24, 35, 0)
-            brightness: root.ambientMode ? 0.6 : 1.8
+            id: primaryKeyLight
+            eulerRotation: Qt.vector3d(-42, 35, 0)
+            brightness: root.ambientMode ? 0.6 : 2.2
             color: "#FFFFFF"
             castsShadow: false
             Behavior on brightness { NumberAnimation { duration: 600 } }
         }
 
-        // 3. Side Profile Sculpting Light (cool blue undertone shadows matching reference)
+        // 2. Rim & Fill Light (Creates crisp specular reflections on side profile & rear glass)
         DirectionalLight {
-            id: sideBodyFillLight
-            eulerRotation: Qt.vector3d(-12, 90, 0)
-            brightness: root.ambientMode ? 0.5 : 1.4
-            color: "#8CAAD0"
-            castsShadow: false
-            Behavior on brightness { NumberAnimation { duration: 600 } }
-        }
-
-        // 4. Rear Upper Light (creates specular rim reflections on rear glass & shoulder line)
-        DirectionalLight {
-            id: rearUpperLight
-            eulerRotation: Qt.vector3d(-24, -145, 0)
-            brightness: root.ambientMode ? 0.5 : 1.5
-            color: "#D0E2F5"
+            id: rimFillLight
+            eulerRotation: Qt.vector3d(-28, -145, 0)
+            brightness: root.ambientMode ? 0.5 : 1.6
+            color: "#B4CEEE"
             castsShadow: false
             Behavior on brightness { NumberAnimation { duration: 600 } }
         }
@@ -663,7 +640,7 @@ Item {
                 (root.statusTab === "oil" ?
                     Qt.vector3d(root.statusOilScale, root.statusOilScale, root.statusOilScale) :
                     Qt.vector3d(root.statusTireScale, root.statusTireScale, root.statusTireScale)) :
-                Qt.vector3d(0.25, 0.25, 0.25)
+                Qt.vector3d(0.205, 0.205, 0.205)
             paintColor: root.paintColor
             metalness: root.metalness
             roughness: root.roughness

@@ -203,8 +203,8 @@ Item {
         readonly property var availableSources: {
             var list = [
                 { name: "OrbitXM", sourceKey: "OrbitXM", icon: "qrc:/ApexVision/qml/assets/radio_logos/orbitxm_logo.png" },
-                { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" },
-                { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_source.svg" }
+                { name: "FM", sourceKey: "FM", icon: "qrc:/ApexVision/qml/assets/icons/radio_fm.svg" },
+                { name: "AM", sourceKey: "AM", icon: "qrc:/ApexVision/qml/assets/icons/radio_am.svg" }
             ];
             if (typeof PhoneBackend !== "undefined" && PhoneBackend.isConnected) {
                 list.push({ name: "Apple CarPlay", sourceKey: "CarPlay", icon: "qrc:/ApexVision/qml/assets/icons/app_carplay.svg" });
@@ -243,19 +243,19 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 18
 
-                        // Circular badge with Icon (OrbitXM renders directly without redundant outer blue background)
+                        // Circular badge with Icon (OrbitXM renders directly without redundant outer background)
                         Rectangle {
                             width: 40
                             height: 40
                             radius: 20
-                            color: modelData.sourceKey === "OrbitXM" ? "transparent" : "#1976D2"
+                            color: modelData.sourceKey === "OrbitXM" ? "transparent" : "#1E88E5"
                             anchors.verticalCenter: parent.verticalCenter
 
                             // Icon inside badge
                             Image {
                                 anchors.centerIn: parent
-                                width: modelData.sourceKey === "OrbitXM" ? 40 : 22
-                                height: modelData.sourceKey === "OrbitXM" ? 40 : 22
+                                width: modelData.sourceKey === "OrbitXM" ? 40 : 24
+                                height: modelData.sourceKey === "OrbitXM" ? 40 : 24
                                 source: modelData.icon
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true

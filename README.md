@@ -8,11 +8,11 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.6.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.7.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
 [![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
 [![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.6.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Releases](https://img.shields.io/badge/Release-v2.7.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -650,6 +650,33 @@ cmake --build build -j$(nproc)
 ./build/apex_vision_ivi
 ```
 
+### Raspberry Pi 5 (Yocto Linux / EGLFS Native KMS)
+
+The application is fully ported and optimized for the **Raspberry Pi 5 (8GB ARM Cortex-A76)** running custom Yocto Linux (Scarthgap 5.0, Kernel 6.6) and Qt 6.7.3.
+
+1. **Docker Cross-Compilation Pipeline**:
+   Cross-compilation is performed using the target Yocto sysroot and native host tools:
+   ```bash
+   ./deploy-pi5.sh
+   ```
+
+2. **Real-Time On-Screen OTA (Over-The-Air) Transmission**:
+   Deployments stream live to the target display with the Cyberpunk progress HUD:
+   ```bash
+   DEPLOY_ARCHIVE="/tmp/apex_deploy_payload.tar.gz"
+   tar --exclude="CarModel_BACKUP" -czf "${DEPLOY_ARCHIVE}" -C . qml
+   TOTAL_BYTES=$(stat -f%z "${DEPLOY_ARCHIVE}" 2>/dev/null || stat -c%s "${DEPLOY_ARCHIVE}")
+   ssh rpi5 "systemctl stop apex-vision; nohup /usr/bin/show-upload-screen.sh > /dev/null 2>&1 &"
+   cat "${DEPLOY_ARCHIVE}" | python3 scripts/pipe-progress.py "${TOTAL_BYTES}" | ssh rpi5 "python3 /usr/bin/ota-receiver.py ${TOTAL_BYTES} /opt/apex_vision_ivi"
+   ssh rpi5 "pkill -9 -f 'qml'; systemctl start apex-vision"
+   ```
+
+3. **Target System Execution**:
+   - Hardware: Raspberry Pi 5 (Broadcom BCM2712, VideoCore VII GPU)
+   - Display: 10.1" 1920x1200 Automotive Touchscreen (`/etc/kms.json`)
+   - Platform: Direct DRM/KMS EGLFS (`QT_QPA_PLATFORM=eglfs`, `QT_QPA_EGLFS_INTEGRATION=eglfs_kms`)
+   - Audio: PipeWire & WirePlumber routing through default ALSA device
+
 ### Windows (MSVC 2022)
 
 ```cmd
@@ -689,6 +716,23 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 ---
 
 ## Release History & Highlights
+
+### [v2.7.0] - Raspberry Pi 5 Target Port, VideoCore VII 60 FPS 3D Optimization & Cyberpunk OTA Update Engine
+- **Hardware-Accelerated 3D Lincoln Zephyr Digital Cockpit Optimization**:
+  - Reduced geometric density by **-40%** (312,940 polygons down from 521,135) while preserving 100% of body curves, glass reflections, and detailed interior cabin.
+  - Converted 11 solid interior cabin materials to `alphaMode: Opaque` to activate hardware **Early-Z depth culling** on Broadcom VideoCore VII TBDR GPU, eliminating occluded fragment shading.
+  - Consolidated lighting rig from 4 lights down to **2 balanced studio lights** (`primaryKeyLight` at `-42°, 35°` and `rimFillLight` at `-28°, -145°`), halving forward lighting passes.
+  - Deep automotive jet-black tires (`#050505`) with preserved Michelin sidewall maps, eliminating emissive blowout.
+  - Restored illuminated rear **APEX** plate (`textureData81.png`) with left "दृष्टि" emblem and right "VISION" badge.
+  - Tuned vehicle scale to `0.205` ensuring comfortable display fit without edge clipping.
+- **Cyberpunk Over-The-Air (OTA) Streaming Update Engine**:
+  - Real-time animated OTA cockpit HUD (`CodeUploadScreen.qml`) displaying live transfer progress, transfer speed (MB/s), elapsed time, ETA countdown, and vehicle component status.
+  - Interactive streaming pipe (`scripts/pipe-progress.py`) forwarding payload byte counts over SSH to target receiver (`/usr/bin/ota-receiver.py`).
+  - Automated service restart and hardware display arbitration under EGLFS KMS.
+- **Direct DRM/KMS EGLFS Full-Screen Embedded Pipeline**:
+  - Native rendering directly to `/dev/dri/card0` with atomic mode-setting (`QT_QPA_EGLFS_KMS_ATOMIC=1`).
+  - Proportional touch scaling for 10.1" 1920x1200 automotive cockpit (`QT_SCALE_FACTOR=1.40`, `QT_FONT_DPI=110`).
+  - Rock-solid PipeWire / WirePlumber audio routing for chime, media player, and navigation audio.
 
 ### [v2.6.0] - Automotive OEM Welcome Screen, Specular Brand Evolution, Persistent State Engine & Infotainment Suite Expansion
 - **Automotive OEM Welcome Screen & Specular Brand Evolution**:

@@ -87,7 +87,7 @@ Item {
         radius: root.isExpanded ? 0 : 18
         color: "#000000"
         visible: false
-        layer.enabled: true
+        layer.enabled: !root.isExpanded
     }
 
     // Map container with MultiEffect mask applied
@@ -95,9 +95,10 @@ Item {
         id: mapContainer
         anchors.fill: parent
         enabled: root.isExpanded
-        layer.enabled: true
+        layer.enabled: !root.isExpanded
+        layer.smooth: true
         layer.effect: MultiEffect {
-            maskEnabled: true
+            maskEnabled: !root.isExpanded
             maskSource: mapMask
         }
 
