@@ -34,10 +34,19 @@ class SystemBackend : public QObject
     Q_PROPERTY(int brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
     Q_PROPERTY(QString unitsTemperature READ unitsTemperature WRITE setUnitsTemperature NOTIFY unitsTemperatureChanged)
     Q_PROPERTY(bool touchSoundsEnabled READ touchSoundsEnabled WRITE setTouchSoundsEnabled NOTIFY touchSoundsEnabledChanged)
+    Q_PROPERTY(bool hasWebEngine READ hasWebEngine CONSTANT)
 
 public:
     explicit SystemBackend(PersistenceManager *persistence = nullptr, QObject *parent = nullptr);
     ~SystemBackend() override;
+
+    bool hasWebEngine() const {
+#ifdef HAVE_WEBENGINE
+        return true;
+#else
+        return false;
+#endif
+    }
 
     bool touchSoundsEnabled() const { return m_touchSoundsEnabled; }
 

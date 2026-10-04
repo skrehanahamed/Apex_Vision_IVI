@@ -2,6 +2,7 @@
  * ==============================================================================
  * Project: Apex VISION IVI - Digital Cockpit & Infotainment System
  * File: NavigationPanel.qml
+ * Description: Adaptive 3D Navigation Coordinator (WebEngine Three.js / Native Cockpit Google Maps HUD)
  * Author / Developer: Sk Rehan Ahamed
  * License: MIT
  * ==============================================================================
@@ -9,11 +10,9 @@
 
 import QtQuick
 import QtQuick.Controls
-import QtWebEngine
+import QtQuick.Effects
 import ApexVision
 import ".."
-
-import QtQuick.Effects
 
 Item {
     id: root
@@ -22,82 +21,62 @@ Item {
     signal toggleExpandRequested(bool openSearch)
 
     function openSearch() {
-        if (!webEngineView.loading) {
-            webEngineView.runJavaScript("openSearchModal();");
+        if (mapLoader.item && typeof mapLoader.item.openSearch === "function") {
+            mapLoader.item.openSearch();
         }
     }
 
     function updateApiKeyInMap() {
-        if (!webEngineView.loading && NavigationBackend.apiKey && NavigationBackend.apiKey !== "") {
-            var script = "if (typeof window.setGoogleApiKey === 'function') { window.setGoogleApiKey('" + NavigationBackend.apiKey + "'); }";
-            webEngineView.runJavaScript(script);
+        if (mapLoader.item && typeof mapLoader.item.updateApiKeyInMap === "function") {
+            mapLoader.item.updateApiKeyInMap();
         }
     }
 
-    // Synchronize vehicle position with 3D map engine
     function updateVehiclePositionInMap() {
-        if (!webEngineView.loading) {
-            var script = "if (typeof window.setVehiclePosition === 'function') { window.setVehiclePosition(" + 
-                         NavigationBackend.latitude + ", " + 
-                         NavigationBackend.longitude + ", " + 
-                         NavigationBackend.heading + ", " + 
-                         NavigationBackend.speed + "); }";
-            webEngineView.runJavaScript(script);
+        if (mapLoader.item && typeof mapLoader.item.updateVehiclePositionInMap === "function") {
+            mapLoader.item.updateVehiclePositionInMap();
         }
     }
 
     function updateStreetNameInMap() {
-        if (!webEngineView.loading) {
-            var script = "if (typeof window.setStreetName === 'function') { window.setStreetName('" + NavigationBackend.currentStreet + "'); }";
-            webEngineView.runJavaScript(script);
+        if (mapLoader.item && typeof mapLoader.item.updateStreetNameInMap === "function") {
+            mapLoader.item.updateStreetNameInMap();
         }
     }
 
     function searchInMap(query) {
-        if (!webEngineView.loading) {
-            var script = "if (typeof window.handleSearchInput === 'function') { window.handleSearchInput('" + query + "'); }";
-            webEngineView.runJavaScript(script);
+        if (mapLoader.item && typeof mapLoader.item.searchInMap === "function") {
+            mapLoader.item.searchInMap(query);
         }
     }
 
     function recenterMap() {
-        if (!webEngineView.loading) {
-            webEngineView.runJavaScript("if (typeof window.recenterMap === 'function') { window.recenterMap(); }");
-        }
-    }
-
-    onIsExpandedChanged: {
-        updateMapMode();
-    }
-
-    onWidthChanged: {
-        if (root.isExpanded) {
-            updateMapMode();
-        }
-    }
-
-    onVisibleChanged: {
-        if (visible) {
-            updateMapMode();
+        if (mapLoader.item && typeof mapLoader.item.recenterMap === "function") {
+            mapLoader.item.recenterMap();
         }
     }
 
     function updateMapMode() {
-        if (!webEngineView.loading) {
-            webEngineView.runJavaScript("if (typeof window.setCompactMode === 'function') { window.setCompactMode(" + (!root.isExpanded) + "); }");
+        if (mapLoader.item && typeof mapLoader.item.updateMapMode === "function") {
+            mapLoader.item.updateMapMode();
         }
     }
 
-    Connections {
-        target: NavigationBackend
-        function onApiKeyChanged() {
-            root.updateApiKeyInMap();
+    onIsExpandedChanged: {
+        if (mapLoader.item) {
+            mapLoader.item.isExpanded = root.isExpanded;
         }
-        function onPositionChanged() {
-            root.updateVehiclePositionInMap();
+    }
+
+    onWidthChanged: {
+        if (root.isExpanded && mapLoader.item) {
+            root.updateMapMode();
         }
-        function onCurrentStreetChanged() {
-            root.updateStreetNameInMap();
+    }
+
+    onVisibleChanged: {
+        if (visible && mapLoader.item) {
+            root.updateMapMode();
         }
     }
 
@@ -122,34 +101,22 @@ Item {
             maskSource: mapMask
         }
 
-        // Live Perspective WebGL Map View (Stadia Maps 3D Vector Engine)
-        WebEngineView {
-            id: webEngineView
+        Loader {
+            id: mapLoader
             anchors.fill: parent
-            url: NavigationBackend.mapUrl
-            backgroundColor: "#F1F5F9"
-
-            settings.javascriptEnabled: true
-            settings.localContentCanAccessRemoteUrls: true
-            settings.localContentCanAccessFileUrls: true
-            settings.pluginsEnabled: true
-
-            onJavaScriptConsoleMessage: function(level, message, lineNumber, sourceID) {
-                if (level > 1 && !message.includes("TileCache")) {
-                    console.warn("[Map JS Error] " + message + " (line " + lineNumber + ")");
-                }
-            }
-
-            onLoadingChanged: function(loadRequest) {
-                if (loadRequest.status === WebEngineView.LoadSucceededStatus) {
-                    root.updateApiKeyInMap();
-                    root.updateVehiclePositionInMap();
-                    root.updateStreetNameInMap();
-                    root.updateMapMode();
+            source: (typeof SystemBackend !== "undefined" && SystemBackend.hasWebEngine) ? "NavigationWebEngine.qml" : "NavigationNativeHUD.qml"
+            asynchronous: false
+            onLoaded: {
+                if (item) {
+                    item.isExpanded = root.isExpanded;
+                    if (item.toggleExpandRequested) {
+                        item.toggleExpandRequested.connect(function(openSearch) {
+                            root.toggleExpandRequested(openSearch);
+                        });
+                    }
                 }
             }
         }
-
     }
 
     // Glass Border Overlay on top of the rounded map (only in compact card mode)

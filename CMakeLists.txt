@@ -103,6 +103,7 @@ qt_add_qml_module(apex_vision_ivi
         qml/pages/NewsPage.qml
         qml/pages/RadioPage.qml
         qml/pages/VideoPage.qml
+        qml/pages/VideoWebEnginePlayer.qml
         qml/pages/RejuvenatePage.qml
         qml/pages/RejuvenateSession.qml
         qml/pages/ManualPage.qml
@@ -114,6 +115,8 @@ qt_add_qml_module(apex_vision_ivi
         qml/components/StatusBar.qml
         qml/components/MediaCard.qml
         qml/components/NavigationPanel.qml
+        qml/components/NavigationWebEngine.qml
+        qml/components/NavigationNativeHUD.qml
         qml/components/ClimateBar.qml
         qml/components/Climate3DPanel.qml
         qml/components/CabinAirRefreshOverlay.qml

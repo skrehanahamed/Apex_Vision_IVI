@@ -46,7 +46,8 @@ echo "=================================================================="
 echo " 📡 Syncing build artifacts to Raspberry Pi 5 (${PI_HOST}:${PI_DEST})..."
 echo "=================================================================="
 
-tar -czf - -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc assets qml web | \
+tar -czf - -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc assets web \
+          -C "${SCRIPT_DIR}" qml | \
   ssh "${PI_HOST}" "mkdir -p ${PI_DEST} && tar -xzf - -C ${PI_DEST} && chmod +x ${PI_DEST}/apex_vision_ivi"
 
 echo "=================================================================="
