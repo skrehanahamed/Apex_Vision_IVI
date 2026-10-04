@@ -54,12 +54,12 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_WEBENGINE
     // Autoplay policy for embedded IVI media playback & WebGL acceleration for Google Maps
-    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--autoplay-policy=no-user-gesture-required --disable-features=WebGPU --enable-webgl --ignore-gpu-blocklist");
+    qputenv("QTWEBENGINE_CHROMIUM_FLAGS", "--no-sandbox --autoplay-policy=no-user-gesture-required --disable-features=WebGPU --enable-webgl --ignore-gpu-blocklist");
+    QtWebEngineQuick::initialize();
 #endif
 
     QGuiApplication app(argc, argv);
 #ifdef HAVE_WEBENGINE
-    QtWebEngineQuick::initialize();
     // Enable persistent disk caching so Google Maps loads rapidly from local storage
     QWebEngineProfile::defaultProfile()->setHttpCacheType(QWebEngineProfile::DiskHttpCache);
     QWebEngineProfile::defaultProfile()->setPersistentCookiesPolicy(QWebEngineProfile::AllowPersistentCookies);

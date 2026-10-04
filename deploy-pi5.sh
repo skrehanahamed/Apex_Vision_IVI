@@ -23,12 +23,20 @@ docker run --rm \
     set -euo pipefail
     export PATH="/workspace/build/tmp/sysroots-uninative/aarch64-linux/usr/bin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin/python3-native:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin/perl-native:/workspace/sources/poky/scripts:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin/aarch64-poky-linux:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot/usr/bin/crossscripts:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/sbin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/sbin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/bin:/workspace/sources/poky/bitbake/bin:/workspace/build/tmp/hosttools:$PATH"
     
+    SYSROOT="/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot"
+    for comp in qtwebengine qtwebchannel qtpositioning nss nspr libopus libevent tiff snappy lcms libxcomposite libxcursor libxi libxrandr libxtst libxscrnsaver libxshmfence minizip pciutils flac libxkbfile ne10; do
+      if [ -d "/workspace/build/tmp/sysroots-components/cortexa76/$comp" ]; then
+        cp -rn "/workspace/build/tmp/sysroots-components/cortexa76/$comp/"* "${SYSROOT}/" 2>/dev/null || true
+      fi
+    done
+
     cd /workspace/APEX_VISION_IVI_PI5
     mkdir -p build-rpi5
     cd build-rpi5
     
-    if [ ! -f "build.ninja" ]; then
-      echo ">> Configuring CMake with Raspberry Pi 5 Yocto Toolchain..."
+    if [ ! -f "build.ninja" ] || ! grep -q "HAVE_WEBENGINE" CMakeCache.txt 2>/dev/null; then
+      echo ">> Configuring CMake with Raspberry Pi 5 Yocto Toolchain (including QtWebEngine)..."
+      rm -f CMakeCache.txt
       cmake -G Ninja \
         -DCMAKE_MAKE_PROGRAM=ninja \
         -DCMAKE_TOOLCHAIN_FILE=/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/toolchain.cmake \
