@@ -19,6 +19,8 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QRegularExpression>
+#include <QSet>
+#include <QMap>
 #include <QDebug>
 
 int SystemBackend::parseGmtOffset(const QString &tzStr)
@@ -66,9 +68,22 @@ SystemBackend::SystemBackend(PersistenceManager *persistence, QObject *parent)
     m_internetSyncTimer.start(15 * 60 * 1000);
 
     // Wi-Fi band & signal monitoring
+#if defined(Q_OS_LINUX)
+    QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("set"), QStringLiteral("country"), QStringLiteral("IN")});
+    QProcess::execute(QStringLiteral("iw"), {QStringLiteral("reg"), QStringLiteral("set"), QStringLiteral("IN")});
+#endif
     connect(&m_wifiStatusTimer, &QTimer::timeout, this, &SystemBackend::updateWifiStatus);
     m_wifiStatusTimer.start(4000);
     QTimer::singleShot(300, this, &SystemBackend::updateWifiStatus);
+    QTimer::singleShot(800, this, [this]() { scanWifiNetworks(); });
+
+    // Automatic periodic background Wi-Fi scan every 25 seconds (silent, no on-screen scanning animation)
+    connect(&m_wifiScanTimer, &QTimer::timeout, this, [this]() {
+        if (m_wifiEnabled && !m_wifiScanning) {
+            scanWifiNetworks(false);
+        }
+    });
+    m_wifiScanTimer.start(25000);
 }
 
 SystemBackend::~SystemBackend()
@@ -290,6 +305,26 @@ void SystemBackend::setManualDate(int year, int month, int day)
     updateClock();
 }
 
+void SystemBackend::setWifiEnabled(bool enabled)
+{
+    if (m_wifiEnabled != enabled) {
+        m_wifiEnabled = enabled;
+        emit wifiEnabledChanged();
+        if (m_wifiEnabled) {
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("reconnect")});
+            updateWifiStatus();
+            scanWifiNetworks();
+        } else {
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("disconnect")});
+            setWifiConnected(false);
+            if (m_wifiSignalBars != 0) {
+                m_wifiSignalBars = 0;
+                emit wifiSignalBarsChanged();
+            }
+        }
+    }
+}
+
 void SystemBackend::setWifiConnected(bool connected)
 {
     if (m_wifiConnected != connected) {
@@ -323,58 +358,74 @@ void SystemBackend::refreshWifiStatus()
 void SystemBackend::updateWifiStatus()
 {
 #if defined(Q_OS_LINUX)
-    // Run "iw dev wlan0 link" to fetch live Wi-Fi SSID, frequency, and signal
-    QProcess process;
-    process.start(QStringLiteral("iw"), {QStringLiteral("dev"), QStringLiteral("wlan0"), QStringLiteral("link")});
-    if (process.waitForFinished(800)) {
-        const QString output = QString::fromUtf8(process.readAllStandardOutput());
-        if (output.contains(QStringLiteral("Connected to"), Qt::CaseInsensitive)) {
+    // 1. Query wpa_cli status (provides SSID, connection state, IP, MAC address, security)
+    QProcess wpaProcess;
+    wpaProcess.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("status")});
+    if (wpaProcess.waitForFinished(800)) {
+        const QString wpaOut = QString::fromUtf8(wpaProcess.readAllStandardOutput());
+        if (wpaOut.contains(QStringLiteral("wpa_state=COMPLETED"))) {
             setWifiConnected(true);
 
-            // Parse SSID
-            static const QRegularExpression ssidRe(QStringLiteral("SSID:\\s*(.+)"));
-            auto ssidMatch = ssidRe.match(output);
-            if (ssidMatch.hasMatch()) {
-                QString ssid = ssidMatch.captured(1).trimmed();
-                if (m_wifiSsid != ssid) {
-                    m_wifiSsid = ssid;
-                    emit wifiSsidChanged();
+            // Line-by-line exact prefix parsing to avoid matching bssid= as ssid=
+            const QStringList lines = wpaOut.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+            for (const QString &rawLine : lines) {
+                const QString trimmed = rawLine.trimmed();
+                if (trimmed.startsWith(QLatin1String("ssid="))) {
+                    QString ssid = trimmed.mid(5).trimmed();
+                    if (m_wifiSsid != ssid) {
+                        m_wifiSsid = ssid;
+                        emit wifiSsidChanged();
+                    }
+                } else if (trimmed.startsWith(QLatin1String("freq="))) {
+                    int freq = trimmed.mid(5).toInt();
+                    QString detectedBand = (freq >= 4900) ? QStringLiteral("5G") : QStringLiteral("2.4G");
+                    if (m_wifiBand != detectedBand) {
+                        m_wifiBand = detectedBand;
+                        emit wifiBandChanged();
+                    }
+                } else if (trimmed.startsWith(QLatin1String("ip_address="))) {
+                    QString ip = trimmed.mid(11).trimmed();
+                    if (m_wifiIpAddress != ip) {
+                        m_wifiIpAddress = ip;
+                        emit wifiIpAddressChanged();
+                    }
+                } else if (trimmed.startsWith(QLatin1String("address="))) {
+                    QString mac = trimmed.mid(8).trimmed();
+                    if (m_wifiMacAddress != mac) {
+                        m_wifiMacAddress = mac;
+                        emit wifiMacAddressChanged();
+                    }
+                } else if (trimmed.startsWith(QLatin1String("key_mgmt="))) {
+                    QString sec = trimmed.mid(9).trimmed();
+                    if (m_wifiSecurity != sec) {
+                        m_wifiSecurity = sec;
+                        emit wifiSecurityChanged();
+                    }
                 }
             }
 
-            // Parse Frequency: 5GHz vs 2.4/2.5GHz band
-            static const QRegularExpression freqRe(QStringLiteral("freq:\\s*([0-9]+)"));
-            auto freqMatch = freqRe.match(output);
-            if (freqMatch.hasMatch()) {
-                int freq = freqMatch.captured(1).toInt();
-                QString detectedBand;
-                if (freq >= 4900) {
-                    detectedBand = QStringLiteral("5G");
-                } else if (freq > 0) {
-                    detectedBand = QStringLiteral("2.5G");
-                }
-                if (!detectedBand.isEmpty() && m_wifiBand != detectedBand) {
-                    m_wifiBand = detectedBand;
-                    emit wifiBandChanged();
-                }
-            }
-
-            // Parse Signal dBm into 1-4 bars
-            static const QRegularExpression sigRe(QStringLiteral("signal:\\s*(-?[0-9]+)\\s*dBm"));
-            auto sigMatch = sigRe.match(output);
-            if (sigMatch.hasMatch()) {
-                int dbm = sigMatch.captured(1).toInt();
-                int bars = 1;
-                if (dbm >= -58) bars = 4;
-                else if (dbm >= -68) bars = 3;
-                else if (dbm >= -78) bars = 2;
-                if (m_wifiSignalBars != bars) {
-                    m_wifiSignalBars = bars;
-                    emit wifiSignalBarsChanged();
+            // 2. Query signal_poll for live RSSI (dBm) and calculate bars
+            QProcess pollProcess;
+            pollProcess.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("signal_poll")});
+            if (pollProcess.waitForFinished(600)) {
+                const QString pollOut = QString::fromUtf8(pollProcess.readAllStandardOutput());
+                static const QRegularExpression rssiRe(QStringLiteral("RSSI=(-?[0-9]+)"));
+                auto rssiMatch = rssiRe.match(pollOut);
+                if (rssiMatch.hasMatch()) {
+                    int dbm = rssiMatch.captured(1).toInt();
+                    if (m_wifiSignalDbm != dbm) {
+                        m_wifiSignalDbm = dbm;
+                        emit wifiSignalDbmChanged();
+                    }
+                    int bars = 1;
+                    if (dbm >= -58) bars = 4;
+                    else if (dbm >= -68) bars = 3;
+                    else if (dbm >= -78) bars = 2;
+                    setWifiSignalBars(bars);
                 }
             }
             return;
-        } else if (output.contains(QStringLiteral("Not connected"), Qt::CaseInsensitive)) {
+        } else if (wpaOut.contains(QStringLiteral("wpa_state=DISCONNECTED")) || wpaOut.contains(QStringLiteral("wpa_state=INACTIVE"))) {
             setWifiConnected(false);
             if (m_wifiSignalBars != 0) {
                 m_wifiSignalBars = 0;
@@ -384,28 +435,291 @@ void SystemBackend::updateWifiStatus()
         }
     }
 
-    // Fallback: try wpa_cli if iw produced no output
-    QProcess wpaProcess;
-    wpaProcess.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("status")});
-    if (wpaProcess.waitForFinished(800)) {
-        const QString wpaOut = QString::fromUtf8(wpaProcess.readAllStandardOutput());
-        if (wpaOut.contains(QStringLiteral("wpa_state=COMPLETED"))) {
+    // Fallback: try iw dev wlan0 link
+    QProcess iwProcess;
+    iwProcess.start(QStringLiteral("iw"), {QStringLiteral("dev"), QStringLiteral("wlan0"), QStringLiteral("link")});
+    if (iwProcess.waitForFinished(800)) {
+        const QString output = QString::fromUtf8(iwProcess.readAllStandardOutput());
+        if (output.contains(QStringLiteral("Connected to"), Qt::CaseInsensitive)) {
             setWifiConnected(true);
-            static const QRegularExpression freqRe(QStringLiteral("freq=([0-9]+)"));
-            auto freqMatch = freqRe.match(wpaOut);
-            if (freqMatch.hasMatch()) {
-                int freq = freqMatch.captured(1).toInt();
-                QString detectedBand = (freq >= 4900) ? QStringLiteral("5G") : QStringLiteral("2.5G");
-                if (m_wifiBand != detectedBand) {
-                    m_wifiBand = detectedBand;
-                    emit wifiBandChanged();
+            static const QRegularExpression ssidRe(QStringLiteral("SSID:\\s*(.+)"));
+            auto ssidMatch = ssidRe.match(output);
+            if (ssidMatch.hasMatch()) {
+                QString ssid = ssidMatch.captured(1).trimmed();
+                if (m_wifiSsid != ssid) {
+                    m_wifiSsid = ssid;
+                    emit wifiSsidChanged();
                 }
             }
-            return;
+            static const QRegularExpression sigRe(QStringLiteral("signal:\\s*(-?[0-9]+)\\s*dBm"));
+            auto sigMatch = sigRe.match(output);
+            if (sigMatch.hasMatch()) {
+                int dbm = sigMatch.captured(1).toInt();
+                int bars = 1;
+                if (dbm >= -58) bars = 4;
+                else if (dbm >= -68) bars = 3;
+                else if (dbm >= -78) bars = 2;
+                setWifiSignalBars(bars);
+            }
+        } else if (output.contains(QStringLiteral("Not connected"), Qt::CaseInsensitive)) {
+            setWifiConnected(false);
+            if (m_wifiSignalBars != 0) {
+                m_wifiSignalBars = 0;
+                emit wifiSignalBarsChanged();
+            }
         }
     }
 #endif
 }
+
+void SystemBackend::scanWifiNetworks()
+{
+    scanWifiNetworks(true);
+}
+
+void SystemBackend::scanWifiNetworks(bool userInitiated)
+{
+#if defined(Q_OS_LINUX)
+    if (userInitiated) {
+        // Delay and restart the auto-scan timer when the user manually presses Scan
+        m_wifiScanTimer.start(25000);
+
+        if (!m_wifiScanning) {
+            m_wifiScanning = true;
+            emit wifiScanningChanged();
+        }
+    }
+
+    // Trigger Wi-Fi scan via wpa_cli
+    QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("scan")});
+
+    // Wait 3500ms for full dual-band (2.4GHz + 5GHz) channel sweep to complete on Pi 5
+    QTimer::singleShot(3500, this, [this, userInitiated]() {
+        // Prune stale BSS entries older than 30s that did not respond during this scan
+        QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("bss_flush"), QStringLiteral("30")});
+
+        QProcess resultsProc;
+        resultsProc.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("scan_results")});
+        resultsProc.waitForFinished(1000);
+        const QString scanOut = QString::fromUtf8(resultsProc.readAllStandardOutput());
+
+        QProcess listProc;
+        listProc.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("list_networks")});
+        listProc.waitForFinished(600);
+        const QString listOut = QString::fromUtf8(listProc.readAllStandardOutput());
+
+        parseScanResults(scanOut, listOut);
+
+        if (userInitiated && m_wifiScanning) {
+            m_wifiScanning = false;
+            emit wifiScanningChanged();
+        }
+    });
+#endif
+}
+
+void SystemBackend::parseScanResults(const QString &scanOutput, const QString &listOutput)
+{
+    // 1. Saved SSIDs from list_networks
+    QSet<QString> savedSsids;
+    const QStringList listLines = listOutput.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    for (int i = 1; i < listLines.size(); ++i) {
+        const QStringList parts = listLines.at(i).split(QLatin1Char('\t'));
+        if (parts.size() >= 2) {
+            savedSsids.insert(parts.at(1).trimmed());
+        }
+    }
+
+    // 2. Parse access points from scan_results (bssid \t freq \t signal \t flags \t ssid)
+    QMap<QString, QVariantMap> apMap;
+    const QStringList scanLines = scanOutput.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    for (int i = 1; i < scanLines.size(); ++i) {
+        const QStringList parts = scanLines.at(i).split(QLatin1Char('\t'));
+        if (parts.size() < 5) continue;
+
+        QString bssid = parts.at(0).trimmed();
+        int freq = parts.at(1).trimmed().toInt();
+        int dbm = parts.at(2).trimmed().toInt();
+        QString flags = parts.at(3).trimmed();
+        QString ssid = parts.at(4).trimmed();
+
+        if (ssid.isEmpty()) continue; // skip hidden SSIDs
+
+        QString band = (freq >= 4900) ? QStringLiteral("5 GHz") : QStringLiteral("2.4 GHz");
+
+        QString sec = QStringLiteral("Open");
+        if (flags.contains(QStringLiteral("WPA3"), Qt::CaseInsensitive) || flags.contains(QStringLiteral("SAE"), Qt::CaseInsensitive)) {
+            sec = QStringLiteral("WPA3");
+        } else if (flags.contains(QStringLiteral("WPA2"), Qt::CaseInsensitive)) {
+            sec = QStringLiteral("WPA2");
+        } else if (flags.contains(QStringLiteral("WPA"), Qt::CaseInsensitive)) {
+            sec = QStringLiteral("WPA");
+        } else if (flags.contains(QStringLiteral("WEP"), Qt::CaseInsensitive)) {
+            sec = QStringLiteral("WEP");
+        }
+
+        int bars = 1;
+        if (dbm >= -58) bars = 4;
+        else if (dbm >= -68) bars = 3;
+        else if (dbm >= -78) bars = 2;
+
+        bool isConnected = (m_wifiConnected && ssid == m_wifiSsid);
+        bool isSaved = savedSsids.contains(ssid);
+
+        if (apMap.contains(ssid)) {
+            const QVariantMap existing = apMap.value(ssid);
+            int existDbm = existing.value(QStringLiteral("signalDbm")).toInt();
+            if (dbm <= existDbm && existing.value(QStringLiteral("band")).toString() == QStringLiteral("5 GHz")) {
+                continue;
+            }
+        }
+
+        QVariantMap ap;
+        ap[QStringLiteral("ssid")] = ssid;
+        ap[QStringLiteral("bssid")] = bssid;
+        ap[QStringLiteral("frequency")] = freq;
+        ap[QStringLiteral("band")] = band;
+        ap[QStringLiteral("signalDbm")] = dbm;
+        ap[QStringLiteral("signalBars")] = bars;
+        ap[QStringLiteral("security")] = sec;
+        bool isSecured = (sec != QStringLiteral("Open"));
+        ap[QStringLiteral("isSecured")] = isSecured;
+        ap[QStringLiteral("secured")] = isSecured;
+        ap[QStringLiteral("isConnected")] = isConnected;
+        ap[QStringLiteral("connected")] = isConnected;
+        ap[QStringLiteral("isSaved")] = isSaved;
+        ap[QStringLiteral("saved")] = isSaved;
+
+        apMap[ssid] = ap;
+    }
+
+    // Ensure the currently connected network is present even if missed in scan
+    if (m_wifiConnected && !m_wifiSsid.isEmpty() && !apMap.contains(m_wifiSsid)) {
+        QVariantMap ap;
+        ap[QStringLiteral("ssid")] = m_wifiSsid;
+        ap[QStringLiteral("bssid")] = QStringLiteral("");
+        ap[QStringLiteral("frequency")] = (m_wifiBand == QStringLiteral("5G")) ? 5320 : 2412;
+        ap[QStringLiteral("band")] = (m_wifiBand == QStringLiteral("5G")) ? QStringLiteral("5 GHz") : QStringLiteral("2.4 GHz");
+        ap[QStringLiteral("signalDbm")] = m_wifiSignalDbm;
+        ap[QStringLiteral("signalBars")] = m_wifiSignalBars > 0 ? m_wifiSignalBars : 4;
+        QString sec = m_wifiSecurity.isEmpty() ? QStringLiteral("WPA2") : m_wifiSecurity;
+        ap[QStringLiteral("security")] = sec;
+        bool isSecured = (sec != QStringLiteral("Open"));
+        ap[QStringLiteral("isSecured")] = isSecured;
+        ap[QStringLiteral("secured")] = isSecured;
+        ap[QStringLiteral("isConnected")] = true;
+        ap[QStringLiteral("connected")] = true;
+        ap[QStringLiteral("isSaved")] = true;
+        ap[QStringLiteral("saved")] = true;
+        apMap[m_wifiSsid] = ap;
+    }
+
+    QVariantList list;
+    for (auto it = apMap.begin(); it != apMap.end(); ++it) {
+        list.append(it.value());
+    }
+
+    std::sort(list.begin(), list.end(), [](const QVariant &a, const QVariant &b) {
+        const QVariantMap ma = a.toMap();
+        const QVariantMap mb = b.toMap();
+        if (ma.value(QStringLiteral("connected")).toBool() != mb.value(QStringLiteral("connected")).toBool()) {
+            return ma.value(QStringLiteral("connected")).toBool();
+        }
+        if (ma.value(QStringLiteral("saved")).toBool() != mb.value(QStringLiteral("saved")).toBool()) {
+            return ma.value(QStringLiteral("saved")).toBool();
+        }
+        return ma.value(QStringLiteral("signalDbm")).toInt() > mb.value(QStringLiteral("signalDbm")).toInt();
+    });
+
+    m_wifiNetworks = list;
+    emit wifiNetworksChanged();
+}
+
+void SystemBackend::connectToNetwork(const QString &ssid, const QString &password)
+{
+    qInfo() << "[SystemBackend] Connect to Wi-Fi requested for:" << ssid;
+#if defined(Q_OS_LINUX)
+    // Check if network already exists in saved networks
+    QProcess listProc;
+    listProc.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("list_networks")});
+    listProc.waitForFinished(600);
+    const QString listOut = QString::fromUtf8(listProc.readAllStandardOutput());
+
+    int targetNetId = -1;
+    const QStringList lines = listOut.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    for (int i = 1; i < lines.size(); ++i) {
+        const QStringList parts = lines.at(i).split(QLatin1Char('\t'));
+        if (parts.size() >= 2 && parts.at(1).trimmed() == ssid) {
+            targetNetId = parts.at(0).trimmed().toInt();
+            break;
+        }
+    }
+
+    if (targetNetId >= 0) {
+        if (!password.isEmpty()) {
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("set_network"), QString::number(targetNetId), QStringLiteral("psk"), QStringLiteral("\"%1\"").arg(password)});
+        }
+        QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("select_network"), QString::number(targetNetId)});
+        QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("enable_network"), QString::number(targetNetId)});
+        QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("save_config")});
+    } else {
+        QProcess addProc;
+        addProc.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("add_network")});
+        addProc.waitForFinished(600);
+        QString newIdStr = QString::fromUtf8(addProc.readAllStandardOutput()).trimmed();
+        bool ok = false;
+        int newId = newIdStr.toInt(&ok);
+        if (ok && newId >= 0) {
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("set_network"), QString::number(newId), QStringLiteral("ssid"), QStringLiteral("\"%1\"").arg(ssid)});
+            if (password.isEmpty()) {
+                QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("set_network"), QString::number(newId), QStringLiteral("key_mgmt"), QStringLiteral("NONE")});
+            } else {
+                QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("set_network"), QString::number(newId), QStringLiteral("psk"), QStringLiteral("\"%1\"").arg(password)});
+            }
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("enable_network"), QString::number(newId)});
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("select_network"), QString::number(newId)});
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("save_config")});
+        }
+    }
+
+    QTimer::singleShot(2500, this, &SystemBackend::updateWifiStatus);
+    QTimer::singleShot(4000, this, [this]() { scanWifiNetworks(); });
+#endif
+}
+
+void SystemBackend::disconnectWifi()
+{
+    qInfo() << "[SystemBackend] Disconnecting Wi-Fi";
+#if defined(Q_OS_LINUX)
+    QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("disconnect")});
+    setWifiConnected(false);
+    updateWifiStatus();
+#endif
+}
+
+void SystemBackend::forgetNetwork(const QString &ssid)
+{
+    qInfo() << "[SystemBackend] Forgetting Wi-Fi network:" << ssid;
+#if defined(Q_OS_LINUX)
+    QProcess listProc;
+    listProc.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("list_networks")});
+    listProc.waitForFinished(600);
+    const QString listOut = QString::fromUtf8(listProc.readAllStandardOutput());
+
+    const QStringList lines = listOut.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+    for (int i = 1; i < lines.size(); ++i) {
+        const QStringList parts = lines.at(i).split(QLatin1Char('\t'));
+        if (parts.size() >= 2 && parts.at(1).trimmed() == ssid) {
+            int netId = parts.at(0).trimmed().toInt();
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("remove_network"), QString::number(netId)});
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("save_config")});
+            break;
+        }
+    }
+    scanWifiNetworks();
+#endif
+}
+
 
 void SystemBackend::setBrightness(int b)
 {

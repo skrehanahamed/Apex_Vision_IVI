@@ -356,8 +356,13 @@ Item {
     property bool diagnosticDataEnabled: true
 
     // Sub-screens for slide transitions
-    property string connCurrentScreen: "main" // "main" | "wifi"
+    property string connCurrentScreen: "main" // "main" | "wifi" | "wifi_connect" | "wifi_details"
     property int connSlideDir: 1
+    property string wifiTargetSsid: ""
+    property string wifiTargetSecurity: ""
+    property string wifiEnteredPassword: ""
+    property bool wifiShowPassword: false
+    property var wifiSelectedDetailsNet: null
     property string locCurrentScreen: "main" // "main" | "recent_requests" | "app_permissions"
     property int locSlideDir: 1
     property string voiceCurrentScreen: "main" // "main" | "digital_assistant" | "voice_language"
@@ -417,12 +422,13 @@ Item {
         onTriggered: root.currentDate = new Date()
     }
 
-    // Full-screen mode for Lane-Keeping Mode & Autolamp Delay & Remote Start Climate & Remote Start Seats & Duration & Remote Unlock & Door Keypad & Profile Name & Avatar & Calm screen & Tone
+    // Full-screen mode for Lane-Keeping Mode & Autolamp Delay & Remote Start Climate & Remote Start Seats & Duration & Remote Unlock & Door Keypad & Profile Name & Avatar & Calm screen & Tone & Wi-Fi Connect & Network Details
     readonly property bool isFullScreenMode: (root.activeCategory === "driver_assist" && root.daCurrentScreen === "lane_keeping_mode") ||
                                              (root.activeCategory === "vehicle" && (root.vehCurrentScreen === "autolamp_delay" || root.vehCurrentScreen === "remote_start_climate" || root.vehCurrentScreen === "remote_start_seats" || root.vehCurrentScreen === "remote_start_duration" || root.vehCurrentScreen === "remote_unlock" || root.vehCurrentScreen === "door_keypad_code")) ||
                                              (root.activeCategory === "profile" && (root.profCurrentScreen === "name" || root.profCurrentScreen === "avatar")) ||
                                              (root.activeCategory === "display" && root.dispCurrentScreen === "calm_screen") ||
-                                             (root.activeCategory === "sound" && root.soundCurrentScreen === "tone")
+                                             (root.activeCategory === "sound" && root.soundCurrentScreen === "tone") ||
+                                             (root.activeCategory === "connectivity" && (root.connCurrentScreen === "wifi_connect" || root.connCurrentScreen === "wifi_details"))
 
     // =========================================================================
     // 0. BACKGROUND (Matches Default BG & Valet Screen)
@@ -1009,7 +1015,10 @@ Item {
                                         root.backRequested();
                                     }
                                 } else if (root.activeCategory === "connectivity") {
-                                    if (root.connCurrentScreen !== "main") {
+                                    if (root.connCurrentScreen === "wifi_connect" || root.connCurrentScreen === "wifi_details") {
+                                        root.connSlideDir = -1;
+                                        root.connCurrentScreen = "wifi";
+                                    } else if (root.connCurrentScreen !== "main") {
                                         root.connSlideDir = -1;
                                         root.connCurrentScreen = "main";
                                     } else {
@@ -1174,6 +1183,8 @@ Item {
                                     return (root.selectedLanguage.indexOf("Hindi") !== -1 ? "डिस्प्ले" : "Display");
                                 case "connectivity":
                                     if (root.connCurrentScreen === "wifi") return "Wi-Fi";
+                                    if (root.connCurrentScreen === "wifi_connect") return (root.wifiTargetSsid !== "" ? ("Connect to " + root.wifiTargetSsid) : "Add network");
+                                    if (root.connCurrentScreen === "wifi_details") return "Network details";
                                     return (root.selectedLanguage.indexOf("Hindi") !== -1 ? "नेटवर्क और इंटरनेट" : "Network & internet");
                                 case "assist_911": return (root.selectedLanguage.indexOf("Hindi") !== -1 ? "911 सहायता" : "911 Assist");
                                 case "voice_assistant":
@@ -1298,13 +1309,11 @@ Item {
                             radius: 19
                             color: a911InfoMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.16) : "transparent"
 
-                            Text {
+                            InfoBadge {
                                 anchors.centerIn: parent
-                                text: "ⓘ"
-                                font.family: "Inter"
-                                font.pixelSize: 22
-                                font.weight: Font.Medium
-                                color: Qt.rgba(255, 255, 255, 0.85)
+                                badgeSize: 22
+                                borderColor: a911InfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.85)
+                                iconColor: a911InfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.85)
                             }
                         }
 
@@ -1386,11 +1395,11 @@ Item {
                     anchors.rightMargin: 16
                     spacing: 12
 
-                    Text {
+                    InfoBadge {
                         anchors.verticalCenter: parent.verticalCenter
-                        text: "ⓘ"
-                        font.pixelSize: 18
-                        color: "#60A5FA"
+                        badgeSize: 20
+                        borderColor: "#60A5FA"
+                        iconColor: "#60A5FA"
                     }
 
                     Text {
@@ -1409,13 +1418,17 @@ Item {
             // =================================================================
             Item {
                 id: daCategoryPanel
-                anchors.left: parent.left
-                anchors.right: parent.right
+                width: parent.width
                 anchors.top: infoBanner.bottom
                 anchors.topMargin: root.activeInfoText !== "" ? 12 : 0
                 anchors.bottom: parent.bottom
-                visible: root.activeCategory === "driver_assist"
+                x: root.activeCategory === "driver_assist" ? 0 : 36
+                opacity: root.activeCategory === "driver_assist" ? 1.0 : 0.0
+                visible: opacity > 0.001
                 clip: true
+
+                Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                 // -------------------------------------------------------------
                 // LEVEL 1: Driver Assistance Main Menu (Photo 1)
@@ -1915,10 +1928,10 @@ Item {
 
                         // Right column: Animated Dynamic Lane Keeping Visualizer
                         Item {
-                            width: Math.min(840, parent.width - 520 - 56)
-                            height: 480
+                            width: Math.min(520, parent.width - 520 - 48)
+                            height: Math.round(width * (9.0 / 16.0))
                             anchors.verticalCenter: parent.verticalCenter
-                            anchors.verticalCenterOffset: -40
+                            anchors.verticalCenterOffset: -20
 
                             Rectangle {
                                 anchors.fill: parent
@@ -2199,13 +2212,17 @@ Item {
             // =================================================================
             Item {
                 id: vehicleCategoryContainer
-                anchors.left: parent.left
-                anchors.right: parent.right
+                width: parent.width
                 anchors.top: infoBanner.bottom
                 anchors.topMargin: root.activeInfoText !== "" ? 12 : 0
                 anchors.bottom: parent.bottom
-                visible: root.activeCategory === "vehicle"
+                x: root.activeCategory === "vehicle" ? 0 : 36
+                opacity: root.activeCategory === "vehicle" ? 1.0 : 0.0
+                visible: opacity > 0.001
                 clip: true
+
+                Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                 // -------------------------------------------------------------
                 // LEVEL 1: Vehicle Main Menu (Image copy 7)
@@ -2538,129 +2555,121 @@ Item {
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
-                    Row {
-                        anchors.fill: parent
+                    // Left 40% screen: Radio Options
+                    Column {
+                        id: autolampOptionsCol
+                        anchors.left: parent.left
+                        anchors.top: parent.top
                         anchors.topMargin: 20
-                        spacing: 56
+                        width: Math.round(parent.width * 0.40) - 16
+                        spacing: 0
 
-                        // Left column: Radio Options (Off, 10s, 20s, 120s matching user photo)
-                        Column {
-                            width: 520
-                            spacing: 0
+                        Repeater {
+                            model: ["Off", "10 seconds", "20 seconds", "120 seconds"]
 
-                            Repeater {
-                                model: ["Off", "10 seconds", "20 seconds", "120 seconds"]
+                            Item {
+                                width: parent.width
+                                height: 82
 
-                                Item {
-                                    width: parent.width
-                                    height: 82
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: lampOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
+                                    radius: 12
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData
+                                    font.family: "Inter"
+                                    font.pixelSize: 24
+                                    font.weight: root.autolampDelay === modelData ? Font.Medium : Font.Normal
+                                    color: root.autolampDelay === modelData ? "#FFFFFF" : "#CBD5E1"
+                                }
+
+                                // Radio indicator circle (matching photo exactly)
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 34
+                                    height: 34
+                                    radius: 17
+                                    color: "transparent"
+                                    border.color: root.autolampDelay === modelData ? "#E5A97C" : "#5A6B82"
+                                    border.width: root.autolampDelay === modelData ? 3.5 : 2.2
+                                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                                     Rectangle {
-                                        anchors.fill: parent
-                                        color: lampOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
-                                        radius: 12
+                                        anchors.centerIn: parent
+                                        width: 14
+                                        height: 14
+                                        radius: 7
+                                        color: "#E5A97C"
+                                        visible: root.autolampDelay === modelData
                                     }
+                                }
 
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 12
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: modelData
-                                        font.family: "Inter"
-                                        font.pixelSize: 24
-                                        font.weight: root.autolampDelay === modelData ? Font.Medium : Font.Normal
-                                        color: root.autolampDelay === modelData ? "#FFFFFF" : "#CBD5E1"
-                                    }
+                                // Row divider line
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 1
+                                    color: Qt.rgba(255, 255, 255, 0.10)
+                                }
 
-                                    // Radio indicator circle (matching photo exactly)
-                                    Rectangle {
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: 16
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: 34
-                                        height: 34
-                                        radius: 17
-                                        color: "transparent"
-                                        border.color: root.autolampDelay === modelData ? "#E5A97C" : "#5A6B82"
-                                        border.width: root.autolampDelay === modelData ? 3.5 : 2.2
-                                        Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                                        Rectangle {
-                                            anchors.centerIn: parent
-                                            width: 14
-                                            height: 14
-                                            radius: 7
-                                            color: "#E5A97C"
-                                            visible: root.autolampDelay === modelData
-                                        }
-                                    }
-
-                                    // Row divider line
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.bottom: parent.bottom
-                                        height: 1
-                                        color: Qt.rgba(255, 255, 255, 0.10)
-                                    }
-
-                                    MouseArea {
-                                        id: lampOptHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.autolampDelay = modelData
-                                    }
+                                MouseArea {
+                                    id: lampOptHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.autolampDelay = modelData
                                 }
                             }
                         }
+                    }
 
-                        // Right column: Autolamp Delay Visualizer Card (Slight rounded rectangle image)
+                    // Right 60% screen: Autolamp Delay Visualizer Card
+                    Item {
+                        id: autolampCardContainer
+                        anchors.left: autolampOptionsCol.right
+                        anchors.leftMargin: 20
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -20
+                        height: Math.min(parent.height - 60, Math.round(width * (9.0 / 16.0)))
+
+                        // Masked Image with slight rounded rectangle corners
                         Item {
-                            id: autolampCardContainer
-                            width: Math.min(840, parent.width - 520 - 56)
-                            height: 480
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.verticalCenterOffset: -40
+                            anchors.fill: parent
 
-                            // Masked Image with slight rounded rectangle corners
-                            Item {
+                            Image {
+                                id: autolampImg
                                 anchors.fill: parent
-
-                                Image {
-                                    id: autolampImg
-                                    anchors.fill: parent
-                                    source: "qrc:/ApexVision/qml/assets/autolamp_delay_preview.png"
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    mipmap: true
-                                    visible: false
-                                }
-
-                                Rectangle {
-                                    id: autolampMask
-                                    anchors.fill: parent
-                                    radius: 14
-                                    color: "black"
-                                    visible: false
-                                    layer.enabled: true
-                                }
-
-                                MultiEffect {
-                                    anchors.fill: parent
-                                    source: autolampImg
-                                    maskEnabled: true
-                                    maskSource: autolampMask
-                                }
+                                source: "qrc:/ApexVision/qml/assets/autolamp_delay_preview.png"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                                visible: false
                             }
 
-                            // Sleek subtle border around the slight rounded rectangle
                             Rectangle {
+                                id: autolampMask
                                 anchors.fill: parent
                                 radius: 14
-                                color: "transparent"
-                                border.color: Qt.rgba(255, 255, 255, 0.16)
-                                border.width: 1.5
+                                color: "black"
+                                visible: false
+                                layer.enabled: true
+                            }
+
+                            MultiEffect {
+                                anchors.fill: parent
+                                source: autolampImg
+                                maskEnabled: true
+                                maskSource: autolampMask
                             }
                         }
                     }
@@ -3038,136 +3047,137 @@ Item {
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
-                    Row {
-                        anchors.fill: parent
+                    // Left 40% screen: Radio Options ("Auto", "Last setting")
+                    Column {
+                        id: climateOptionsCol
+                        anchors.left: parent.left
+                        anchors.top: parent.top
                         anchors.topMargin: 20
-                        spacing: 56
+                        width: Math.round(parent.width * 0.40) - 16
+                        spacing: 0
 
-                        // Left column: Radio Options ("Auto", "Last setting")
-                        Column {
-                            width: 520
-                            spacing: 0
+                        Repeater {
+                            model: ["Auto", "Last setting"]
 
-                            Repeater {
-                                model: ["Auto", "Last setting"]
+                            Item {
+                                width: parent.width
+                                height: 82
 
-                                Item {
-                                    width: parent.width
-                                    height: 82
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: climateOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
+                                    radius: 12
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData
+                                    font.family: "Inter"
+                                    font.pixelSize: 24
+                                    font.weight: root.remoteStartClimate === modelData ? Font.Medium : Font.Normal
+                                    color: root.remoteStartClimate === modelData ? "#FFFFFF" : "#CBD5E1"
+                                }
+
+                                // Radio indicator circle (matching reference photo)
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 34
+                                    height: 34
+                                    radius: 17
+                                    color: "transparent"
+                                    border.color: root.remoteStartClimate === modelData ? "#E5A97C" : "#5A6B82"
+                                    border.width: root.remoteStartClimate === modelData ? 3.5 : 2.2
+                                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                                     Rectangle {
-                                        anchors.fill: parent
-                                        color: climateOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
-                                        radius: 12
+                                        anchors.centerIn: parent
+                                        width: 14
+                                        height: 14
+                                        radius: 7
+                                        color: "#E5A97C"
+                                        visible: root.remoteStartClimate === modelData
                                     }
+                                }
 
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 12
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: modelData
-                                        font.family: "Inter"
-                                        font.pixelSize: 24
-                                        font.weight: root.remoteStartClimate === modelData ? Font.Medium : Font.Normal
-                                        color: root.remoteStartClimate === modelData ? "#FFFFFF" : "#CBD5E1"
-                                    }
+                                // Row divider line
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 1
+                                    color: Qt.rgba(255, 255, 255, 0.10)
+                                }
 
-                                    // Radio indicator circle (matching reference photo)
-                                    Rectangle {
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: 16
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: 34
-                                        height: 34
-                                        radius: 17
-                                        color: "transparent"
-                                        border.color: root.remoteStartClimate === modelData ? "#E5A97C" : "#5A6B82"
-                                        border.width: root.remoteStartClimate === modelData ? 3.5 : 2.2
-                                        Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                                        Rectangle {
-                                            anchors.centerIn: parent
-                                            width: 14
-                                            height: 14
-                                            radius: 7
-                                            color: "#E5A97C"
-                                            visible: root.remoteStartClimate === modelData
-                                        }
-                                    }
-
-                                    // Row divider line
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.bottom: parent.bottom
-                                        height: 1
-                                        color: Qt.rgba(255, 255, 255, 0.10)
-                                    }
-
-                                    MouseArea {
-                                        id: climateOptHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.remoteStartClimate = modelData
-                                    }
+                                MouseArea {
+                                    id: climateOptHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.remoteStartClimate = modelData
                                 }
                             }
                         }
+                    }
 
-                        // Right column: Remote Start Climate Visualizer Card (Identical to autolamp delay)
+                    // Right 60% screen: Remote Start Climate Visualizer Card
+                    Item {
+                        id: climateCardContainer
+                        anchors.left: climateOptionsCol.right
+                        anchors.leftMargin: 20
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -20
+                        height: Math.min(parent.height - 60, Math.round(width * (9.0 / 16.0)))
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "#041322"
+                        }
+
+                        // Masked Image with slight rounded rectangle corners
                         Item {
-                            id: climateCardContainer
-                            width: Math.min(840, parent.width - 520 - 56)
-                            height: 480
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.verticalCenterOffset: -40
+                            anchors.fill: parent
+
+                            Image {
+                                id: climateImg
+                                anchors.fill: parent
+                                source: "qrc:/ApexVision/qml/assets/remote_start_climate_preview.png"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                                visible: false
+                            }
 
                             Rectangle {
+                                id: climateMask
                                 anchors.fill: parent
                                 radius: 14
-                                color: "#041322"
+                                color: "black"
+                                visible: false
+                                layer.enabled: true
                             }
 
-                            // Masked Image with slight rounded rectangle corners
-                            Item {
+                            MultiEffect {
                                 anchors.fill: parent
-
-                                Image {
-                                    id: climateImg
-                                    anchors.fill: parent
-                                    source: "qrc:/ApexVision/qml/assets/remote_start_climate_preview.png"
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    mipmap: true
-                                    visible: false
-                                }
-
-                                Rectangle {
-                                    id: climateMask
-                                    anchors.fill: parent
-                                    radius: 14
-                                    color: "black"
-                                    visible: false
-                                    layer.enabled: true
-                                }
-
-                                MultiEffect {
-                                    anchors.fill: parent
-                                    source: climateImg
-                                    maskEnabled: true
-                                    maskSource: climateMask
-                                }
+                                source: climateImg
+                                maskEnabled: true
+                                maskSource: climateMask
                             }
+                        }
 
-                            // Sleek subtle border around the slight rounded rectangle
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 14
-                                color: "transparent"
-                                border.color: Qt.rgba(255, 255, 255, 0.16)
-                                border.width: 1.5
-                            }
+                        // Sleek subtle border around the slight rounded rectangle
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "transparent"
+                            border.color: Qt.rgba(255, 255, 255, 0.16)
+                            border.width: 1.5
                         }
                     }
                 }
@@ -3188,136 +3198,137 @@ Item {
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
-                    Row {
-                        anchors.fill: parent
+                    // Left 40% screen: Radio Options ("Auto", "Off" matching user photo)
+                    Column {
+                        id: seatsOptionsCol
+                        anchors.left: parent.left
+                        anchors.top: parent.top
                         anchors.topMargin: 20
-                        spacing: 56
+                        width: Math.round(parent.width * 0.40) - 16
+                        spacing: 0
 
-                        // Left column: Radio Options ("Auto", "Off" matching user photo)
-                        Column {
-                            width: 520
-                            spacing: 0
+                        Repeater {
+                            model: ["Auto", "Off"]
 
-                            Repeater {
-                                model: ["Auto", "Off"]
+                            Item {
+                                width: parent.width
+                                height: 82
 
-                                Item {
-                                    width: parent.width
-                                    height: 82
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: seatsOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
+                                    radius: 12
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData
+                                    font.family: "Inter"
+                                    font.pixelSize: 24
+                                    font.weight: root.remoteStartSeats === modelData ? Font.Medium : Font.Normal
+                                    color: root.remoteStartSeats === modelData ? "#FFFFFF" : "#CBD5E1"
+                                }
+
+                                // Radio indicator circle (matching reference photo)
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 34
+                                    height: 34
+                                    radius: 17
+                                    color: "transparent"
+                                    border.color: root.remoteStartSeats === modelData ? "#E5A97C" : "#5A6B82"
+                                    border.width: root.remoteStartSeats === modelData ? 3.5 : 2.2
+                                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                                     Rectangle {
-                                        anchors.fill: parent
-                                        color: seatsOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
-                                        radius: 12
+                                        anchors.centerIn: parent
+                                        width: 14
+                                        height: 14
+                                        radius: 7
+                                        color: "#E5A97C"
+                                        visible: root.remoteStartSeats === modelData
                                     }
+                                }
 
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 12
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: modelData
-                                        font.family: "Inter"
-                                        font.pixelSize: 24
-                                        font.weight: root.remoteStartSeats === modelData ? Font.Medium : Font.Normal
-                                        color: root.remoteStartSeats === modelData ? "#FFFFFF" : "#CBD5E1"
-                                    }
+                                // Row divider line
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 1
+                                    color: Qt.rgba(255, 255, 255, 0.10)
+                                }
 
-                                    // Radio indicator circle (matching reference photo)
-                                    Rectangle {
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: 16
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: 34
-                                        height: 34
-                                        radius: 17
-                                        color: "transparent"
-                                        border.color: root.remoteStartSeats === modelData ? "#E5A97C" : "#5A6B82"
-                                        border.width: root.remoteStartSeats === modelData ? 3.5 : 2.2
-                                        Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                                        Rectangle {
-                                            anchors.centerIn: parent
-                                            width: 14
-                                            height: 14
-                                            radius: 7
-                                            color: "#E5A97C"
-                                            visible: root.remoteStartSeats === modelData
-                                        }
-                                    }
-
-                                    // Row divider line
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.bottom: parent.bottom
-                                        height: 1
-                                        color: Qt.rgba(255, 255, 255, 0.10)
-                                    }
-
-                                    MouseArea {
-                                        id: seatsOptHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.remoteStartSeats = modelData
-                                    }
+                                MouseArea {
+                                    id: seatsOptHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.remoteStartSeats = modelData
                                 }
                             }
                         }
+                    }
 
-                        // Right column: Remote Start Seats Visualizer Card (Identical to autolamp delay)
+                    // Right 60% screen: Remote Start Seats Visualizer Card
+                    Item {
+                        id: seatsCardContainer
+                        anchors.left: seatsOptionsCol.right
+                        anchors.leftMargin: 20
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -20
+                        height: Math.min(parent.height - 60, Math.round(width * (9.0 / 16.0)))
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "#050D14"
+                        }
+
+                        // Masked Image with slight rounded rectangle corners
                         Item {
-                            id: seatsCardContainer
-                            width: Math.min(840, parent.width - 520 - 56)
-                            height: 480
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.verticalCenterOffset: -40
+                            anchors.fill: parent
+
+                            Image {
+                                id: seatsImg
+                                anchors.fill: parent
+                                source: "qrc:/ApexVision/qml/assets/remote_start_seats_preview.png"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                                visible: false
+                            }
 
                             Rectangle {
+                                id: seatsMask
                                 anchors.fill: parent
                                 radius: 14
-                                color: "#050D14"
+                                color: "black"
+                                visible: false
+                                layer.enabled: true
                             }
 
-                            // Masked Image with slight rounded rectangle corners
-                            Item {
+                            MultiEffect {
                                 anchors.fill: parent
-
-                                Image {
-                                    id: seatsImg
-                                    anchors.fill: parent
-                                    source: "qrc:/ApexVision/qml/assets/remote_start_seats_preview.png"
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    mipmap: true
-                                    visible: false
-                                }
-
-                                Rectangle {
-                                    id: seatsMask
-                                    anchors.fill: parent
-                                    radius: 14
-                                    color: "black"
-                                    visible: false
-                                    layer.enabled: true
-                                }
-
-                                MultiEffect {
-                                    anchors.fill: parent
-                                    source: seatsImg
-                                    maskEnabled: true
-                                    maskSource: seatsMask
-                                }
+                                source: seatsImg
+                                maskEnabled: true
+                                maskSource: seatsMask
                             }
+                        }
 
-                            // Sleek subtle border around the slight rounded rectangle
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 14
-                                color: "transparent"
-                                border.color: Qt.rgba(255, 255, 255, 0.16)
-                                border.width: 1.5
-                            }
+                        // Sleek subtle border around the slight rounded rectangle
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "transparent"
+                            border.color: Qt.rgba(255, 255, 255, 0.16)
+                            border.width: 1.5
                         }
                     }
                 }
@@ -3338,136 +3349,137 @@ Item {
                     Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
-                    Row {
-                        anchors.fill: parent
+                    // Left 40% screen: Radio Options ("5 minutes", "10 minutes", "15 minutes")
+                    Column {
+                        id: durationOptionsCol
+                        anchors.left: parent.left
+                        anchors.top: parent.top
                         anchors.topMargin: 20
-                        spacing: 56
+                        width: Math.round(parent.width * 0.40) - 16
+                        spacing: 0
 
-                        // Left column: Radio Options ("5 minutes", "10 minutes", "15 minutes")
-                        Column {
-                            width: 520
-                            spacing: 0
+                        Repeater {
+                            model: ["5 minutes", "10 minutes", "15 minutes"]
 
-                            Repeater {
-                                model: ["5 minutes", "10 minutes", "15 minutes"]
+                            Item {
+                                width: parent.width
+                                height: 82
 
-                                Item {
-                                    width: parent.width
-                                    height: 82
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: durOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
+                                    radius: 12
+                                }
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 12
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: modelData
+                                    font.family: "Inter"
+                                    font.pixelSize: 24
+                                    font.weight: root.remoteStartDuration === modelData ? Font.Medium : Font.Normal
+                                    color: root.remoteStartDuration === modelData ? "#FFFFFF" : "#CBD5E1"
+                                }
+
+                                // Radio indicator circle (matching reference photo)
+                                Rectangle {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 16
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 34
+                                    height: 34
+                                    radius: 17
+                                    color: "transparent"
+                                    border.color: root.remoteStartDuration === modelData ? "#E5A97C" : "#5A6B82"
+                                    border.width: root.remoteStartDuration === modelData ? 3.5 : 2.2
+                                    Behavior on border.color { ColorAnimation { duration: 150 } }
 
                                     Rectangle {
-                                        anchors.fill: parent
-                                        color: durOptHover.containsMouse ? Qt.rgba(255, 255, 255, 0.06) : "transparent"
-                                        radius: 12
+                                        anchors.centerIn: parent
+                                        width: 14
+                                        height: 14
+                                        radius: 7
+                                        color: "#E5A97C"
+                                        visible: root.remoteStartDuration === modelData
                                     }
+                                }
 
-                                    Text {
-                                        anchors.left: parent.left
-                                        anchors.leftMargin: 12
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: modelData
-                                        font.family: "Inter"
-                                        font.pixelSize: 24
-                                        font.weight: root.remoteStartDuration === modelData ? Font.Medium : Font.Normal
-                                        color: root.remoteStartDuration === modelData ? "#FFFFFF" : "#CBD5E1"
-                                    }
+                                // Row divider line
+                                Rectangle {
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    height: 1
+                                    color: Qt.rgba(255, 255, 255, 0.10)
+                                }
 
-                                    // Radio indicator circle (matching reference photo)
-                                    Rectangle {
-                                        anchors.right: parent.right
-                                        anchors.rightMargin: 16
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        width: 34
-                                        height: 34
-                                        radius: 17
-                                        color: "transparent"
-                                        border.color: root.remoteStartDuration === modelData ? "#E5A97C" : "#5A6B82"
-                                        border.width: root.remoteStartDuration === modelData ? 3.5 : 2.2
-                                        Behavior on border.color { ColorAnimation { duration: 150 } }
-
-                                        Rectangle {
-                                            anchors.centerIn: parent
-                                            width: 14
-                                            height: 14
-                                            radius: 7
-                                            color: "#E5A97C"
-                                            visible: root.remoteStartDuration === modelData
-                                        }
-                                    }
-
-                                    // Row divider line
-                                    Rectangle {
-                                        anchors.left: parent.left
-                                        anchors.right: parent.right
-                                        anchors.bottom: parent.bottom
-                                        height: 1
-                                        color: Qt.rgba(255, 255, 255, 0.10)
-                                    }
-
-                                    MouseArea {
-                                        id: durOptHover
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.remoteStartDuration = modelData
-                                    }
+                                MouseArea {
+                                    id: durOptHover
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: root.remoteStartDuration = modelData
                                 }
                             }
                         }
+                    }
 
-                        // Right column: Remote Start Duration Visualizer Card (Same image as climate control)
+                    // Right 60% screen: Remote Start Duration Visualizer Card
+                    Item {
+                        id: durationCardContainer
+                        anchors.left: durationOptionsCol.right
+                        anchors.leftMargin: 20
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -20
+                        height: Math.min(parent.height - 60, Math.round(width * (9.0 / 16.0)))
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "#000000"
+                        }
+
+                        // Masked Image with slight rounded rectangle corners
                         Item {
-                            id: durationCardContainer
-                            width: Math.min(840, parent.width - 520 - 56)
-                            height: 480
-                            anchors.verticalCenter: parent.verticalCenter
-                            anchors.verticalCenterOffset: -40
+                            anchors.fill: parent
+
+                            Image {
+                                id: durationImg
+                                anchors.fill: parent
+                                source: "qrc:/ApexVision/qml/assets/image.png"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                                visible: false
+                            }
 
                             Rectangle {
+                                id: durationMask
                                 anchors.fill: parent
                                 radius: 14
-                                color: "#000000"
+                                color: "black"
+                                visible: false
+                                layer.enabled: true
                             }
 
-                            // Masked Image with slight rounded rectangle corners
-                            Item {
+                            MultiEffect {
                                 anchors.fill: parent
-
-                                Image {
-                                    id: durationImg
-                                    anchors.fill: parent
-                                    source: "qrc:/ApexVision/qml/assets/image.png"
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    mipmap: true
-                                    visible: false
-                                }
-
-                                Rectangle {
-                                    id: durationMask
-                                    anchors.fill: parent
-                                    radius: 14
-                                    color: "black"
-                                    visible: false
-                                    layer.enabled: true
-                                }
-
-                                MultiEffect {
-                                    anchors.fill: parent
-                                    source: durationImg
-                                    maskEnabled: true
-                                    maskSource: durationMask
-                                }
+                                source: durationImg
+                                maskEnabled: true
+                                maskSource: durationMask
                             }
+                        }
 
-                            // Sleek subtle border around the slight rounded rectangle
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 14
-                                color: "transparent"
-                                border.color: Qt.rgba(255, 255, 255, 0.16)
-                                border.width: 1.5
-                            }
+                        // Sleek subtle border around the slight rounded rectangle
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "transparent"
+                            border.color: Qt.rgba(255, 255, 255, 0.16)
+                            border.width: 1.5
                         }
                     }
                 }
@@ -3556,93 +3568,92 @@ Item {
                     Behavior on x { NumberAnimation { duration: 320; easing.type: Easing.OutCubic } }
                     Behavior on opacity { NumberAnimation { duration: 280; easing.type: Easing.InOutQuad } }
 
-                    Row {
-                        anchors.fill: parent
+                    // Left 40% screen: Radio Options (Aligned to top)
+                    Item {
+                        id: remoteUnlockOptionsCol
+                        anchors.left: parent.left
                         anchors.leftMargin: 20
-                        anchors.rightMargin: 20
-                        spacing: 40
+                        anchors.top: parent.top
+                        anchors.bottom: parent.bottom
+                        width: Math.round(parent.width * 0.40) - 36
 
-                        // Left column: Radio Options (Aligned to top)
-                        Item {
-                            width: 480
+                        Column {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
                             anchors.top: parent.top
-                            anchors.bottom: parent.bottom
+                            anchors.topMargin: 16
+                            spacing: 0
 
-                            Column {
-                                anchors.left: parent.left
-                                anchors.right: parent.right
-                                anchors.top: parent.top
-                                anchors.topMargin: 16
-                                spacing: 0
+                            SettingRowRadio {
+                                title: "All doors"
+                                selected: root.remoteUnlockMode === "All doors"
+                                onSelectedRequested: root.remoteUnlockMode = "All doors"
+                            }
 
-                                SettingRowRadio {
-                                    title: "All doors"
-                                    selected: root.remoteUnlockMode === "All doors"
-                                    onSelectedRequested: root.remoteUnlockMode = "All doors"
-                                }
+                            SettingRowRadio {
+                                title: "Driver's door"
+                                selected: root.remoteUnlockMode === "Driver's door"
+                                onSelectedRequested: root.remoteUnlockMode = "Driver's door"
+                            }
+                        }
+                    }
 
-                                SettingRowRadio {
-                                    title: "Driver's door"
-                                    selected: root.remoteUnlockMode === "Driver's door"
-                                    onSelectedRequested: root.remoteUnlockMode = "Driver's door"
-                                }
+                    // Right 60% screen: Top-down vehicle visualizer card
+                    Item {
+                        id: remoteUnlockCardContainer
+                        anchors.left: remoteUnlockOptionsCol.right
+                        anchors.leftMargin: 20
+                        anchors.right: parent.right
+                        anchors.rightMargin: 16
+                        anchors.verticalCenter: parent.verticalCenter
+                        anchors.verticalCenterOffset: -20
+                        height: Math.min(parent.height - 60, Math.round(width * (9.0 / 16.0)))
+
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "#0B0E14"
+                        }
+
+                        Item {
+                            anchors.fill: parent
+
+                            Image {
+                                id: remoteUnlockImg
+                                anchors.fill: parent
+                                source: root.remoteUnlockMode === "All doors" ?
+                                        "qrc:/ApexVision/qml/assets/remote_unlock_all.png" :
+                                        "qrc:/ApexVision/qml/assets/remote_unlock_driver.png"
+                                fillMode: Image.PreserveAspectFit
+                                smooth: true
+                                mipmap: true
+                                visible: false
+                            }
+
+                            Rectangle {
+                                id: remoteUnlockMask
+                                anchors.fill: parent
+                                radius: 14
+                                color: "black"
+                                visible: false
+                                layer.enabled: true
+                            }
+
+                            MultiEffect {
+                                anchors.fill: parent
+                                source: remoteUnlockImg
+                                maskEnabled: true
+                                maskSource: remoteUnlockMask
                             }
                         }
 
-                        // Right column: Top-down vehicle visualizer card (Aligned to top)
-                        Item {
-                            id: remoteUnlockCardContainer
-                            width: Math.min(840, parent.width - 520 - 56)
-                            height: 480
-                            anchors.top: parent.top
-                            anchors.topMargin: 16
-
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 14
-                                color: "#0B0E14"
-                            }
-
-                            Item {
-                                anchors.fill: parent
-
-                                Image {
-                                    id: remoteUnlockImg
-                                    anchors.fill: parent
-                                    source: root.remoteUnlockMode === "All doors" ?
-                                            "qrc:/ApexVision/qml/assets/remote_unlock_all.png" :
-                                            "qrc:/ApexVision/qml/assets/remote_unlock_driver.png"
-                                    fillMode: Image.PreserveAspectCrop
-                                    smooth: true
-                                    mipmap: true
-                                    visible: false
-                                }
-
-                                Rectangle {
-                                    id: remoteUnlockMask
-                                    anchors.fill: parent
-                                    radius: 14
-                                    color: "black"
-                                    visible: false
-                                    layer.enabled: true
-                                }
-
-                                MultiEffect {
-                                    anchors.fill: parent
-                                    source: remoteUnlockImg
-                                    maskEnabled: true
-                                    maskSource: remoteUnlockMask
-                                }
-                            }
-
-                            // Sleek subtle border around card
-                            Rectangle {
-                                anchors.fill: parent
-                                radius: 14
-                                color: "transparent"
-                                border.color: Qt.rgba(255, 255, 255, 0.16)
-                                border.width: 1.5
-                            }
+                        // Sleek subtle border around card
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: 14
+                            color: "transparent"
+                            border.color: Qt.rgba(255, 255, 255, 0.16)
+                            border.width: 1.5
                         }
                     }
                 }
@@ -3914,7 +3925,9 @@ Item {
             // =================================================================
             Item {
                 id: soundCategoryPanel
-                anchors.fill: parent
+                width: parent.width
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
                 x: root.activeCategory === "sound" ? 0 : 36
                 opacity: root.activeCategory === "sound" ? 1.0 : 0.0
                 visible: opacity > 0.001
@@ -4622,11 +4635,11 @@ Item {
                             // Top-Down Car Image - Perfectly scaled to show full front hood gradient and full cabin seats
                             Image {
                                 id: carTopImg
-                                width: 520
-                                height: width * (1536.0 / 1024.0) // 780px
+                                width: 340
+                                height: width * (1536.0 / 1024.0) // 510px
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 anchors.verticalCenter: parent.verticalCenter
-                                anchors.verticalCenterOffset: -12
+                                anchors.verticalCenterOffset: -6
                                 source: "qrc:/ApexVision/qml/assets/icons/car_top_balance_fade.png"
                                 fillMode: Image.PreserveAspectFit
                                 smooth: true
@@ -5741,11 +5754,16 @@ Item {
             // =================================================================
             Item {
                 id: bluetoothCategoryPanel
-                anchors.left: parent.left
-                anchors.right: parent.right
+                width: parent.width
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                visible: root.activeCategory === "bluetooth"
+                x: root.activeCategory === "bluetooth" ? 0 : 36
+                opacity: root.activeCategory === "bluetooth" ? 1.0 : 0.0
+                visible: opacity > 0.001
+                clip: true
+
+                Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                 // -------------------------------------------------------------
                 // VIEW 1: Connect to Bluetooth (Exact layout from user photo)
@@ -5754,7 +5772,13 @@ Item {
                 Item {
                     id: btConnectView
                     anchors.fill: parent
-                    visible: root.bluetoothEnabled && !PhoneBackend.isConnected && !root.btPairingActive
+                    x: (!root.btPairingActive && !PhoneBackend.isConnected) ? 0 : -parent.width * 0.4
+                    opacity: (!root.btPairingActive && !PhoneBackend.isConnected) ? 1.0 : 0.0
+                    enabled: !root.btPairingActive && !PhoneBackend.isConnected
+                    visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                     Column {
                         anchors.centerIn: parent
@@ -5830,7 +5854,13 @@ Item {
                 Item {
                     id: btPairingView
                     anchors.fill: parent
-                    visible: root.bluetoothEnabled && root.btPairingActive
+                    x: root.btPairingActive ? 0 : parent.width
+                    opacity: root.btPairingActive ? 1.0 : 0.0
+                    enabled: root.btPairingActive
+                    visible: opacity > 0.001 || x < parent.width
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                     Timer {
                         id: btScanTimer
@@ -6083,7 +6113,13 @@ Item {
                 Item {
                     id: btConnectedView
                     anchors.fill: parent
-                    visible: root.bluetoothEnabled && PhoneBackend.isConnected && !root.btPairingActive
+                    x: (PhoneBackend.isConnected && !root.btPairingActive) ? 0 : parent.width
+                    opacity: (PhoneBackend.isConnected && !root.btPairingActive) ? 1.0 : 0.0
+                    enabled: PhoneBackend.isConnected && !root.btPairingActive
+                    visible: opacity > 0.001 || x < parent.width
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                     Column {
                         anchors.centerIn: parent
@@ -6291,12 +6327,16 @@ Item {
             // =================================================================
             Item {
                 id: systemContainer
-                anchors.left: parent.left
-                anchors.right: parent.right
+                width: parent.width
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
+                x: root.activeCategory === "system" ? 0 : 36
+                opacity: root.activeCategory === "system" ? 1.0 : 0.0
+                visible: opacity > 0.001
                 clip: true
-                visible: root.activeCategory === "system"
+
+                Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                 // -------------------------------------------------------------
                 // LEVEL 1: System Main View
@@ -9412,12 +9452,16 @@ Item {
             // =================================================================
             Item {
                 id: profileContainer
-                anchors.left: parent.left
-                anchors.right: parent.right
+                width: parent.width
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                visible: root.activeCategory === "profile"
+                x: root.activeCategory === "profile" ? 0 : 36
+                opacity: root.activeCategory === "profile" ? 1.0 : 0.0
+                visible: opacity > 0.001
                 clip: true
+
+                Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                 // -------------------------------------------------------------
                 // LEVEL 1: MAIN PROFILE VIEW (Matches Image 1 & Image 4)
@@ -10757,12 +10801,16 @@ Item {
             // =================================================================
             Item {
                 id: displayContainer
-                anchors.left: parent.left
-                anchors.right: parent.right
+                width: parent.width
                 anchors.top: parent.top
                 anchors.bottom: parent.bottom
-                visible: root.activeCategory === "display"
+                x: root.activeCategory === "display" ? 0 : 36
+                opacity: root.activeCategory === "display" ? 1.0 : 0.0
+                visible: opacity > 0.001
                 clip: true
+
+                Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
 
                 // -------------------------------------------------------------
                 // LEVEL 1: MAIN DISPLAY VIEW (Matches Image 1)
@@ -10990,11 +11038,11 @@ Item {
                                     height: 32
                                     anchors.verticalCenter: parent.verticalCenter
 
-                                    Text {
+                                    InfoBadge {
                                         anchors.centerIn: parent
-                                        text: "ⓘ"
-                                        font.pixelSize: 18
-                                        color: "#94A3B8"
+                                        badgeSize: 20
+                                        borderColor: "#94A3B8"
+                                        iconColor: "#94A3B8"
                                     }
                                     MouseArea {
                                         anchors.fill: parent
@@ -11607,7 +11655,7 @@ Item {
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: parent.width
-                    x: root.connCurrentScreen === "wifi" ? 0 : parent.width
+                    x: root.connCurrentScreen === "wifi" ? 0 : (root.connCurrentScreen === "main" ? parent.width : -parent.width * 0.4)
                     opacity: root.connCurrentScreen === "wifi" ? 1.0 : 0.0
                     enabled: root.connCurrentScreen === "wifi"
                     visible: opacity > 0.001 || (x > -parent.width * 0.4 && x < parent.width)
@@ -11629,18 +11677,107 @@ Item {
 
                             SettingRowSwitch {
                                 title: "Use Wi-Fi"
-                                subtitle: root.wifiEnabled ? "Connected to Apex_Fast5G" : "Wi-Fi is turned off"
-                                checked: root.wifiEnabled
+                                subtitle: (typeof SystemBackend !== "undefined" && SystemBackend.wifiConnected)
+                                    ? ("Connected to " + SystemBackend.wifiSsid + " • " + SystemBackend.wifiBand)
+                                    : ((typeof SystemBackend !== "undefined" && SystemBackend.wifiEnabled) ? "Disconnected • Wi-Fi is on" : "Wi-Fi is turned off")
+                                checked: (typeof SystemBackend !== "undefined") ? SystemBackend.wifiEnabled : true
                                 onToggled: {
-                                    root.wifiEnabled = !root.wifiEnabled;
+                                    if (typeof SystemBackend !== "undefined") {
+                                        SystemBackend.setWifiEnabled(!SystemBackend.wifiEnabled);
+                                    }
                                 }
                             }
 
-                            // Available Networks Header
+                            // Connected Network Card (if active)
+                            Rectangle {
+                                width: parent.width - 16
+                                height: 74
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                radius: 12
+                                color: Qt.rgba(34, 197, 94, 0.12)
+                                border.color: Qt.rgba(34, 197, 94, 0.35)
+                                border.width: 1
+                                visible: (typeof SystemBackend !== "undefined" && SystemBackend.wifiEnabled && SystemBackend.wifiConnected && SystemBackend.wifiSsid !== "")
+
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 16
+                                    anchors.rightMargin: 16
+                                    spacing: 14
+
+                                    Image {
+                                        source: "qrc:/ApexVision/qml/assets/icons/setting_wifi_white.svg"
+                                        width: 22
+                                        height: 22
+                                        sourceSize: Qt.size(22, 22)
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 3
+                                        width: parent.width - 140
+
+                                        Row {
+                                            spacing: 8
+                                            Text {
+                                                text: (typeof SystemBackend !== "undefined") ? SystemBackend.wifiSsid : ""
+                                                color: "#FFFFFF"
+                                                font.family: "Inter"
+                                                font.pixelSize: 17
+                                                font.weight: Font.Bold
+                                            }
+                                            Rectangle {
+                                                width: 8
+                                                height: 8
+                                                radius: 4
+                                                color: "#22C55E"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                        }
+
+                                        Text {
+                                            text: "Connected • " + ((typeof SystemBackend !== "undefined") ? (SystemBackend.wifiBand + " • " + SystemBackend.wifiSecurity + " (" + SystemBackend.wifiSignalDbm + " dBm)") : "")
+                                            color: "#86EFAC"
+                                            font.family: "Inter"
+                                            font.pixelSize: 13
+                                        }
+                                    }
+
+                                    // Gear Icon -> Details Screen
+                                    Rectangle {
+                                        width: 38
+                                        height: 38
+                                        radius: 19
+                                        color: gearMa.containsMouse ? Qt.rgba(255, 255, 255, 0.18) : Qt.rgba(255, 255, 255, 0.08)
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "⚙"
+                                            font.pixelSize: 18
+                                            color: "#FFFFFF"
+                                        }
+
+                                        MouseArea {
+                                            id: gearMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                root.connSlideDir = 1;
+                                                root.connCurrentScreen = "wifi_details";
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Available Networks Header with Scan Refresh Button
                             Item {
                                 width: parent.width
-                                height: 50
-                                visible: root.wifiEnabled
+                                height: 52
+                                visible: (typeof SystemBackend !== "undefined") ? SystemBackend.wifiEnabled : true
 
                                 Text {
                                     anchors.left: parent.left
@@ -11652,30 +11789,1150 @@ Item {
                                     font.weight: Font.DemiBold
                                     color: root.currentThemeAccent
                                 }
+
+                                Row {
+                                    anchors.right: parent.right
+                                    anchors.rightMargin: 8
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 8
+
+                                    Rectangle {
+                                        width: scanRow.implicitWidth + 24
+                                        height: 32
+                                        radius: 16
+                                        color: scanMa.containsMouse ? Qt.rgba(255, 255, 255, 0.18) : Qt.rgba(255, 255, 255, 0.08)
+                                        border.color: Qt.rgba(255, 255, 255, 0.18)
+                                        border.width: 1
+
+                                        Row {
+                                            id: scanRow
+                                            anchors.centerIn: parent
+                                            spacing: 6
+
+                                            Image {
+                                                id: scanIcon
+                                                source: Qt.platform.os === "linux" ? "file:///opt/apex_vision_ivi/qml/assets/icons/icon_wifi_scan.svg" : "qrc:/ApexVision/qml/assets/icons/icon_wifi_scan.svg"
+                                                width: 14
+                                                height: 14
+                                                sourceSize: Qt.size(14, 14)
+                                                anchors.verticalCenter: parent.verticalCenter
+
+                                                RotationAnimation on rotation {
+                                                    from: 0
+                                                    to: 360
+                                                    duration: 800
+                                                    loops: Animation.Infinite
+                                                    running: (typeof SystemBackend !== "undefined" && SystemBackend.wifiScanning)
+                                                }
+                                            }
+
+                                            Text {
+                                                id: scanTxt
+                                                text: (typeof SystemBackend !== "undefined" && SystemBackend.wifiScanning) ? "Scanning..." : "Scan"
+                                                color: "#FFFFFF"
+                                                font.family: "Inter"
+                                                font.pixelSize: 13
+                                                font.weight: Font.Medium
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            id: scanMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                if (typeof SystemBackend !== "undefined") {
+                                                    SystemBackend.scanWifiNetworks();
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
-                            SettingRowChevron {
-                                visible: root.wifiEnabled
-                                title: "Apex_Fast5G"
-                                subtitle: "Connected • 5 GHz • Secured (WPA3)"
+                            // Dynamic Repeater for Real Scanned Wi-Fi Networks
+                            Repeater {
+                                model: (typeof SystemBackend !== "undefined" && SystemBackend.wifiEnabled) ? SystemBackend.wifiNetworks : []
+
+                                Rectangle {
+                                    id: wifiNetworkItem
+                                    property var netData: modelData
+                                    readonly property bool isNetConnected: Boolean(netData && (netData.isConnected || netData.connected))
+                                    readonly property int netBars: {
+                                        if (!netData) return 1;
+                                        if (netData.signalBars !== undefined && Number(netData.signalBars) > 0) {
+                                            return Number(netData.signalBars);
+                                        }
+                                        var dbm = (netData.signalDbm !== undefined) ? Number(netData.signalDbm) : -100;
+                                        if (dbm >= -58) return 4;
+                                        if (dbm >= -68) return 3;
+                                        if (dbm >= -78) return 2;
+                                        return 1;
+                                    }
+
+                                    width: parent.width
+                                    height: 76
+                                    radius: 12
+                                    color: itemMa.pressed ? Qt.rgba(255, 255, 255, 0.08) :
+                                           (itemMa.containsMouse ? Qt.rgba(255, 255, 255, 0.04) : "transparent")
+                                    Behavior on color { ColorAnimation { duration: 120 } }
+
+                                    Row {
+                                        anchors.left: parent.left
+                                        anchors.leftMargin: 12
+                                        anchors.right: chevronItem.left
+                                        anchors.rightMargin: 12
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 16
+
+                                        // Left Icon Group: Vector Wi-Fi Wave + 4 Crisp Vertical Signal Bars
+                                        Row {
+                                            spacing: 10
+                                            anchors.verticalCenter: parent.verticalCenter
+
+                                            Image {
+                                                source: wifiNetworkItem.isNetConnected ? "qrc:/ApexVision/qml/assets/icons/setting_wifi_yellow.svg" : "qrc:/ApexVision/qml/assets/icons/setting_wifi_white.svg"
+                                                width: 22
+                                                height: 22
+                                                sourceSize: Qt.size(22, 22)
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+
+                                            // 4 Crisp Vertical Signal Strength Bars
+                                            Row {
+                                                spacing: 2.5
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                Repeater {
+                                                    model: 4
+                                                    Rectangle {
+                                                        width: 3.5
+                                                        height: 6 + index * 4
+                                                        radius: 1.5
+                                                        anchors.bottom: parent.bottom
+                                                        color: (index < wifiNetworkItem.netBars) ? (wifiNetworkItem.isNetConnected ? "#E0A96D" : "#FFFFFF") : Qt.rgba(255, 255, 255, 0.22)
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Center Column: SSID Name + Lock + Status Subtitle
+                                        Column {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 4
+                                            width: parent.width - 70
+
+                                            Row {
+                                                spacing: 8
+                                                Text {
+                                                    text: (wifiNetworkItem.netData && wifiNetworkItem.netData.ssid) ? wifiNetworkItem.netData.ssid : ""
+                                                    color: wifiNetworkItem.isNetConnected ? "#E0A96D" : "#FFFFFF"
+                                                    font.family: "Inter"
+                                                    font.pixelSize: 20
+                                                    font.weight: wifiNetworkItem.isNetConnected ? Font.Bold : Font.DemiBold
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                // Crisp Authentic SVG Vector Padlock Icon
+                                                Image {
+                                                    visible: Boolean(modelData.isSecured !== undefined ? modelData.isSecured : (modelData.security && modelData.security !== "Open"))
+                                                    source: Qt.platform.os === "linux" ? "file:///opt/apex_vision_ivi/qml/assets/icons/icon_wifi_lock.svg" : "qrc:/ApexVision/qml/assets/icons/icon_wifi_lock.svg"
+                                                    width: 14
+                                                    height: 14
+                                                    sourceSize: Qt.size(14, 14)
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    opacity: 0.95
+                                                }
+                                            }
+
+                                            Text {
+                                                text: (Boolean(modelData.isConnected) || Boolean(modelData.connected)) ? "Connected" :
+                                                      ((Boolean(modelData.isSaved) || Boolean(modelData.saved)) ? ("Saved • " + (modelData.security || "WPA2")) :
+                                                      ((Boolean(modelData.isSecured) || (modelData.security && modelData.security !== "Open")) ? (modelData.security || "Secured") : "Open Network"))
+                                                color: (Boolean(modelData.isConnected) || Boolean(modelData.connected)) ? "#86EFAC" : "#93C5FD"
+                                                font.family: "Inter"
+                                                font.pixelSize: 14
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+                                    }
+
+                                    // Right Trailing Chevron / Settings Action
+                                    Item {
+                                        id: chevronItem
+                                        anchors.right: parent.right
+                                        anchors.rightMargin: 8
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: 52
+                                        height: 52
+
+                                        Rectangle {
+                                            anchors.centerIn: parent
+                                            width: 36
+                                            height: 36
+                                            radius: 18
+                                            color: chevronMa.containsMouse ? Qt.rgba(255, 255, 255, 0.14) : "transparent"
+                                            Behavior on color { ColorAnimation { duration: 120 } }
+                                        }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: modelData.isConnected ? "⚙" : "›"
+                                            font.family: "Inter"
+                                            font.pixelSize: modelData.isConnected ? 22 : 32
+                                            font.weight: Font.DemiBold
+                                            color: modelData.isConnected ? "#38BDF8" : ((Boolean(modelData.isSaved) || Boolean(modelData.saved)) ? "#E0A96D" : "#CBD5E1")
+                                        }
+
+                                        MouseArea {
+                                            id: chevronMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                if (typeof SystemBackend !== "undefined") {
+                                                    SystemBackend.playTouchSound();
+                                                }
+                                                // Arrow clicked: show settings & details about the network
+                                                root.wifiSelectedDetailsNet = modelData;
+                                                root.connSlideDir = 1;
+                                                root.connCurrentScreen = "wifi_details";
+                                            }
+                                        }
+                                    }
+
+                                    Rectangle {
+                                        anchors.bottom: parent.bottom
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.leftMargin: 12
+                                        anchors.rightMargin: 16
+                                        height: 1
+                                        color: Qt.rgba(255, 255, 255, 0.06)
+                                    }
+
+                                    // Main Row Area: Left click on network name & status
+                                    MouseArea {
+                                        id: itemMa
+                                        anchors.left: parent.left
+                                        anchors.right: chevronItem.left
+                                        anchors.top: parent.top
+                                        anchors.bottom: parent.bottom
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (typeof SystemBackend !== "undefined") {
+                                                SystemBackend.playTouchSound();
+                                            }
+                                            if (modelData.isConnected) {
+                                                root.wifiSelectedDetailsNet = modelData;
+                                                root.connSlideDir = 1;
+                                                root.connCurrentScreen = "wifi_details";
+                                            } else if (Boolean(modelData.isSaved) || Boolean(modelData.saved)) {
+                                                // Saved network: pressing name connects directly!
+                                                if (typeof SystemBackend !== "undefined") {
+                                                    SystemBackend.connectToNetwork(modelData.ssid);
+                                                }
+                                            } else {
+                                                // Unsaved: open password connect screen
+                                                root.wifiTargetSsid = modelData.ssid;
+                                                root.wifiTargetSecurity = modelData.security;
+                                                root.wifiEnteredPassword = "";
+                                                root.connSlideDir = 1;
+                                                root.connCurrentScreen = "wifi_connect";
+                                            }
+                                        }
+                                    }
+                                }
                             }
 
-                            SettingRowChevron {
-                                visible: root.wifiEnabled
-                                title: "Supercharge_HQ"
-                                subtitle: "Saved • Secured (WPA2)"
+                            // Empty state if no networks found
+                            Item {
+                                width: parent.width
+                                height: 80
+                                visible: (typeof SystemBackend !== "undefined" && SystemBackend.wifiEnabled && SystemBackend.wifiNetworks.length === 0)
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: (typeof SystemBackend !== "undefined" && SystemBackend.wifiScanning) ? "Searching for wireless networks..." : "No Wi-Fi networks found in range"
+                                    color: "#94A3B8"
+                                    font.family: "Inter"
+                                    font.pixelSize: 15
+                                }
                             }
 
+                            // Add Network Chevron
                             SettingRowChevron {
-                                visible: root.wifiEnabled
-                                title: "Guest_Net"
-                                subtitle: "Open network"
-                            }
-
-                            SettingRowChevron {
-                                visible: root.wifiEnabled
+                                visible: (typeof SystemBackend !== "undefined") ? SystemBackend.wifiEnabled : true
                                 title: "Add network"
                                 subtitle: "Connect to a hidden or manual Wi-Fi network"
+                                onClicked: {
+                                    root.wifiTargetSsid = "";
+                                    root.wifiTargetSecurity = "WPA/WPA2/WPA3";
+                                    root.wifiEnteredPassword = "";
+                                    root.connSlideDir = 1;
+                                    root.connCurrentScreen = "wifi_connect";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // =============================================================
+                // Screen 3: Wi-Fi Connect Sub-screen (With Bottom-Docked Google Keyboard)
+                // =============================================================
+                Item {
+                    id: connWifiConnectView
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    x: 0
+                    opacity: root.connCurrentScreen === "wifi_connect" ? 1.0 : 0.0
+                    enabled: root.connCurrentScreen === "wifi_connect"
+                    visible: opacity > 0.001 || autoKeyboardDockTranslate.y < (autoKeyboardDock.height + 30)
+
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+
+                    property bool isCapsLock: false
+                    property bool isSymbols: false
+                    property string activeTarget: "password"
+
+                    // Helper inline automotive keyboard key component
+                    component AutoKeyButton: Rectangle {
+                        id: kBtn
+                        property string label: ""
+                        property real btnWidth: 68
+                        property real btnHeight: 50
+                        signal clicked()
+
+                        width: btnWidth
+                        height: btnHeight
+                        radius: 12
+                        color: kMouse.pressed ? Qt.rgba(255, 255, 255, 0.22) :
+                               (kMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.14) : Qt.rgba(255, 255, 255, 0.08))
+                        border.color: Qt.rgba(255, 255, 255, 0.20)
+                        border.width: 1
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: kBtn.label
+                            color: "#FFFFFF"
+                            font.family: "Inter"
+                            font.pixelSize: 20
+                            font.weight: Font.Medium
+                        }
+
+                        MouseArea {
+                            id: kMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                                kBtn.clicked();
+                            }
+                        }
+                    }
+
+                    function appendChar(c) {
+                        if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                        if (root.wifiTargetSsid === "" && activeTarget === "ssid") {
+                            manualSsidInput.text += c;
+                        } else {
+                            root.wifiEnteredPassword += c;
+                        }
+                    }
+
+                    function deleteChar() {
+                        if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                        if (root.wifiTargetSsid === "" && activeTarget === "ssid") {
+                            if (manualSsidInput.text.length > 0) {
+                                manualSsidInput.text = manualSsidInput.text.substring(0, manualSsidInput.text.length - 1);
+                            }
+                        } else {
+                            if (root.wifiEnteredPassword.length > 0) {
+                                root.wifiEnteredPassword = root.wifiEnteredPassword.substring(0, root.wifiEnteredPassword.length - 1);
+                            }
+                        }
+                    }
+
+                    function doConnect() {
+                        if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                        var target = (root.wifiTargetSsid !== "") ? root.wifiTargetSsid : manualSsidInput.text.trim();
+                        if (target !== "" && typeof SystemBackend !== "undefined") {
+                            SystemBackend.connectToNetwork(target, root.wifiEnteredPassword);
+                        }
+                        root.connSlideDir = -1;
+                        root.connCurrentScreen = "wifi";
+                        root.wifiEnteredPassword = "";
+                    }
+
+                    // Upper Area: Settings-Themed Input Form Card
+                    Item {
+                        id: connectUpperArea
+                        anchors.top: parent.top
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.bottom: autoKeyboardDock.top
+                        anchors.bottomMargin: 8
+                        x: root.connCurrentScreen === "wifi_connect" ? 0 : 36
+                        opacity: root.connCurrentScreen === "wifi_connect" ? 1.0 : 0.0
+
+                        Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                        Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+
+                        Flickable {
+                            anchors.fill: parent
+                            contentHeight: connectFormCol.height + 20
+                            clip: true
+
+                            Column {
+                                id: connectFormCol
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.top: parent.top
+                                anchors.topMargin: 12
+                                spacing: 16
+
+                                // Network Header Row
+                                Row {
+                                    width: parent.width
+                                    spacing: 12
+
+                                    Image {
+                                        source: "qrc:/ApexVision/qml/assets/icons/setting_wifi_white.svg"
+                                        width: 24
+                                        height: 24
+                                        sourceSize: Qt.size(24, 24)
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Text {
+                                        text: (root.wifiTargetSsid !== "") ? root.wifiTargetSsid : "Add Wi-Fi Network"
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 20
+                                        font.weight: Font.Bold
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Rectangle {
+                                        visible: root.wifiTargetSecurity !== ""
+                                        height: 24
+                                        width: secPillTxt.implicitWidth + 14
+                                        radius: 12
+                                        color: Qt.rgba(224/255, 169/255, 109/255, 0.16)
+                                        border.color: Qt.rgba(224/255, 169/255, 109/255, 0.45)
+                                        border.width: 1
+                                        anchors.verticalCenter: parent.verticalCenter
+
+                                        Text {
+                                            id: secPillTxt
+                                            anchors.centerIn: parent
+                                            text: root.wifiTargetSecurity
+                                            font.family: "Inter"
+                                            font.pixelSize: 12
+                                            font.weight: Font.DemiBold
+                                            color: "#E0A96D"
+                                        }
+                                    }
+                                }
+
+                                // Manual SSID Input Row (if adding new network)
+                                Item {
+                                    visible: root.wifiTargetSsid === ""
+                                    width: parent.width
+                                    height: 50
+
+                                    Rectangle {
+                                        anchors.fill: parent
+                                        radius: 10
+                                        color: (connWifiConnectView.activeTarget === "ssid") ? Qt.rgba(224/255, 169/255, 109/255, 0.15) : Qt.rgba(255, 255, 255, 0.08)
+                                        border.color: (connWifiConnectView.activeTarget === "ssid") ? "#E0A96D" : Qt.rgba(255, 255, 255, 0.20)
+                                        border.width: 1.5
+
+                                        TextInput {
+                                            id: manualSsidInput
+                                            anchors.fill: parent
+                                            anchors.leftMargin: 16
+                                            anchors.rightMargin: 16
+                                            verticalAlignment: TextInput.AlignVCenter
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 16
+                                            clip: true
+
+                                            Text {
+                                                anchors.fill: parent
+                                                verticalAlignment: Text.AlignVCenter
+                                                visible: !manualSsidInput.text && !manualSsidInput.activeFocus
+                                                text: "Network SSID name"
+                                                color: "#64748B"
+                                                font.family: "Inter"
+                                                font.pixelSize: 16
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            onClicked: {
+                                                connWifiConnectView.activeTarget = "ssid";
+                                                manualSsidInput.forceActiveFocus();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Password Input Field & Amber Glass Connect Action Button
+                                Row {
+                                    width: parent.width
+                                    height: 52
+                                    spacing: 14
+
+                                    // Password Input Field Container (Cluster Glass Styling)
+                                    Rectangle {
+                                        width: parent.width - 150
+                                        height: parent.height
+                                        radius: 12
+                                        color: (connWifiConnectView.activeTarget === "password") ? Qt.rgba(255, 255, 255, 0.12) : Qt.rgba(255, 255, 255, 0.06)
+                                        border.color: (connWifiConnectView.activeTarget === "password") ? "#E0A96D" : Qt.rgba(255, 255, 255, 0.18)
+                                        border.width: 1.5
+
+                                        TextInput {
+                                            id: wifiPagePassInput
+                                            anchors.left: parent.left
+                                            anchors.right: passIconsRow.left
+                                            anchors.top: parent.top
+                                            anchors.bottom: parent.bottom
+                                            anchors.leftMargin: 16
+                                            anchors.rightMargin: 10
+                                            verticalAlignment: TextInput.AlignVCenter
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 17
+                                            echoMode: root.wifiShowPassword ? TextInput.Normal : TextInput.Password
+                                            text: root.wifiEnteredPassword
+                                            onTextChanged: root.wifiEnteredPassword = text
+                                            onAccepted: connWifiConnectView.doConnect()
+                                            clip: true
+
+                                            Text {
+                                                anchors.fill: parent
+                                                verticalAlignment: Text.AlignVCenter
+                                                visible: !wifiPagePassInput.text && !wifiPagePassInput.activeFocus
+                                                text: "Enter Wi-Fi Password"
+                                                color: "#94A3B8"
+                                                font.family: "Inter"
+                                                font.pixelSize: 16
+                                            }
+                                        }
+
+                                        Row {
+                                            id: passIconsRow
+                                            anchors.right: parent.right
+                                            anchors.rightMargin: 12
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 12
+
+                                            // Clear button
+                                            Text {
+                                                visible: root.wifiEnteredPassword.length > 0
+                                                text: "✕"
+                                                font.pixelSize: 16
+                                                color: "#94A3B8"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    anchors.margins: -6
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: root.wifiEnteredPassword = ""
+                                                }
+                                            }
+
+                                            // Show / Hide Password toggle (Glass Pill with Project Amber Theme)
+                                            Rectangle {
+                                                width: 54
+                                                height: 28
+                                                radius: 8
+                                                color: root.wifiShowPassword ? Qt.rgba(224/255, 169/255, 109/255, 0.28) : Qt.rgba(255, 255, 255, 0.10)
+                                                border.color: root.wifiShowPassword ? "#E0A96D" : Qt.rgba(255, 255, 255, 0.22)
+                                                border.width: 1
+                                                anchors.verticalCenter: parent.verticalCenter
+
+                                                Text {
+                                                    anchors.centerIn: parent
+                                                    text: root.wifiShowPassword ? "HIDE" : "SHOW"
+                                                    font.family: "Inter"
+                                                    font.pixelSize: 11
+                                                    font.weight: Font.Bold
+                                                    color: root.wifiShowPassword ? "#FFA77E" : "#FFFFFF"
+                                                }
+
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: {
+                                                        if (typeof SystemBackend !== "undefined") {
+                                                            SystemBackend.playTouchSound();
+                                                        }
+                                                        root.wifiShowPassword = !root.wifiShowPassword;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            anchors.rightMargin: 64
+                                            onClicked: {
+                                                connWifiConnectView.activeTarget = "password";
+                                                wifiPagePassInput.forceActiveFocus();
+                                            }
+                                        }
+                                    }
+
+                                    // Single Primary Connect Button (Lincoln Zephyr Amber Cockpit Glassmorphism)
+                                    Rectangle {
+                                        id: connectActionBtn
+                                        width: 136
+                                        height: parent.height
+                                        radius: 12
+                                        color: _connMa.pressed ? Qt.rgba(224/255, 169/255, 109/255, 0.40) :
+                                               (_connMa.containsMouse ? Qt.rgba(224/255, 169/255, 109/255, 0.26) : Qt.rgba(224/255, 169/255, 109/255, 0.16))
+                                        border.color: _connMa.containsMouse ? "#FFA77E" : "#E0A96D"
+                                        border.width: 1.5
+
+                                        // Subtle top glass shine reflection
+                                        Rectangle {
+                                            anchors.top: parent.top
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            anchors.margins: 1
+                                            height: parent.height * 0.45
+                                            radius: 11
+                                            gradient: Gradient {
+                                                GradientStop { position: 0.0; color: Qt.rgba(255, 255, 255, 0.32) }
+                                                GradientStop { position: 1.0; color: Qt.rgba(255, 255, 255, 0.0) }
+                                            }
+                                        }
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "Connect"
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 16
+                                            font.weight: Font.DemiBold
+                                        }
+
+                                        MouseArea {
+                                            id: _connMa
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: connWifiConnectView.doConnect()
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    text: (root.wifiTargetSsid !== "")
+                                        ? "Enter password to join " + root.wifiTargetSsid + ". Use the touch keyboard below."
+                                        : "Enter SSID network name and security key to connect."
+                                    color: "#94A3B8"
+                                    font.family: "Inter"
+                                    font.pixelSize: 13
+                                }
+                            }
+                        }
+                    }
+
+                    // Lower Area: Lincoln Zephyr Automotive Virtual Keyboard Docked at Bottom
+                    Rectangle {
+                        id: autoKeyboardDock
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 265
+                        z: 50
+
+                        transform: Translate {
+                            id: autoKeyboardDockTranslate
+                            y: (root.connCurrentScreen === "wifi_connect") ? 0 : (autoKeyboardDock.height + 40)
+                            Behavior on y {
+                                NumberAnimation {
+                                    duration: 380
+                                    easing.type: Easing.OutCubic
+                                }
+                            }
+                        }
+
+                        // Cockpit Frosted Glassmorphism Background
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: Qt.rgba(15/255, 23/255, 42/255, 0.90) }
+                            GradientStop { position: 1.0; color: Qt.rgba(7/255, 11/255, 20/255, 0.95) }
+                        }
+                        border.color: Qt.rgba(255, 255, 255, 0.14)
+                        border.width: 1
+
+                        // Top highlight border
+                        Rectangle {
+                            anchors.top: parent.top
+                            width: parent.width
+                            height: 1
+                            color: Qt.rgba(255, 255, 255, 0.28)
+                        }
+
+                        Column {
+                            anchors.centerIn: parent
+                            width: Math.min(parent.width - 40, 1060)
+                            spacing: 10
+
+                            // Row 1 (10 keys)
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 8
+                                Repeater {
+                                    model: connWifiConnectView.isSymbols
+                                        ? ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"]
+                                        : ["q", "w", "e", "r", "t", "y", "u", "i", "o", "p"]
+                                    AutoKeyButton {
+                                        label: connWifiConnectView.isCapsLock ? modelData.toUpperCase() : modelData
+                                        btnWidth: (parent.parent.width - (9 * 8)) / 10
+                                        btnHeight: 50
+                                        onClicked: connWifiConnectView.appendChar(label)
+                                    }
+                                }
+                            }
+
+                            // Row 2 (9 keys)
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 8
+                                Repeater {
+                                    model: connWifiConnectView.isSymbols
+                                        ? ["-", "/", ":", ";", "(", ")", "$", "&", "@"]
+                                        : ["a", "s", "d", "f", "g", "h", "j", "k", "l"]
+                                    AutoKeyButton {
+                                        label: connWifiConnectView.isCapsLock ? modelData.toUpperCase() : modelData
+                                        btnWidth: (parent.parent.width - (8 * 8) - 40) / 9
+                                        btnHeight: 50
+                                        onClicked: connWifiConnectView.appendChar(label)
+                                    }
+                                }
+                            }
+
+                            // Row 3 (Shift, 7 keys, Backspace)
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 8
+
+                                // Shift Key with Amber Active state
+                                Rectangle {
+                                    width: 88
+                                    height: 50
+                                    radius: 12
+                                    color: connWifiConnectView.isCapsLock ? Qt.rgba(224/255, 169/255, 109/255, 0.35) : Qt.rgba(255, 255, 255, 0.08)
+                                    border.color: connWifiConnectView.isCapsLock ? "#E0A96D" : Qt.rgba(255, 255, 255, 0.20)
+                                    border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "⇧"
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 22
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                                            connWifiConnectView.isCapsLock = !connWifiConnectView.isCapsLock;
+                                        }
+                                    }
+                                }
+
+                                Repeater {
+                                    model: connWifiConnectView.isSymbols
+                                        ? ["_", "\"", "!", "?", "%", "+", "="]
+                                        : ["z", "x", "c", "v", "b", "n", "m"]
+                                    AutoKeyButton {
+                                        label: connWifiConnectView.isCapsLock ? modelData.toUpperCase() : modelData
+                                        btnWidth: (parent.parent.width - 200 - (6 * 8)) / 7
+                                        btnHeight: 50
+                                        onClicked: connWifiConnectView.appendChar(label)
+                                    }
+                                }
+
+                                // Backspace Key
+                                Rectangle {
+                                    width: 88
+                                    height: 50
+                                    radius: 12
+                                    color: wifiKbBsMouse.pressed ? Qt.rgba(239/255, 68/255, 68/255, 0.35) :
+                                           (wifiKbBsMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.16) : Qt.rgba(255, 255, 255, 0.08))
+                                    border.color: Qt.rgba(255, 255, 255, 0.20)
+                                    border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "⌫"
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 22
+                                    }
+                                    MouseArea {
+                                        id: wifiKbBsMouse
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: connWifiConnectView.deleteChar()
+                                    }
+                                }
+                            }
+
+                            // Row 4 (?123, Dismiss Chevron, Space, Dot, Enter ⏎)
+                            Row {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                spacing: 8
+
+                                // ?123 symbol switch with Amber Active state
+                                Rectangle {
+                                    width: 90
+                                    height: 50
+                                    radius: 12
+                                    color: connWifiConnectView.isSymbols ? Qt.rgba(224/255, 169/255, 109/255, 0.35) : Qt.rgba(255, 255, 255, 0.08)
+                                    border.color: connWifiConnectView.isSymbols ? "#E0A96D" : Qt.rgba(255, 255, 255, 0.20)
+                                    border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: connWifiConnectView.isSymbols ? "ABC" : "?123"
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 15
+                                        font.weight: Font.DemiBold
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                                            connWifiConnectView.isSymbols = !connWifiConnectView.isSymbols;
+                                        }
+                                    }
+                                }
+
+                                // Dismiss keyboard chevron
+                                Rectangle {
+                                    width: 58
+                                    height: 50
+                                    radius: 12
+                                    color: wifiKbDismissMa.pressed ? Qt.rgba(255, 255, 255, 0.20) : Qt.rgba(255, 255, 255, 0.08)
+                                    border.color: Qt.rgba(255, 255, 255, 0.20)
+                                    border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "⌄"
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 22
+                                        font.weight: Font.Bold
+                                    }
+                                    MouseArea {
+                                        id: wifiKbDismissMa
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                                            root.connSlideDir = -1;
+                                            root.connCurrentScreen = "wifi";
+                                        }
+                                    }
+                                }
+
+                                // Space bar
+                                Rectangle {
+                                    width: parent.parent.width - 410
+                                    height: 50
+                                    radius: 12
+                                    color: wifiKbSpaceMouse.pressed ? Qt.rgba(255, 255, 255, 0.22) :
+                                           (wifiKbSpaceMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.14) : Qt.rgba(255, 255, 255, 0.08))
+                                    border.color: Qt.rgba(255, 255, 255, 0.20)
+                                    border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "Space"
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 15
+                                    }
+                                    MouseArea {
+                                        id: wifiKbSpaceMouse
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: connWifiConnectView.appendChar(" ")
+                                    }
+                                }
+
+                                // Dot key
+                                Rectangle {
+                                    width: 60
+                                    height: 50
+                                    radius: 12
+                                    color: wifiKbDotMouse.pressed ? Qt.rgba(255, 255, 255, 0.22) : Qt.rgba(255, 255, 255, 0.08)
+                                    border.color: Qt.rgba(255, 255, 255, 0.20)
+                                    border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "."
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 22
+                                    }
+                                    MouseArea {
+                                        id: wifiKbDotMouse
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: connWifiConnectView.appendChar(".")
+                                    }
+                                }
+
+                                // Enter Key with Amber Outline (⏎) - No duplicate "Connect"
+                                Rectangle {
+                                    width: 104
+                                    height: 50
+                                    radius: 12
+                                    color: wifiKbEnterMouse.pressed ? Qt.rgba(224/255, 169/255, 109/255, 0.40) :
+                                           (wifiKbEnterMouse.containsMouse ? Qt.rgba(224/255, 169/255, 109/255, 0.22) : Qt.rgba(224/255, 169/255, 109/255, 0.12))
+                                    border.color: "#E0A96D"
+                                    border.width: 2
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "⏎"
+                                        color: "#FFFFFF"
+                                        font.pixelSize: 24
+                                        font.weight: Font.DemiBold
+                                    }
+                                    MouseArea {
+                                        id: wifiKbEnterMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: connWifiConnectView.doConnect()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // =============================================================
+                // Screen 4: Wi-Fi Network Details Sub-screen
+                // =============================================================
+                Item {
+                    id: connWifiDetailsView
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: parent.width
+                    x: root.connCurrentScreen === "wifi_details" ? 0 : parent.width
+                    opacity: root.connCurrentScreen === "wifi_details" ? 1.0 : 0.0
+                    enabled: root.connCurrentScreen === "wifi_details"
+                    visible: opacity > 0.001 || x < parent.width
+
+                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+
+                    Flickable {
+                        anchors.fill: parent
+                        contentHeight: detailsCol.height + 40
+                        clip: true
+                        boundsBehavior: Flickable.DragAndOvershootBounds
+                        flickableDirection: Flickable.VerticalFlick
+
+                        Column {
+                            id: detailsCol
+                            width: parent.width
+                            spacing: 0
+
+                            readonly property var activeNetInfo: root.wifiSelectedDetailsNet ? root.wifiSelectedDetailsNet :
+                                ((typeof SystemBackend !== "undefined" && SystemBackend.wifiConnected) ?
+                                    ({ ssid: SystemBackend.wifiSsid, isConnected: true, connected: true, isSaved: true, saved: true,
+                                       band: SystemBackend.wifiBand, signalBars: SystemBackend.wifiSignalBars,
+                                       signalDbm: SystemBackend.wifiSignalDbm, security: SystemBackend.wifiSecurity,
+                                       bssid: SystemBackend.wifiMacAddress }) : null)
+
+                            readonly property bool isNetActiveConnected: Boolean(activeNetInfo && (activeNetInfo.isConnected || activeNetInfo.connected ||
+                                (typeof SystemBackend !== "undefined" && SystemBackend.wifiConnected && activeNetInfo.ssid === SystemBackend.wifiSsid)))
+
+                            // Connected / Saved Overview Card
+                            Rectangle {
+                                width: parent.width - 16
+                                height: 84
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                radius: 12
+                                color: detailsCol.isNetActiveConnected ? Qt.rgba(34, 197, 94, 0.12) : Qt.rgba(224, 169, 109, 0.12)
+                                border.color: detailsCol.isNetActiveConnected ? Qt.rgba(34, 197, 94, 0.35) : Qt.rgba(224, 169, 109, 0.35)
+                                border.width: 1
+
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.leftMargin: 16
+                                    anchors.rightMargin: 16
+                                    spacing: 14
+
+                                    Image {
+                                        source: "qrc:/ApexVision/qml/assets/icons/setting_wifi_yellow.svg"
+                                        width: 26
+                                        height: 26
+                                        sourceSize: Qt.size(26, 26)
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 4
+
+                                        Text {
+                                            text: detailsCol.activeNetInfo ? detailsCol.activeNetInfo.ssid : ((typeof SystemBackend !== "undefined") ? SystemBackend.wifiSsid : "Wi-Fi Network")
+                                            color: "#FFFFFF"
+                                            font.family: "Inter"
+                                            font.pixelSize: 20
+                                            font.weight: Font.Bold
+                                        }
+
+                                        Row {
+                                            spacing: 6
+                                            Rectangle {
+                                                width: 8
+                                                height: 8
+                                                radius: 4
+                                                color: detailsCol.isNetActiveConnected ? "#22C55E" : "#E0A96D"
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                            Text {
+                                                text: detailsCol.isNetActiveConnected ? "Connected & Active" : "Saved in memory"
+                                                color: detailsCol.isNetActiveConnected ? "#86EFAC" : "#FCD34D"
+                                                font.family: "Inter"
+                                                font.pixelSize: 14
+                                                font.weight: Font.Medium
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { width: 1; height: 16 }
+
+                            // Specifications Header
+                            Item {
+                                width: parent.width
+                                height: 40
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.leftMargin: 8
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Network specifications"
+                                    font.family: "Inter"
+                                    font.pixelSize: 16
+                                    font.weight: Font.DemiBold
+                                    color: root.currentThemeAccent
+                                }
+                            }
+
+                            SettingRowChevron {
+                                title: "IP Address"
+                                subtitle: detailsCol.isNetActiveConnected ? ((typeof SystemBackend !== "undefined" && SystemBackend.wifiIpAddress !== "") ? SystemBackend.wifiIpAddress : "192.168.1.217") : "Not assigned (Disconnected)"
+                            }
+
+                            SettingRowChevron {
+                                title: "MAC Address"
+                                subtitle: (detailsCol.activeNetInfo && detailsCol.activeNetInfo.bssid && detailsCol.activeNetInfo.bssid !== "") ? detailsCol.activeNetInfo.bssid : ((typeof SystemBackend !== "undefined") ? SystemBackend.wifiMacAddress : "98:fe:54:2b:64:6e")
+                            }
+
+                            SettingRowChevron {
+                                title: "Frequency & Band"
+                                subtitle: (detailsCol.activeNetInfo && detailsCol.activeNetInfo.band) ? (detailsCol.activeNetInfo.band.indexOf("GHz") !== -1 ? detailsCol.activeNetInfo.band : (detailsCol.activeNetInfo.band + " Band")) : ((typeof SystemBackend !== "undefined") ? (SystemBackend.wifiBand + " Band") : "5 GHz")
+                            }
+
+                            SettingRowChevron {
+                                title: "Signal Strength"
+                                subtitle: (detailsCol.activeNetInfo && detailsCol.activeNetInfo.signalBars !== undefined) ? (detailsCol.activeNetInfo.signalBars + "/4 bars" + (detailsCol.activeNetInfo.signalDbm ? (" (" + detailsCol.activeNetInfo.signalDbm + " dBm)") : "")) : ((typeof SystemBackend !== "undefined") ? (SystemBackend.wifiSignalBars + "/4 bars (" + SystemBackend.wifiSignalDbm + " dBm)") : "4/4 bars")
+                            }
+
+                            SettingRowChevron {
+                                title: "Security"
+                                subtitle: (detailsCol.activeNetInfo && detailsCol.activeNetInfo.security) ? detailsCol.activeNetInfo.security : ((typeof SystemBackend !== "undefined" && SystemBackend.wifiSecurity !== "") ? SystemBackend.wifiSecurity : "WPA2-PSK")
+                            }
+
+                            Item { width: 1; height: 24 }
+
+                            // Action Buttons Row (Connect / Disconnect & Forget)
+                            Row {
+                                anchors.right: parent.right
+                                anchors.rightMargin: 12
+                                spacing: 16
+
+                                Rectangle {
+                                    width: 140
+                                    height: 48
+                                    radius: 10
+                                    color: detailsCol.isNetActiveConnected ? Qt.rgba(239, 68, 68, 0.15) : Qt.rgba(34, 197, 94, 0.18)
+                                    border.color: detailsCol.isNetActiveConnected ? Qt.rgba(239, 68, 68, 0.40) : Qt.rgba(34, 197, 94, 0.45)
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: detailsCol.isNetActiveConnected ? "Disconnect" : "Connect"
+                                        color: detailsCol.isNetActiveConnected ? "#FCA5A5" : "#86EFAC"
+                                        font.family: "Inter"
+                                        font.pixelSize: 15
+                                        font.weight: Font.DemiBold
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (typeof SystemBackend !== "undefined") {
+                                                if (detailsCol.isNetActiveConnected) {
+                                                    SystemBackend.disconnectWifi();
+                                                } else if (detailsCol.activeNetInfo && detailsCol.activeNetInfo.ssid) {
+                                                    SystemBackend.connectToNetwork(detailsCol.activeNetInfo.ssid);
+                                                }
+                                            }
+                                            root.connSlideDir = -1;
+                                            root.connCurrentScreen = "wifi";
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    width: 150
+                                    height: 48
+                                    radius: 10
+                                    color: Qt.rgba(255, 255, 255, 0.10)
+                                    border.color: Qt.rgba(255, 255, 255, 0.22)
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "Forget network"
+                                        color: "#FFFFFF"
+                                        font.family: "Inter"
+                                        font.pixelSize: 15
+                                        font.weight: Font.DemiBold
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (typeof SystemBackend !== "undefined") {
+                                                var forgetSsid = detailsCol.activeNetInfo ? detailsCol.activeNetInfo.ssid : SystemBackend.wifiSsid;
+                                                if (forgetSsid) {
+                                                    SystemBackend.forgetNetwork(forgetSsid);
+                                                }
+                                            }
+                                            root.connSlideDir = -1;
+                                            root.connCurrentScreen = "wifi";
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -11687,7 +12944,9 @@ Item {
             // =================================================================
             Item {
                 id: assist911Container
-                anchors.fill: parent
+                width: parent.width
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
                 x: root.activeCategory === "assist_911" ? 0 : 36
                 opacity: root.activeCategory === "assist_911" ? 1.0 : 0.0
                 visible: opacity > 0.001
@@ -12108,21 +13367,11 @@ Item {
                                             height: 28
                                             anchors.verticalCenter: parent.verticalCenter
 
-                                            Rectangle {
-                                                anchors.fill: parent
-                                                radius: 14
-                                                color: Qt.rgba(255, 255, 255, 0.16)
-                                                border.color: Qt.rgba(255, 255, 255, 0.35)
-                                                border.width: 1
-
-                                                Text {
-                                                    anchors.centerIn: parent
-                                                    text: "ⓘ"
-                                                    font.family: "Inter"
-                                                    font.pixelSize: 16
-                                                    font.weight: Font.DemiBold
-                                                    color: "#FFFFFF"
-                                                }
+                                            InfoBadge {
+                                                anchors.centerIn: parent
+                                                badgeSize: 22
+                                                borderColor: Qt.rgba(255, 255, 255, 0.70)
+                                                iconColor: "#FFFFFF"
                                             }
                                         }
 
@@ -13772,6 +15021,35 @@ Item {
         }
     }
 
+    // Component: InfoBadge (Universal crisp vector circled "i" explanation badge)
+    component InfoBadge: Item {
+        id: infoBadgeRoot
+        property color iconColor: "#FFFFFF"
+        property color borderColor: Qt.rgba(255, 255, 255, 0.70)
+        property int badgeSize: 22
+
+        width: badgeSize
+        height: badgeSize
+
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+            color: "transparent"
+            border.color: infoBadgeRoot.borderColor
+            border.width: 1.8
+
+            Text {
+                anchors.centerIn: parent
+                anchors.verticalCenterOffset: -0.5
+                text: "i"
+                font.family: "Inter"
+                font.pixelSize: Math.round(infoBadgeRoot.badgeSize * 0.58)
+                font.weight: Font.Bold
+                color: infoBadgeRoot.iconColor
+            }
+        }
+    }
+
     // Component 0: SettingRowSimple (Informational display row)
     component SettingRowSimple: Item {
         id: simpleRow
@@ -13874,13 +15152,11 @@ Item {
                 radius: 19
                 color: infoMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.16) : "transparent"
 
-                Text {
+                InfoBadge {
                     anchors.centerIn: parent
-                    text: "ⓘ"
-                    font.family: "Inter"
-                    font.pixelSize: 20
-                    font.weight: Font.Medium
-                    color: infoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
+                    badgeSize: 22
+                    borderColor: infoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
+                    iconColor: infoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
                 }
             }
 
@@ -14017,13 +15293,11 @@ Item {
                 radius: 19
                 color: swInfoMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.16) : "transparent"
 
-                Text {
+                InfoBadge {
                     anchors.centerIn: parent
-                    text: "ⓘ"
-                    font.family: "Inter"
-                    font.pixelSize: 20
-                    font.weight: Font.Medium
-                    color: swInfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
+                    badgeSize: 22
+                    borderColor: swInfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
+                    iconColor: swInfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
                 }
             }
 
@@ -14177,13 +15451,11 @@ Item {
                 radius: 19
                 color: chInfoMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.16) : "transparent"
 
-                Text {
+                InfoBadge {
                     anchors.centerIn: parent
-                    text: "ⓘ"
-                    font.family: "Inter"
-                    font.pixelSize: 20
-                    font.weight: Font.Medium
-                    color: chInfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
+                    badgeSize: 22
+                    borderColor: chInfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
+                    iconColor: chInfoMouse.containsMouse ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.70)
                 }
             }
 

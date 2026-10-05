@@ -53,10 +53,17 @@ rm -f "${PATCH_ARCHIVE}"
 
 EXCLUDE_ARGS=(
   --exclude="qml/climate3d/assets"
-  --exclude="qml/climate3d/CarModel"
+  --exclude="qml/climate3d/CarModel/meshes"
+  --exclude="qml/climate3d/CarModel/maps"
+  --exclude="qml/climate3d/CarModel_Consolidated/meshes"
+  --exclude="qml/climate3d/CarModel_Consolidated/maps"
   --exclude="qml/climate3d/SeatModel"
   --exclude="qml/climate3d/images"
-  --exclude="qml/assets"
+  --exclude="qml/assets/video"
+  --exclude="qml/assets/sounds"
+  --exclude="qml/assets/news_images"
+  --exclude="qml/assets/radio_logos"
+  --exclude="qml/assets/avatars"
   --exclude="CarModel_BACKUP"
   --exclude="CarModel_Pi_Backup"
   --exclude="*.mesh"
@@ -77,7 +84,7 @@ else
   echo ">> Packing binary and QML patch..."
   tar -czf "${PATCH_ARCHIVE}" \
       "${EXCLUDE_ARGS[@]}" \
-      -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi \
+      -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc \
       -C "${SCRIPT_DIR}" qml
 fi
 

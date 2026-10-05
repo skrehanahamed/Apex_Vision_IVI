@@ -134,6 +134,8 @@
     <file>qml/assets/icons/icon_software_licenses.svg</file>
     <file>qml/assets/icons/icon_software_update.svg</file>
     <file>qml/assets/icons/icon_refresh_round.svg</file>
+    <file>qml/assets/icons/icon_wifi_scan.svg</file>
+    <file>qml/assets/icons/icon_wifi_lock.svg</file>
     <file>qml/assets/icons/icon_sound_fader.svg</file>
     <file>qml/assets/icons/icon_steering_heat.png</file>
     <file>qml/assets/icons/icon_storage.svg</file>

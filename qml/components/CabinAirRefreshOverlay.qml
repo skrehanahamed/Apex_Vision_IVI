@@ -168,13 +168,24 @@ Item {
                 border.width: 1
                 Behavior on color { ColorAnimation { duration: 150 } }
 
-                Text {
+                Rectangle {
                     anchors.centerIn: parent
-                    text: "ⓘ"
-                    font.family: "Inter"
-                    font.pixelSize: 18
-                    font.weight: Font.Medium
-                    color: infoMouse.containsMouse ? "#FFFFFF" : "#CBD5E1"
+                    width: 20
+                    height: 20
+                    radius: 10
+                    color: "transparent"
+                    border.color: infoMouse.containsMouse ? "#FFFFFF" : "#CBD5E1"
+                    border.width: 1.6
+
+                    Text {
+                        anchors.centerIn: parent
+                        anchors.verticalCenterOffset: -0.5
+                        text: "i"
+                        font.family: "Inter"
+                        font.pixelSize: 12
+                        font.weight: Font.Bold
+                        color: infoMouse.containsMouse ? "#FFFFFF" : "#CBD5E1"
+                    }
                 }
             }
 

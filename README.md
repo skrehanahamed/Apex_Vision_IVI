@@ -8,11 +8,11 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.7.0-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.7.1-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
 [![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
 [![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.7.0-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Releases](https://img.shields.io/badge/Release-v2.7.1-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -716,6 +716,24 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 ---
 
 ## Release History & Highlights
+
+### [v2.7.1] - Ambient 3D Engine Optimization, Hardware Back-Face Culling, Wi-Fi 5 GHz & UI Polish
+- **Hardware-Accelerated Back-Face Culling (`Scene.qml`)**:
+  - Activated hardware `cullMode: PrincipledMaterial.BackFaceCulling` across 35 solid materials (outer panels, chassis, leather seats, trims, dashboard, steering wheel, wheels), cutting triangle rasterization and vertex shading load by ~40–50% on the Raspberry Pi 5 VideoCore VII GPU.
+  - Preserved `NoCulling` on transparent glass and decal blend overlays for pristine optics.
+- **Ambient Lighting Cabin Mode Wheel Caching**:
+  - Implemented dynamic frustum culling for the 4 wheel meshes (`wheel_FL`, `wheel_FR`, `wheel_RL`, `wheel_RR`), translating them off-screen `(0, -5000, 0)` in top-down cabin mode (`wheelsVisible: !root.ambientMode`), eliminating 4 complex model draw calls and tire tread texture lookups.
+- **2D UI Layer Texture Caching**:
+  - Added `layer.enabled: true` to `menuContainer` in `VehiclePage.qml`, caching the 6 vehicle cards into an off-screen GPU texture so that sliding and fading the menu no longer stalls CPU 2D rendering during 3D camera animations.
+- **Wi-Fi 5 GHz, WPA3 & Enhanced Telemetry UX**:
+  - Configured regulatory domain (`country=IN`) in `/etc/wpa_supplicant.conf` to unblock 5 GHz DFS and high-frequency channels (36–165).
+  - Verified 5 GHz (802.11ac), WPA2-Personal, and WPA3-Personal SAE connectivity on the Pi 5 Cypress/Infineon Wi-Fi chipset.
+  - Dual-action Wi-Fi network cards: direct connect on network title click, and dedicated chevron navigation to the comprehensive `wifi_details` overlay screen.
+  - Smart auto-scan synchronization: background scan runs silently every 25s, while manual scan restarts cooldown with immediate feedback.
+- **Automotive UI Polish**:
+  - Removed unnecessary gray border on Autolamp Delay visualizer card in Settings.
+  - Replaced missing tooltip explanation symbols with crisp vector `InfoBadge` components in Settings and Cabin Air Refresh.
+  - Stabilized environment lighting and clearcoat specular reflections during camera flight.
 
 ### [v2.7.0] - Raspberry Pi 5 Target Port, VideoCore VII 60 FPS 3D Optimization & Cyberpunk OTA Update Engine
 - **Hardware-Accelerated 3D Lincoln Zephyr Digital Cockpit Optimization**:

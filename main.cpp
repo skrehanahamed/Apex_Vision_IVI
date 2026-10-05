@@ -831,6 +831,23 @@ int main(int argc, char *argv[])
             }
         }
 
+        if (app.arguments().contains("--settings-wifi")) {
+            QObject *stack = rootObj->findChild<QObject*>("pageStack");
+            if (stack) {
+                stack->setProperty("currentIndex", 4);
+            }
+            QObject *settings = rootObj->findChild<QObject*>("settingsPage");
+            if (settings) {
+                settings->setProperty("activeCategory", "connectivity");
+                settings->setProperty("connCurrentScreen", "wifi");
+                if (app.arguments().contains("--settings-wifi-connect")) {
+                    settings->setProperty("connCurrentScreen", "wifi_connect");
+                    settings->setProperty("wifiTargetSsid", "APEX-GUEST-5G");
+                    settings->setProperty("wifiTargetSecurity", "WPA2-PSK");
+                }
+            }
+        }
+
         if (app.arguments().contains("--radio-sxm")) {
             QObject *stack = rootObj->findChild<QObject*>("pageStack");
             if (stack) {

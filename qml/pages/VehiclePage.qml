@@ -218,6 +218,7 @@ Item {
         anchors.bottomMargin: 36
         width: 500
         z: 10
+        layer.enabled: true
 
         // Main Vehicle Overview 2x3 Grid (When Ambient Lighting screen is closed)
         Grid {

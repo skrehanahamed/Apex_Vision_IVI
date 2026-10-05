@@ -27,6 +27,17 @@ Window {
         id: mainRoot
         anchors.fill: parent
         property bool climate3DOpen: climateBar.climate3DOpen
+        property bool studioPrewarmed: false
+
+        Timer {
+            id: studioPrewarmTimer
+            interval: 1000
+            running: true
+            repeat: false
+            onTriggered: {
+                mainRoot.studioPrewarmed = true;
+            }
+        }
 
         // Ambient Dark Focus Scrim (Darkens screen when popups are active to highlight focus controls)
         Rectangle {
@@ -56,17 +67,6 @@ Window {
         readonly property bool rejuvenateSessionActive: typeof RejuvenateController !== "undefined" && (RejuvenateController.active || RejuvenateController.paused)
         readonly property bool rejuvenateBarsVisible: !rejuvenateSessionActive || (typeof fullScreenRejuvenateSession !== "undefined" && fullScreenRejuvenateSession.hudVisible)
 
-        // Startup Prewarm for 3D Vehicle Studio (Compiles shaders & geometry in background during boot)
-        property bool studioPrewarmed: false
-        Timer {
-            id: studioWarmupTimer
-            interval: 1800
-            running: true
-            repeat: false
-            onTriggered: {
-                mainRoot.studioPrewarmed = true;
-            }
-        }
 
         // 1. BOTTOM CLIMATE CONTROL BAR (Permanent: Full-width, covers entire bottom with zero space)
         ClimateBar {
@@ -264,9 +264,9 @@ Window {
                 VehiclePage {
                     id: vehiclePage
                     anchors.fill: parent
-                    z: (pageStack.currentIndex === 1 || pageStack.currentIndex === 4) ? 15 : 1
-                    visible: true
-                    opacity: (pageStack.currentIndex === 1 || pageStack.currentIndex === 4) ? 1.0 : (mainRoot.studioPrewarmed ? 0.0 : 0.002)
+                    z: (pageStack.currentIndex === 1) ? 15 : 1
+                    visible: pageStack.currentIndex === 1 || !mainRoot.studioPrewarmed || opacity > 0.01
+                    opacity: (pageStack.currentIndex === 1) ? 1.0 : (mainRoot.studioPrewarmed ? 0.0 : 0.001)
                     enabled: pageStack.currentIndex === 1 && opacity > 0.8
                     Behavior on opacity {
                         NumberAnimation {
@@ -398,6 +398,7 @@ Window {
                 SettingsPage {
                     id: settingsPage
                     anchors.fill: parent
+                    z: (pageStack.currentIndex === 4) ? 25 : 1
                     visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 4 ? 1.0 : 0.0
                     enabled: pageStack.currentIndex === 4 && opacity > 0.90

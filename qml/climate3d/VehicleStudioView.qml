@@ -272,14 +272,14 @@ Item {
 
     Timer {
         id: autoReturnTimer
-        interval: 3000
+        interval: 2500
         repeat: false
         onTriggered: {
             if (!rotateMouseArea.dragActive && !rotateMouseArea.inertiaActive && !root.ambientMode && !root.statusMode) {
                 var diff = root.getShortestAngleDiff(root.currentYaw, root.heroYaw);
                 resetYawAnim.from = root.currentYaw;
                 resetYawAnim.to = root.currentYaw + diff;
-                resetYawAnim.duration = Math.max(380, Math.min(750, Math.abs(diff) * 4.2));
+                resetYawAnim.duration = Math.max(300, Math.min(650, Math.abs(diff) * 3.5));
                 resetYawAnim.restart();
             }
         }
@@ -290,14 +290,18 @@ Item {
         target: root
         property: "currentYaw"
         easing.type: Easing.OutCubic
+        onFinished: {
+            root.currentYaw = root.heroYaw;
+        }
     }
 
     // Delayed roof visibility so roof element removal is timed invisibly during camera flight
     property bool roofVisibleDelayed: true
+    readonly property bool effectiveRoofVisible: root.roofVisibleDelayed
 
     Timer {
         id: hideRoofTimer
-        interval: 500
+        interval: 320
         repeat: false
         onTriggered: {
             if (root.ambientMode) {
@@ -308,7 +312,7 @@ Item {
 
     Timer {
         id: showRoofTimer
-        interval: 240
+        interval: 480
         repeat: false
         onTriggered: {
             if (!root.ambientMode) {
@@ -317,25 +321,15 @@ Item {
         }
     }
 
-    SequentialAnimation {
-        id: camZoomInAnim
-        PauseAnimation { duration: 380 }
-        Vector3dAnimation {
-            target: mainCamera
-            property: "position"
-            to: Qt.vector3d(root.ambientCamOffsetX, root.ambientCamOffsetY, 4.7)
-            duration: 470
-            easing.type: Easing.OutCubic
-        }
-    }
+    property bool ambientFlightActive: false
 
-    Vector3dAnimation {
-        id: camZoomOutAnim
-        target: mainCamera
-        property: "position"
-        to: Qt.vector3d(root.heroCamOffsetX, 0.0, root.heroCameraZ)
-        duration: 380
-        easing.type: Easing.OutCubic
+    Timer {
+        id: flightActiveTimer
+        interval: 560
+        repeat: false
+        onTriggered: {
+            root.ambientFlightActive = false;
+        }
     }
 
     onAmbientModeChanged: {
@@ -344,18 +338,16 @@ Item {
         rotateMouseArea.dragActive = false;
         rotateMouseArea.inertiaActive = false;
         rotateMouseArea.velocityX = 0.0;
+        root.ambientFlightActive = true;
+        flightActiveTimer.restart();
 
         if (ambientMode) {
             showRoofTimer.stop();
-            camZoomOutAnim.stop();
             root.roofVisibleDelayed = true;
             hideRoofTimer.restart();
-            camZoomInAnim.restart();
         } else {
             hideRoofTimer.stop();
-            camZoomInAnim.stop();
             showRoofTimer.restart();
-            camZoomOutAnim.restart();
             root.currentYaw = root.heroYaw;
         }
     }
@@ -397,7 +389,8 @@ Item {
             lightProbe: Texture {
                 source: "assets/_Hall.ktx"
             }
-            probeExposure: 0.45
+            probeExposure: root.ambientMode ? 0.28 : 0.45
+            Behavior on probeExposure { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
 
             // Embedded Pi 5 GPU 60 FPS optimization: disable costly multi-pass full-screen bloom
             glowEnabled: false
@@ -416,7 +409,7 @@ Item {
                     Qt.vector3d(0.0, root.heroPosY, 0.0))
 
             eulerRotation: root.ambientMode ?
-                Qt.vector3d(-89.5, 180.0, 0.0) :
+                Qt.vector3d(-78.0, 180.0, 0.0) :
                 (root.statusMode ?
                     (root.statusTab === "oil" ?
                         Qt.vector3d(root.statusOilPitch, root.statusOilYaw, root.statusOilRoll) :
@@ -425,16 +418,23 @@ Item {
 
             Behavior on position {
                 enabled: !statusTunerMouseArea.pressed
-                Vector3dAnimation { duration: 680; easing.type: Easing.InOutCubic }
+                Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
             }
             Behavior on eulerRotation {
                 enabled: !rotateMouseArea.dragActive && !rotateMouseArea.inertiaActive && !statusTunerMouseArea.pressed
-                Vector3dAnimation { duration: 680; easing.type: Easing.InOutCubic }
+                Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
             }
 
             PerspectiveCamera {
                 id: mainCamera
-                position: Qt.vector3d(root.heroCamOffsetX, 0.0, root.heroCameraZ)
+                position: root.ambientMode ?
+                    Qt.vector3d(root.ambientCamOffsetX, root.ambientCamOffsetY, 4.7) :
+                    Qt.vector3d(root.heroCamOffsetX, 0.0, root.heroCameraZ)
+
+                Behavior on position {
+                    Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
+                }
+
                 eulerRotation: root.statusMode ?
                     (root.statusTab === "oil" ?
                         Qt.vector3d(root.statusOilCamPitch, 0.0, 0.0) :
@@ -445,10 +445,10 @@ Item {
                 fieldOfView: root.ambientMode ? 28.0 : (root.statusMode ? (root.statusTab === "oil" ? root.statusOilFov : root.statusTireFov) : 27.0)
 
                 Behavior on fieldOfView {
-                    NumberAnimation { duration: 680; easing.type: Easing.InOutCubic }
+                    NumberAnimation { duration: 550; easing.type: Easing.OutCubic }
                 }
                 Behavior on eulerRotation {
-                    Vector3dAnimation { duration: 680; easing.type: Easing.InOutCubic }
+                    Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -463,17 +463,17 @@ Item {
             brightness: root.ambientMode ? 0.6 : 2.2
             color: "#FFFFFF"
             castsShadow: false
-            Behavior on brightness { NumberAnimation { duration: 600 } }
+            Behavior on brightness { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
         }
 
-        // 2. Rim & Fill Light (Creates crisp specular reflections on side profile & rear glass)
+        // 2. Rim & Fill Light (Smooth continuous dimming to prevent shader re-compilation hitch)
         DirectionalLight {
             id: rimFillLight
             eulerRotation: Qt.vector3d(-28, -145, 0)
-            brightness: root.ambientMode ? 0.5 : 1.6
+            brightness: root.ambientMode ? 0.0 : 1.6
             color: "#B4CEEE"
             castsShadow: false
-            Behavior on brightness { NumberAnimation { duration: 600 } }
+            Behavior on brightness { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
         }
 
         // ---------------------------------------------------------------------
@@ -483,10 +483,12 @@ Item {
             id: carRoot
             position: Qt.vector3d(0.0, 0.0, 0.0)
 
-            // Ground shadows (visible in exterior pose, hidden in ambient mode to remove any plane border edge)
+            // Ground shadows (smooth opacity fade to prevent geometry drop)
             Node {
                 id: groundShadowsContainer
-                visible: !root.ambientMode
+                opacity: root.ambientMode ? 0.0 : 1.0
+                scale: root.ambientMode ? Qt.vector3d(0.001, 0.001, 0.001) : Qt.vector3d(1.0, 1.0, 1.0)
+                Behavior on opacity { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
 
                 // Consolidated 60 FPS Ground Contact Shadow Quad
                 Model {
@@ -526,7 +528,11 @@ Item {
             roughness: root.roughness
             clearcoat: root.clearcoat
             lightsOn: root.lightsOn
-            roofVisible: root.roofVisibleDelayed
+            roofVisible: root.effectiveRoofVisible
+            wheelsVisible: !root.ambientMode
+            ambientColor: root.ambientColor
+            ambientBrightness: root.ambientBrightness
+            ambientOn: root.ambientOn
 
             Behavior on scale {
                 Vector3dAnimation { duration: 680; easing.type: Easing.InOutCubic }
@@ -534,78 +540,23 @@ Item {
         }
 
             // -----------------------------------------------------------------
-            // Ambient Lighting Cabin Strips & Glow Rig (Top-Down Interior Mode)
+            // Ambient Lighting Cabin Glow Rig (Consolidated 1-Light Setup for 60 FPS)
             // -----------------------------------------------------------------
             Node {
                 id: ambientLightingRig
-                visible: root.ambientMode
+                visible: true
 
                 property color activeColor: root.ambientColor
-                property real glowFactor: root.ambientOn ? (root.ambientBrightness * 2.8) : 0.0
-                property real lightFactor: root.ambientOn ? (root.ambientBrightness * 3.2) : 0.0
+                property real lightFactor: (root.ambientMode && root.ambientOn) ? (root.ambientBrightness * 3.2) : 0.0
 
-                Behavior on glowFactor { NumberAnimation { duration: 250 } }
                 Behavior on lightFactor { NumberAnimation { duration: 250 } }
 
-
-                // 5. Driver Front Footwell PointLight
+                // High-efficiency unified central cabin point light
                 PointLight {
-                    id: driverFootwellLight
-                    position: Qt.vector3d(0.35, 0.45, 0.50)
+                    id: cabinUnifiedAmbientLight
+                    position: Qt.vector3d(0.0, 0.72, -0.05)
                     color: ambientLightingRig.activeColor
-                    brightness: ambientLightingRig.lightFactor * 1.2
-                    castsShadow: false
-                }
-
-                // 6. Passenger Front Footwell PointLight
-                PointLight {
-                    id: passengerFootwellLight
-                    position: Qt.vector3d(-0.35, 0.45, 0.50)
-                    color: ambientLightingRig.activeColor
-                    brightness: ambientLightingRig.lightFactor * 1.2
-                    castsShadow: false
-                }
-
-                // 7. Rear Left Footwell PointLight
-                PointLight {
-                    id: rearLeftFootwellLight
-                    position: Qt.vector3d(0.35, 0.45, -0.60)
-                    color: ambientLightingRig.activeColor
-                    brightness: ambientLightingRig.lightFactor * 1.0
-                    castsShadow: false
-                }
-
-                // 8. Rear Right Footwell PointLight
-                PointLight {
-                    id: rearRightFootwellLight
-                    position: Qt.vector3d(-0.35, 0.45, -0.60)
-                    color: ambientLightingRig.activeColor
-                    brightness: ambientLightingRig.lightFactor * 1.0
-                    castsShadow: false
-                }
-
-                // 9. Soft Door Trim Ambient Glow Bounce
-                PointLight {
-                    id: leftDoorBounce
-                    position: Qt.vector3d(0.64, 0.72, -0.15)
-                    color: ambientLightingRig.activeColor
-                    brightness: ambientLightingRig.lightFactor * 0.8
-                    castsShadow: false
-                }
-                PointLight {
-                    id: rightDoorBounce
-                    position: Qt.vector3d(-0.64, 0.72, -0.15)
-                    color: ambientLightingRig.activeColor
-                    brightness: ambientLightingRig.lightFactor * 0.8
-                    castsShadow: false
-                }
-
-                // 10. Soft Cabin Ambient Fill Light (Highlights seats in luxury darkness)
-                PointLight {
-                    id: cabinAmbientFill
-                    position: Qt.vector3d(0.0, 1.25, -0.15)
-                    color: "#2C3E55"
-                    brightness: root.ambientMode ? 0.75 : 0.0
+                    brightness: ambientLightingRig.lightFactor * 2.2
                     castsShadow: false
                 }
             }
@@ -613,7 +564,7 @@ Item {
             // Headlights & Taillights Lighting Rig
             Node {
                 id: headlightsRig
-                visible: root.lightsOn
+                visible: root.lightsOn && !root.ambientMode
 
                 SpotLight {
                     id: leftHeadlightSpot
@@ -684,7 +635,10 @@ Item {
                 var dx = mouse.x - lastX;
                 lastX = mouse.x;
                 velocityX = dx * 0.40;
-                root.currentYaw -= dx * 0.40;
+                var newYaw = root.currentYaw - dx * 0.40;
+                while (newYaw > root.heroYaw + 180) newYaw -= 360;
+                while (newYaw < root.heroYaw - 180) newYaw += 360;
+                root.currentYaw = newYaw;
             }
         }
 
@@ -709,7 +663,8 @@ Item {
             var diff = root.getShortestAngleDiff(root.currentYaw, root.heroYaw);
             resetYawAnim.from = root.currentYaw;
             resetYawAnim.to = root.currentYaw + diff;
-            resetYawAnim.duration = Math.max(380, Math.min(750, Math.abs(diff) * 4.2));
+            resetYawAnim.duration = Math.max(300, Math.min(650, Math.abs(diff) * 3.5));
+            resetYawAnim.restart();
         }
     }
 
@@ -822,7 +777,10 @@ Item {
         running: rotateMouseArea.inertiaActive
         onTriggered: {
             rotateMouseArea.velocityX *= 0.93;
-            root.currentYaw -= rotateMouseArea.velocityX;
+            var newYaw = root.currentYaw - rotateMouseArea.velocityX;
+            while (newYaw > root.heroYaw + 180) newYaw -= 360;
+            while (newYaw < root.heroYaw - 180) newYaw += 360;
+            root.currentYaw = newYaw;
             if (Math.abs(rotateMouseArea.velocityX) < 0.04) {
                 rotateMouseArea.inertiaActive = false;
                 autoReturnTimer.restart();
