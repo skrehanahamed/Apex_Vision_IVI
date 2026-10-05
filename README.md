@@ -1,34 +1,38 @@
-# Apex VISION IVI - Automotive In-Vehicle Infotainment System
+# Apex VISION IVI — Raspberry Pi 5 Embedded Cockpit Edition
 
 <div align="center">
 
 ![APEX Logo](qml/assets/icons/apex_logo.png)
 
-### Production-Grade Automotive Human-Machine Interface (HMI) and Digital Cockpit Head Unit
+### Production-Grade Automotive Digital Cockpit & 3D Infotainment Head Unit for Raspberry Pi 5
+#### Bare-Metal Embedded Linux • Direct DRM/KMS EGLFS • Broadcom VideoCore VII 60 FPS • Cyberpunk OTA Engine
 
-[![Platform](https://img.shields.io/badge/Platform-Qt%206%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
-[![Standard](https://img.shields.io/badge/Standard-ISO%2026262%20%7C%20MISRA%20C%2B%2B-00599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white)](https://isocpp.org/)
-[![Version](https://img.shields.io/badge/Version-v2.7.1-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
-[![macOS CI](https://img.shields.io/badge/macOS%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=apple)](.github/workflows/build-macos.yml)
-[![Ubuntu CI](https://img.shields.io/badge/Ubuntu%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=ubuntu)](.github/workflows/build.yml)
-[![Windows CI](https://img.shields.io/badge/Windows%20CI-Passing-brightgreen.svg?style=for-the-badge&logo=windows)](.github/workflows/build-windows.yml)
-[![Releases](https://img.shields.io/badge/Release-v2.7.1-blueviolet.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed/Apex_Vision_IVI/releases)
+[![Target](https://img.shields.io/badge/Target-Raspberry%20Pi%205%208GB%20%7C%20aarch64-C51A4A.svg?style=for-the-badge&logo=raspberrypi&logoColor=white)](https://www.raspberrypi.com/)
+[![OS](https://img.shields.io/badge/OS-Yocto%20Linux%20Scarthgap%205.0%20%7C%20Kernel%206.6-FF7F00.svg?style=for-the-badge&logo=linux&logoColor=white)](https://www.yoctoproject.org/)
+[![Display](https://img.shields.io/badge/Display-DRM%2FKMS%20EGLFS%20%7C%201920x1200%2010.1%22-00599C.svg?style=for-the-badge)](https://www.qt.io/)
+[![GPU](https://img.shields.io/badge/GPU-VideoCore%20VII%20%7C%2060%20FPS%20Quick3D-41CD52.svg?style=for-the-badge)](https://www.qt.io/)
+[![Framework](https://img.shields.io/badge/Framework-Qt%206.7.3%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
+[![Wi-Fi](https://img.shields.io/badge/Wi--Fi-5%20GHz%20802.11ac%20%7C%20WPA3--SAE-007ACC.svg?style=for-the-badge&logo=wi-fi&logoColor=white)](https://www.wi-fi.org/)
+[![Audio](https://img.shields.io/badge/Audio-PipeWire%20%7C%20WirePlumber-8A2BE2.svg?style=for-the-badge)](https://pipewire.org/)
+[![Version](https://img.shields.io/badge/Version-v2.7.1%20Pi5%20Edition-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
 <br/>
 
-<sub>Made by <b>Sk Rehan Ahamed</b> with the help of <b>Antigravity</b></sub>
+<sub>Engineered by <b>Sk Rehan Ahamed</b> with the help of <b>Antigravity</b></sub>
 
 </div>
 
 ---
 
-## Executive Overview
+## Executive Overview (Raspberry Pi 5 Edition)
 
-Apex VISION IVI is a production-grade automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered with Qt 6 (QML / Qt Quick), WebEngine WebGL 3D acceleration, and modern C++20. Modeled on modern connected electric vehicle (EV) widescreen cockpit architectures, the system features a hardware-accelerated dual-viewport dashboard, live 3D perspective cockpit navigation powered by a custom **Three.js WebGL CustomLayer** rendering an authentic **Lincoln Zephyr luxury sedan in pearl white**, real-time vector 3D building extrusions, a circular **Google Automotive Speedometer Cluster** with live speed physics and speed limit warnings, a **3-in-1 Cockpit View Mode Switcher** (Perspective / North-up / Overview), an integrated native **YouTube Video Streaming Suite** with infinite feed browsing and seamless Up Next recommendations, the **OrbitXM Satellite Radio Suite** with 18 curated live audio stations, dynamic artwork carousel, quick preset bar, and authentic Grand Theft Auto radio station logos, the **APEX Rejuvenate™ Stationary Wellness Immersion Suite** synchronized across vehicle climate, motorized seating, and ambient lighting, a **Digital Owner's Manual with 2-Page Visual Search and Hotspot Mapping**, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite.
+Apex VISION IVI (Raspberry Pi 5 Edition) is an embedded automotive In-Vehicle Infotainment (IVI) system and digital cockpit head unit engineered natively for the **Raspberry Pi 5 (8GB ARM Cortex-A76)** running custom **Yocto Linux (Scarthgap 5.0, Kernel 6.6.63-v8-16k)** and **Qt 6.7.3 Quick3D / WebEngine**. 
 
-The architecture strictly decouples the QML presentation layer from deterministic C++ backend controllers, establishing an automotive-compliant state machine that manages live telemetry, reverse geocode lookups, thermal comfort states, valet access arbitration, YouTube network extraction, multi-sensory wellness orchestration, and vehicle safety interlocks.
+Bypassing desktop window managers, X11, and generic Wayland compositors, the application renders **directly to the Broadcom VideoCore VII GPU via Linux DRM/KMS EGLFS (`/dev/dri/card0`)** with atomic mode-setting. The cockpit features a dual-viewport dashboard, live 3D perspective cockpit navigation powered by a custom **Three.js WebGL CustomLayer** rendering an authentic **Lincoln Zephyr luxury sedan in pearl white**, real-time vector 3D building extrusions, an automotive **Google Automotive Speedometer Cluster** with live physics, a **3-in-1 Cockpit View Mode Switcher** (Perspective / North-up / Overview), an integrated native **YouTube Video Streaming Suite**, the **OrbitXM Satellite Radio Suite** with 18 curated live audio stations, the **APEX Rejuvenate™ Stationary Wellness Immersion Suite** synchronized across vehicle climate, motorized seating, and ambient lighting, a **Digital Owner's Manual with 2-Page Visual Search and Hotspot Mapping**, full HVAC and seat comfort management, 3D interactive vehicle and cabin studios, multi-contour massage seat control, full-screen valet security locking, and a modern OEM cockpit settings suite with full 5 GHz Wi-Fi and WPA3-Personal telemetry.
+
+The system is deployed via an automated **Cyberpunk Over-The-Air (OTA) Streaming Engine** (`patch-pi5.sh`) that cross-compiles inside a persistent Docker Yocto sysroot and live-streams hot-patches to the target screen in ~1–5 seconds with animated HUD progress and speed telemetry.
 
 ---
 
@@ -585,109 +589,116 @@ Apex_Vision_IVI/
 
 ---
 
-## Build and Execution
+## Raspberry Pi 5 Embedded Deployment & Build Pipeline
 
-### Prerequisites
+### Target Hardware & System Architecture
+| Parameter | Specification |
+|---|---|
+| **SoC / CPU** | Broadcom BCM2712, Quad-core ARM Cortex-A76 @ 2.4 GHz |
+| **GPU / Acceleration** | Broadcom VideoCore VII (V3D 7.1), OpenGL ES 3.1 & Vulkan 1.2 |
+| **System Memory** | 8 GB LPDDR4X-4267 SDRAM |
+| **Operating System** | Yocto Linux (Poky Scarthgap 5.0, Kernel 6.6.63-v8-16k) |
+| **Display Server** | Direct DRM/KMS EGLFS (`/dev/dri/card0`, atomic mode-setting) |
+| **Cockpit Display** | 10.1" 1920x1200 IPS Automotive Touchscreen (`/etc/kms.json`) |
+| **Application Framework** | Qt 6.7.3 Embedded (Quick3D, WebEngine, Multimedia, Network) |
+| **Audio Routing** | PipeWire 1.0 & WirePlumber (ALSA HDMI & I2S DAC) |
+| **Wireless Telemetry** | Cypress/Infineon 5 GHz 802.11ac Wi-Fi & WPA3-Personal SAE |
+| **System Service** | Systemd unit (`/etc/systemd/system/apex-vision.service`) |
 
-- **Compiler**: C++20 compliant compiler (GCC 11+, Clang 13+, MSVC 2019+)
-- **Build System**: CMake 3.20+ and Ninja or Make
-- **Framework**: Qt 6.5+ with the following components:
-  - `Qt6::Core`
-  - `Qt6::Gui`
-  - `Qt6::Quick`
-  - `Qt6::Qml`
-  - `Qt6::QuickControls2`
-  - `Qt6::Svg`
-  - `Qt6::Network`
-  - `Qt6::WebEngineQuick`
-  - `Qt6::Multimedia`
+---
 
-### Developer Environment & API Configuration
+### Automated Deployment Workflows
 
-Apex VISION IVI uses dynamic secret resolution to load API keys without hardcoding them in version control.
+#### 1. Ultra-Fast Dynamic QML Hot-Patch (~1s Deployment)
+Instantly packages and streams QML/JS presentation updates over SSH directly to the live cockpit display:
+```bash
+./patch-pi5.sh --qml
+```
+* **Payload**: ~290 KB (excludes heavy static textures, videos, and meshes).
+* **Speed**: ~0.3s transfer, ~1s total live restart.
+* **On-Screen Experience**: Activates the animated Cyberpunk OTA progress HUD on the Pi 5 screen.
 
-1. **Option A: JSON Configuration (Recommended)**:
-   ```bash
-   cp config.example.json config.json
-   # Edit config.json and enter your Google Maps API key
-   ```
+#### 2. Binary + QML Patch Deploy (~5s Deployment)
+Cross-compiles modified C++ backend sources in Docker with Ninja and streams updated binary + QML:
+```bash
+./patch-pi5.sh
+```
+* **Payload**: ~5.1 MB (updated `apex_vision_ivi` binary + `assets.rcc` + QML).
+* **Speed**: ~2.5s compilation + ~2.5s streaming over SSH.
 
-2. **Option B: Environment Variables**:
-   ```bash
-   cp .env.example .env
-   # Or export directly in your shell:
-   export GOOGLE_MAPS_API_KEY="YOUR_GOOGLE_MAPS_API_KEY"
-   ```
+#### 3. Full Cold Sync Deploy (Asset Additions)
+When adding new 3D meshes, KTX light probes, or heavy video assets:
+```bash
+./deploy-pi5.sh          # Standard full asset sync
+./deploy-pi5.sh --full   # Includes heavy 1080p Rejuvenate wellness videos
+```
 
-### macOS (Apple Silicon / Intel)
+---
+
+### Docker Cross-Compilation Environment
+The host Mac (Darwin arm64) cross-compiles for the ARM64 target using the persistent Yocto sysroot Docker container:
 
 ```bash
-# 1. Install Qt 6 and QtWebEngine via Homebrew
+docker run --rm \
+  -v /Users/reno/.gemini/antigravity-ide/scratch/rpi5-yocto-qt-env:/workspace \
+  -v yocto-tmp:/workspace/build/tmp \
+  -v $(pwd):/workspace/APEX_VISION_IVI_PI5 \
+  rpi5-yocto-scarthgap-builder \
+  bash -c '
+    set -euo pipefail
+    cd /workspace/APEX_VISION_IVI_PI5
+    mkdir -p build-rpi5 && cd build-rpi5
+    if [ ! -f "build.ninja" ]; then
+      cmake -G Ninja \
+        -DCMAKE_TOOLCHAIN_FILE=/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/toolchain.cmake \
+        -DQT_HOST_PATH=/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/ \
+        -DCMAKE_BUILD_TYPE=Release ..
+    fi
+    ninja -j 6
+  '
+```
+
+---
+
+### Service Lifecycle & Target Management
+```bash
+# Verify active status
+ssh rpi5 "systemctl status apex-vision"
+
+# Restart application service
+ssh rpi5 "systemctl restart apex-vision"
+
+# Launch in foreground for live console telemetry
+ssh rpi5 "systemctl stop apex-vision && /opt/apex_vision_ivi/apex_vision_ivi"
+```
+
+---
+
+### Local Desktop Preview (Optional Development)
+For UI testing and desktop simulation prior to target deployment:
+
+<details>
+<summary><b>Click to expand macOS & Linux Desktop Build Instructions</b></summary>
+
+#### macOS (Apple Silicon / Intel)
+```bash
 brew install qt qtwebengine ninja
-
-# 2. Build the application using Makefile
-make
-
-# 3. Launch the application
-make run
+make && make run
 ```
 
-### Ubuntu Linux (22.04 LTS / 24.04 LTS)
-
+#### Ubuntu Linux (22.04 LTS / 24.04 LTS)
 ```bash
-# 1. Install system build dependencies
-sudo apt-get update
-sudo apt-get install -y \
-  build-essential cmake ninja-build \
-  libgl1-mesa-dev libxkbcommon-dev libxkbcommon-x11-dev \
-  libfontconfig1-dev libfreetype6-dev libasound2-dev libpulse-dev
-
-# 2. Configure with CMake (pointing to Qt 6 installation)
 cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-
-# 3. Build and launch
-cmake --build build -j$(nproc)
-./build/apex_vision_ivi
+cmake --build build -j$(nproc) && ./build/apex_vision_ivi
 ```
 
-### Raspberry Pi 5 (Yocto Linux / EGLFS Native KMS)
-
-The application is fully ported and optimized for the **Raspberry Pi 5 (8GB ARM Cortex-A76)** running custom Yocto Linux (Scarthgap 5.0, Kernel 6.6) and Qt 6.7.3.
-
-1. **Docker Cross-Compilation Pipeline**:
-   Cross-compilation is performed using the target Yocto sysroot and native host tools:
-   ```bash
-   ./deploy-pi5.sh
-   ```
-
-2. **Real-Time On-Screen OTA (Over-The-Air) Transmission**:
-   Deployments stream live to the target display with the Cyberpunk progress HUD:
-   ```bash
-   DEPLOY_ARCHIVE="/tmp/apex_deploy_payload.tar.gz"
-   tar --exclude="CarModel_BACKUP" -czf "${DEPLOY_ARCHIVE}" -C . qml
-   TOTAL_BYTES=$(stat -f%z "${DEPLOY_ARCHIVE}" 2>/dev/null || stat -c%s "${DEPLOY_ARCHIVE}")
-   ssh rpi5 "systemctl stop apex-vision; nohup /usr/bin/show-upload-screen.sh > /dev/null 2>&1 &"
-   cat "${DEPLOY_ARCHIVE}" | python3 scripts/pipe-progress.py "${TOTAL_BYTES}" | ssh rpi5 "python3 /usr/bin/ota-receiver.py ${TOTAL_BYTES} /opt/apex_vision_ivi"
-   ssh rpi5 "pkill -9 -f 'qml'; systemctl start apex-vision"
-   ```
-
-3. **Target System Execution**:
-   - Hardware: Raspberry Pi 5 (Broadcom BCM2712, VideoCore VII GPU)
-   - Display: 10.1" 1920x1200 Automotive Touchscreen (`/etc/kms.json`)
-   - Platform: Direct DRM/KMS EGLFS (`QT_QPA_PLATFORM=eglfs`, `QT_QPA_EGLFS_INTEGRATION=eglfs_kms`)
-   - Audio: PipeWire & WirePlumber routing through default ALSA device
-
-### Windows (MSVC 2022)
-
+#### Windows (MSVC 2022)
 ```cmd
-:: 1. Open Visual Studio x64 Native Tools Command Prompt
-:: 2. Configure with CMake
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH="C:\Qt\6.5.3\msvc2019_64"
-
-:: 3. Build and launch
-cmake --build build --config Release --parallel
-build\apex_vision_ivi.exe
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --parallel && build\apex_vision_ivi.exe
 ```
+
+</details>
 
 ---
 
