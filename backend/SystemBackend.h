@@ -45,6 +45,9 @@ class SystemBackend : public QObject
     Q_PROPERTY(int brightness READ brightness WRITE setBrightness NOTIFY brightnessChanged)
     Q_PROPERTY(QString unitsTemperature READ unitsTemperature WRITE setUnitsTemperature NOTIFY unitsTemperatureChanged)
     Q_PROPERTY(bool touchSoundsEnabled READ touchSoundsEnabled WRITE setTouchSoundsEnabled NOTIFY touchSoundsEnabledChanged)
+    Q_PROPERTY(int volumePrompts READ volumePrompts WRITE setVolumePrompts NOTIFY volumePromptsChanged)
+    Q_PROPERTY(int volumePhone READ volumePhone WRITE setVolumePhone NOTIFY volumePhoneChanged)
+    Q_PROPERTY(int volumeCallRing READ volumeCallRing WRITE setVolumeCallRing NOTIFY volumeCallRingChanged)
     Q_PROPERTY(bool hasWebEngine READ hasWebEngine CONSTANT)
 
 public:
@@ -60,6 +63,9 @@ public:
     }
 
     bool touchSoundsEnabled() const { return m_touchSoundsEnabled; }
+    int volumePrompts() const { return m_volumePrompts; }
+    int volumePhone() const { return m_volumePhone; }
+    int volumeCallRing() const { return m_volumeCallRing; }
 
     QString currentTime() const { return m_currentTime; }
     QString currentDate() const { return m_currentDate; }
@@ -86,6 +92,9 @@ public:
     int brightness() const { return m_brightness; }
     QString unitsTemperature() const { return m_unitsTemperature; }
 
+    Q_INVOKABLE void setVolumePrompts(int vol);
+    Q_INVOKABLE void setVolumePhone(int vol);
+    Q_INVOKABLE void setVolumeCallRing(int vol);
     Q_INVOKABLE void setIs24HourFormat(bool is24);
     Q_INVOKABLE void setAutoTimeEnabled(bool enabled);
     Q_INVOKABLE void setAutoTimeZoneEnabled(bool enabled);
@@ -142,6 +151,9 @@ signals:
     void brightnessChanged();
     void unitsTemperatureChanged();
     void touchSoundsEnabledChanged();
+    void volumePromptsChanged();
+    void volumePhoneChanged();
+    void volumeCallRingChanged();
     void ttsFinished();
 
 private slots:
@@ -186,6 +198,9 @@ private:
     int m_brightness{85};
     QString m_unitsTemperature{"Celsius (°C)"};
     bool m_touchSoundsEnabled{true};
+    int m_volumePrompts{10};
+    int m_volumePhone{30};
+    int m_volumeCallRing{10};
     QProcess *m_ttsProcess{nullptr};
 };
 

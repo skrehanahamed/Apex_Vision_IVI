@@ -52,6 +52,9 @@ SystemBackend::SystemBackend(PersistenceManager *persistence, QObject *parent)
         m_unitsTemperature = m_persistence->getSetting(QStringLiteral("sys_unitsTemperature"), QStringLiteral("Celsius (°C)")).toString();
         m_brightness = m_persistence->getSetting(QStringLiteral("sys_brightness"), 85).toInt();
         m_touchSoundsEnabled = m_persistence->getSetting(QStringLiteral("sys_touchSoundsEnabled"), true).toBool();
+        m_volumePrompts = m_persistence->getSetting(QStringLiteral("sys_vol_prompts"), 10).toInt();
+        m_volumePhone = m_persistence->getSetting(QStringLiteral("sys_vol_phone"), 30).toInt();
+        m_volumeCallRing = m_persistence->getSetting(QStringLiteral("sys_vol_ring"), 10).toInt();
     }
 
     m_networkManager = new QNetworkAccessManager(this);
@@ -659,9 +662,11 @@ void SystemBackend::connectToNetwork(const QString &ssid, const QString &passwor
         if (!password.isEmpty()) {
             QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("set_network"), QString::number(targetNetId), QStringLiteral("psk"), QStringLiteral("\"%1\"").arg(password)});
         }
-        QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("select_network"), QString::number(targetNetId)});
+        QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("bssid_ignore"), QStringLiteral("clear")});
         QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("enable_network"), QString::number(targetNetId)});
+        QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("select_network"), QString::number(targetNetId)});
         QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("save_config")});
+        QProcess::execute(QStringLiteral("cp"), {QStringLiteral("/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"), QStringLiteral("/etc/wpa_supplicant.conf")});
     } else {
         QProcess addProc;
         addProc.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("add_network")});
@@ -676,10 +681,30 @@ void SystemBackend::connectToNetwork(const QString &ssid, const QString &passwor
             } else {
                 QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("set_network"), QString::number(newId), QStringLiteral("psk"), QStringLiteral("\"%1\"").arg(password)});
             }
+            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("bssid_ignore"), QStringLiteral("clear")});
             QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("enable_network"), QString::number(newId)});
             QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("select_network"), QString::number(newId)});
             QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("save_config")});
+            QProcess::execute(QStringLiteral("cp"), {QStringLiteral("/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"), QStringLiteral("/etc/wpa_supplicant.conf")});
         }
+    }
+    // Enforce power save off on wlan0 to eliminate packet loss and handshake latency
+    QProcess::execute(QStringLiteral("iw"), {QStringLiteral("dev"), QStringLiteral("wlan0"), QStringLiteral("set"), QStringLiteral("power_save"), QStringLiteral("off")});
+
+    // Immediately mark as saved in memory so UI reflects saved state
+    bool updated = false;
+    for (int i = 0; i < m_wifiNetworks.size(); ++i) {
+        QVariantMap ap = m_wifiNetworks.at(i).toMap();
+        if (ap.value(QStringLiteral("ssid")).toString() == ssid) {
+            ap[QStringLiteral("isSaved")] = true;
+            ap[QStringLiteral("saved")] = true;
+            m_wifiNetworks[i] = ap;
+            updated = true;
+            break;
+        }
+    }
+    if (updated) {
+        emit wifiNetworksChanged();
     }
 
     QTimer::singleShot(2500, this, &SystemBackend::updateWifiStatus);
@@ -701,6 +726,12 @@ void SystemBackend::forgetNetwork(const QString &ssid)
 {
     qInfo() << "[SystemBackend] Forgetting Wi-Fi network:" << ssid;
 #if defined(Q_OS_LINUX)
+    // 1. If currently connected to this network, cleanly disconnect
+    if (m_wifiConnected && (m_wifiSsid == ssid || ssid.isEmpty())) {
+        disconnectWifi();
+    }
+
+    // 2. Remove all network IDs matching this SSID from wpa_supplicant
     QProcess listProc;
     listProc.start(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("list_networks")});
     listProc.waitForFinished(600);
@@ -712,10 +743,30 @@ void SystemBackend::forgetNetwork(const QString &ssid)
         if (parts.size() >= 2 && parts.at(1).trimmed() == ssid) {
             int netId = parts.at(0).trimmed().toInt();
             QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("remove_network"), QString::number(netId)});
-            QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("save_config")});
-            break;
         }
     }
+    // Re-enable all remaining saved networks so none stay disabled
+    QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("enable_network"), QStringLiteral("all")});
+    QProcess::execute(QStringLiteral("wpa_cli"), {QStringLiteral("-i"), QStringLiteral("wlan0"), QStringLiteral("save_config")});
+    QProcess::execute(QStringLiteral("cp"), {QStringLiteral("/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"), QStringLiteral("/etc/wpa_supplicant.conf")});
+
+    // 3. Immediately mark network as unsaved & disconnected in memory so QML transitions to password prompt on next tap
+    bool updated = false;
+    for (int i = 0; i < m_wifiNetworks.size(); ++i) {
+        QVariantMap ap = m_wifiNetworks.at(i).toMap();
+        if (ap.value(QStringLiteral("ssid")).toString() == ssid) {
+            ap[QStringLiteral("isSaved")] = false;
+            ap[QStringLiteral("saved")] = false;
+            ap[QStringLiteral("isConnected")] = false;
+            ap[QStringLiteral("connected")] = false;
+            m_wifiNetworks[i] = ap;
+            updated = true;
+        }
+    }
+    if (updated) {
+        emit wifiNetworksChanged();
+    }
+
     scanWifiNetworks();
 #endif
 }
@@ -822,6 +873,42 @@ void SystemBackend::setUnitsTemperature(const QString &unit)
             m_persistence->setSetting(QStringLiteral("sys_unitsTemperature"), unit);
         }
         emit unitsTemperatureChanged();
+    }
+}
+
+void SystemBackend::setVolumePrompts(int vol)
+{
+    vol = std::clamp(vol, 0, 30);
+    if (m_volumePrompts != vol) {
+        m_volumePrompts = vol;
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("sys_vol_prompts"), m_volumePrompts);
+        }
+        emit volumePromptsChanged();
+    }
+}
+
+void SystemBackend::setVolumePhone(int vol)
+{
+    vol = std::clamp(vol, 0, 30);
+    if (m_volumePhone != vol) {
+        m_volumePhone = vol;
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("sys_vol_phone"), m_volumePhone);
+        }
+        emit volumePhoneChanged();
+    }
+}
+
+void SystemBackend::setVolumeCallRing(int vol)
+{
+    vol = std::clamp(vol, 0, 30);
+    if (m_volumeCallRing != vol) {
+        m_volumeCallRing = vol;
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("sys_vol_ring"), m_volumeCallRing);
+        }
+        emit volumeCallRingChanged();
     }
 }
 

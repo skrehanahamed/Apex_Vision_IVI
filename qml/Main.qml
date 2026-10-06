@@ -158,8 +158,8 @@ Window {
             anchors.right: parent.right
             anchors.top: parent.top
             anchors.bottom: climateBar.top
-            width: (pageStack.currentIndex === 7) ? 0 : 44
-            visible: width > 0
+            width: 44
+            visible: true
             clip: true
             z: mainRoot.rejuvenateSessionActive ? 105 : 50
 

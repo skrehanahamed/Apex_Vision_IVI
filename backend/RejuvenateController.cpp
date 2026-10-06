@@ -46,7 +46,7 @@ RejuvenateController::RejuvenateController(ClimateBackend *climate,
     m_audioPlayer = new QMediaPlayer(this);
     m_audioPlayer->setAudioOutput(m_audioOutput);
     m_audioPlayer->setLoops(QMediaPlayer::Infinite);
-    m_audioOutput->setVolume(0.85f);
+    m_audioOutput->setVolume(1.0f);
 
     // Test bench mode: drive simulation checks disabled
     m_vehicleStationary = true;
@@ -339,7 +339,7 @@ void RejuvenateController::startPreviewAudio()
     if (m_audioPlayer && theme) {
         m_audioPlayer->setSource(theme->audioUrl());
         if (m_audioOutput) {
-            m_audioOutput->setVolume(0.80f);
+            m_audioOutput->setVolume(1.0f);
         }
         m_audioPlayer->play();
         qInfo() << "[RejuvenateController] Preview ambient audio started:" << theme->audioUrl();

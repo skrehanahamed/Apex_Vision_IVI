@@ -24,7 +24,9 @@
 #include <QTimer>
 #include <QPointer>
 #include <QRegularExpression>
+#include <QProcess>
 #include <algorithm>
+#include <cmath>
 
 MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *persistence, QObject *parent)
     : QObject(parent)
@@ -35,11 +37,24 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *pers
         if (!lastSource.isEmpty()) {
             m_source = lastSource;
         }
+        m_volume = m_persistence->getSetting(QStringLiteral("media_volume"), 100).toInt();
+        m_bass = m_persistence->getSetting(QStringLiteral("media_bass"), 0).toInt();
+        m_mid = m_persistence->getSetting(QStringLiteral("media_mid"), 0).toInt();
+        m_treble = m_persistence->getSetting(QStringLiteral("media_treble"), 0).toInt();
+        m_balance = m_persistence->getSetting(QStringLiteral("media_balance"), 0.0).toReal();
+        m_fade = m_persistence->getSetting(QStringLiteral("media_fade"), 0.0).toReal();
+        m_speedCompensation = m_persistence->getSetting(QStringLiteral("media_speedComp"), QStringLiteral("Medium")).toString();
+        m_quantumLogicMode = m_persistence->getSetting(QStringLiteral("media_qlMode"), QStringLiteral("Audience")).toString();
+        m_quantumLogicImmersion = m_persistence->getSetting(QStringLiteral("media_qlImmersion"), 75.0).toReal();
     }
 
     if (simulator) {
         connect(simulator, &VehicleSimulator::mediaProgressUpdated,
                 this, &MediaBackend::onMediaProgressUpdated);
+        connect(simulator, &VehicleSimulator::telemetryUpdated,
+                this, [this](double speed, double, const QString &, double, int) {
+            applySpeedCompensatedVolume(speed);
+        });
     }
 
     // Initialize Audio Engine
@@ -47,8 +62,8 @@ MediaBackend::MediaBackend(VehicleSimulator *simulator, PersistenceManager *pers
     m_mediaPlayer = new QMediaPlayer(this);
     m_mediaPlayer->setAudioOutput(m_audioOutput);
     m_audioOutput->setMuted(false);
-    m_volume = 100;
-    m_audioOutput->setVolume(1.0f);
+    m_audioOutput->setVolume(static_cast<float>(m_volume) / 100.0f);
+    updateAlsaHardwareBalance();
 
     connect(m_mediaPlayer, &QMediaPlayer::errorOccurred, this, [this](QMediaPlayer::Error error, const QString &errorString) {
         qWarning() << "[MediaBackend] MediaPlayer error:" << error << errorString;
@@ -545,7 +560,7 @@ void MediaBackend::initFmStations()
 
     addFm("91.1", "AIR FM Gold", "Delhi Capital Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio00564kbps.m3u8");
     addFm("93.5", "Superhits FM 93.5", "South Non-Stop Hits", "https://drive.uber.radio/uber/bollywoodnow/icecast.audio");
-    addFm("95.9", "Bollywood Hits Radio", "Top Bollywood Hits", "http://stream.zeno.fm/8ty8szwpwfeuv");
+    addFm("95.9", "Bollywood Hits Radio", "Top Bollywood Hits", "https://prclive1.listenon.in/Bollywood");
     addFm("98.3", "Radio Mirchi Romance", "Modern Hindi Beats", "https://drive.uber.radio/uber/bollywoodlove/icecast.audio");
     addFm("100.7", "AIR FM Gold Kolkata", "Kolkata Eastern Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio011/hlspbaudio01164kbps.m3u8");
     addFm("101.4", "AIR FM Rainbow Chennai", "Chennai South Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio006/hlspbaudio00664kbps.m3u8");
@@ -1089,9 +1104,18 @@ void MediaBackend::setVolume(int vol)
     vol = std::clamp(vol, 0, 100);
     if (m_volume != vol) {
         m_volume = vol;
-        if (m_audioOutput) {
-            m_audioOutput->setVolume(static_cast<float>(m_volume) / 100.0f);
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("media_volume"), m_volume);
         }
+        applySpeedCompensatedVolume(m_lastVehicleSpeed);
+#if defined(Q_OS_LINUX)
+        // Synchronize PipeWire default audio sink volume in real-time
+        float pwVol = static_cast<float>(m_volume) / 100.0f;
+        QProcess::startDetached(QStringLiteral("wpctl"), {
+            QStringLiteral("set-volume"), QStringLiteral("@DEFAULT_AUDIO_SINK@"),
+            QString::number(pwVol, 'f', 2)
+        });
+#endif
         emit volumeChanged();
     }
 }
@@ -1343,7 +1367,7 @@ void MediaBackend::initSxmChannels()
         ch["badgeText"] = "FLASH FM";
         ch["badgeColor"] = "#D946EF";
         ch["logoUrl"] = "qrc:/ApexVision/qml/assets/radio_logos/sxm_gtaflash.png";
-        ch["streamUrl"] = "http://stream.laut.fm/gta-classics";
+        ch["streamUrl"] = "http://stream1.dancewave.online:8080/dance.mp3";
         QVariantList tr;
         tr.append(createTrack("Out of Touch", "Daryl Hall & John Oates", "Vice City Flash FM", 261,
             "qrc:/ApexVision/qml/assets/station_art/art_gtaflash.jpg"));
@@ -2242,5 +2266,199 @@ void MediaBackend::tuneOnlineStation(const QString &name, const QString &streamU
     emit sourceChanged();
 
     fetchOnlineSxmArt(name, "");
+}
+
+void MediaBackend::setBass(int b)
+{
+    setTone(b, m_mid, m_treble);
+}
+
+void MediaBackend::setMid(int m)
+{
+    setTone(m_bass, m, m_treble);
+}
+
+void MediaBackend::setTreble(int t)
+{
+    setTone(m_bass, m_mid, t);
+}
+
+void MediaBackend::setTone(int bass, int mid, int treble)
+{
+    bass = std::clamp(bass, -6, 6);
+    mid = std::clamp(mid, -6, 6);
+    treble = std::clamp(treble, -6, 6);
+
+    bool changed = (m_bass != bass || m_mid != mid || m_treble != treble);
+    if (changed) {
+        m_bass = bass;
+        m_mid = mid;
+        m_treble = treble;
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("media_bass"), m_bass);
+            m_persistence->setSetting(QStringLiteral("media_mid"), m_mid);
+            m_persistence->setSetting(QStringLiteral("media_treble"), m_treble);
+        }
+        emit toneChanged();
+    }
+}
+
+void MediaBackend::setBalance(qreal bal)
+{
+    setBalanceFade(bal, m_fade);
+}
+
+void MediaBackend::setFade(qreal fade)
+{
+    setBalanceFade(m_balance, fade);
+}
+
+void MediaBackend::setBalanceFade(qreal bal, qreal fade)
+{
+    bal = std::clamp(bal, -7.0, 7.0);
+    fade = std::clamp(fade, -7.0, 7.0);
+
+    bool bChanged = !qFuzzyCompare(m_balance, bal);
+    bool fChanged = !qFuzzyCompare(m_fade, fade);
+
+    if (bChanged || fChanged) {
+        m_balance = bal;
+        m_fade = fade;
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("media_balance"), m_balance);
+            m_persistence->setSetting(QStringLiteral("media_fade"), m_fade);
+        }
+        updateAlsaHardwareBalance();
+        if (bChanged) emit balanceChanged();
+        if (fChanged) emit fadeChanged();
+    }
+}
+
+void MediaBackend::updateAlsaHardwareBalance()
+{
+#if defined(Q_OS_LINUX)
+    // Map m_balance (-7 to +7) to Left & Right hardware channel percentages
+    float leftGain = 1.0f;
+    float rightGain = 1.0f;
+    if (m_balance < 0.0) {
+        rightGain = std::max(0.15f, 1.0f - static_cast<float>(-m_balance) / 7.0f * 0.85f);
+    } else if (m_balance > 0.0) {
+        leftGain = std::max(0.15f, 1.0f - static_cast<float>(m_balance) / 7.0f * 0.85f);
+    }
+    int leftPct = std::clamp(static_cast<int>(std::round(leftGain * 100.0f)), 15, 100);
+    int rightPct = std::clamp(static_cast<int>(std::round(rightGain * 100.0f)), 15, 100);
+
+    // Drive Pi 5 ALSA PCM mixer controls on HDMI card 1 (vc4hdmi1) and fallback card 0
+    QProcess::startDetached(QStringLiteral("amixer"), {
+        QStringLiteral("-c"), QStringLiteral("1"),
+        QStringLiteral("sset"), QStringLiteral("PCM"),
+        QStringLiteral("%1%,%2%").arg(leftPct).arg(rightPct)
+    });
+    QProcess::startDetached(QStringLiteral("amixer"), {
+        QStringLiteral("-c"), QStringLiteral("0"),
+        QStringLiteral("sset"), QStringLiteral("PCM"),
+        QStringLiteral("%1%,%2%").arg(leftPct).arg(rightPct)
+    });
+#endif
+}
+
+void MediaBackend::setSpeedCompensation(const QString &mode)
+{
+    if (m_speedCompensation != mode) {
+        m_speedCompensation = mode;
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("media_speedComp"), m_speedCompensation);
+        }
+        applySpeedCompensatedVolume(m_lastVehicleSpeed);
+        emit speedCompensationChanged();
+    }
+}
+
+void MediaBackend::applySpeedCompensatedVolume(double speed)
+{
+    m_lastVehicleSpeed = speed;
+    float boost = 0.0f;
+    if (m_speedCompensation == QLatin1String("Low")) {
+        if (speed > 40.0) boost = std::clamp(static_cast<float>((speed - 40.0) / 100.0 * 0.05f), 0.0f, 0.05f);
+    } else if (m_speedCompensation == QLatin1String("Medium")) {
+        if (speed > 30.0) boost = std::clamp(static_cast<float>((speed - 30.0) / 90.0 * 0.09f), 0.0f, 0.09f);
+    } else if (m_speedCompensation == QLatin1String("High")) {
+        if (speed > 20.0) boost = std::clamp(static_cast<float>((speed - 20.0) / 80.0 * 0.14f), 0.0f, 0.14f);
+    }
+
+    if (m_audioOutput) {
+        float baseVol = static_cast<float>(m_volume) / 100.0f;
+        float effectiveVol = std::clamp(baseVol * (1.0f + boost), 0.0f, 1.0f);
+        m_audioOutput->setVolume(effectiveVol);
+    }
+}
+
+void MediaBackend::setQuantumLogicMode(const QString &mode)
+{
+    setQuantumLogic(mode, m_quantumLogicImmersion);
+}
+
+void MediaBackend::setQuantumLogicImmersion(qreal imm)
+{
+    setQuantumLogic(m_quantumLogicMode, imm);
+}
+
+void MediaBackend::setQuantumLogic(const QString &mode, qreal imm)
+{
+    imm = std::clamp(imm, 0.0, 100.0);
+    bool changed = (m_quantumLogicMode != mode || !qFuzzyCompare(m_quantumLogicImmersion, imm));
+    if (changed) {
+        m_quantumLogicMode = mode;
+        m_quantumLogicImmersion = imm;
+        if (m_persistence) {
+            m_persistence->setSetting(QStringLiteral("media_qlMode"), m_quantumLogicMode);
+            m_persistence->setSetting(QStringLiteral("media_qlImmersion"), m_quantumLogicImmersion);
+        }
+        emit quantumLogicChanged();
+    }
+}
+
+void MediaBackend::playRevelDemo()
+{
+    if (!m_revelPlayer) {
+        m_revelAudioOutput = new QAudioOutput(this);
+        m_revelPlayer = new QMediaPlayer(this);
+        m_revelPlayer->setAudioOutput(m_revelAudioOutput);
+        m_revelAudioOutput->setVolume(1.0f);
+        connect(m_revelPlayer, &QMediaPlayer::playbackStateChanged, this, [this](QMediaPlayer::PlaybackState st) {
+            bool playing = (st == QMediaPlayer::PlayingState);
+            if (m_isRevelDemoPlaying != playing) {
+                m_isRevelDemoPlaying = playing;
+                emit revelDemoChanged();
+            }
+        });
+    }
+
+    if (m_mediaPlayer && m_mediaPlayer->playbackState() == QMediaPlayer::PlayingState) {
+        m_mediaPlayer->pause();
+    }
+
+    m_revelPlayer->setSource(QUrl(QStringLiteral("qrc:/ApexVision/qml/assets/sounds/welcome_startup.wav")));
+    m_revelPlayer->play();
+    m_isRevelDemoPlaying = true;
+    emit revelDemoChanged();
+}
+
+void MediaBackend::stopRevelDemo()
+{
+    if (m_revelPlayer) {
+        m_revelPlayer->stop();
+    }
+    m_isRevelDemoPlaying = false;
+    emit revelDemoChanged();
+}
+
+void MediaBackend::toggleRevelDemo()
+{
+    if (m_isRevelDemoPlaying) {
+        stopRevelDemo();
+    } else {
+        playRevelDemo();
+    }
 }
 

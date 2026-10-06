@@ -85,6 +85,17 @@ class MediaBackend : public QObject
     Q_PROPERTY(QVariantList onlineSearchResults READ onlineSearchResults NOTIFY onlineSearchResultsChanged)
     Q_PROPERTY(bool isSearchingOnline READ isSearchingOnline NOTIFY isSearchingOnlineChanged)
     Q_PROPERTY(int currentSxmChannelIndex READ currentSxmChannelIndex NOTIFY sxmChannelChanged)
+    // Audio DSP, Tone, Soundstage & Balance Properties (Linked to Pi 5 Sound System)
+    Q_PROPERTY(int bass READ bass WRITE setBass NOTIFY toneChanged)
+    Q_PROPERTY(int mid READ mid WRITE setMid NOTIFY toneChanged)
+    Q_PROPERTY(int treble READ treble WRITE setTreble NOTIFY toneChanged)
+    Q_PROPERTY(qreal balance READ balance WRITE setBalance NOTIFY balanceChanged)
+    Q_PROPERTY(qreal fade READ fade WRITE setFade NOTIFY fadeChanged)
+    Q_PROPERTY(QString speedCompensation READ speedCompensation WRITE setSpeedCompensation NOTIFY speedCompensationChanged)
+    Q_PROPERTY(QString quantumLogicMode READ quantumLogicMode WRITE setQuantumLogicMode NOTIFY quantumLogicChanged)
+    Q_PROPERTY(qreal quantumLogicImmersion READ quantumLogicImmersion WRITE setQuantumLogicImmersion NOTIFY quantumLogicChanged)
+    Q_PROPERTY(bool isRevelDemoPlaying READ isRevelDemoPlaying NOTIFY revelDemoChanged)
+
     Q_PROPERTY(bool bootComplete READ bootComplete WRITE setBootComplete NOTIFY bootCompleteChanged)
 
 public:
@@ -111,6 +122,32 @@ public:
     int volume() const { return m_volume; }
     bool phoneConnected() const { return m_phoneConnected; }
     QString connectedPhoneName() const { return m_connectedPhoneName; }
+
+    // Audio DSP & Soundstage Getters
+    int bass() const { return m_bass; }
+    int mid() const { return m_mid; }
+    int treble() const { return m_treble; }
+    qreal balance() const { return m_balance; }
+    qreal fade() const { return m_fade; }
+    QString speedCompensation() const { return m_speedCompensation; }
+    QString quantumLogicMode() const { return m_quantumLogicMode; }
+    qreal quantumLogicImmersion() const { return m_quantumLogicImmersion; }
+    bool isRevelDemoPlaying() const { return m_isRevelDemoPlaying; }
+
+    Q_INVOKABLE void setBass(int b);
+    Q_INVOKABLE void setMid(int m);
+    Q_INVOKABLE void setTreble(int t);
+    Q_INVOKABLE void setTone(int bass, int mid, int treble);
+    Q_INVOKABLE void setBalance(qreal bal);
+    Q_INVOKABLE void setFade(qreal fade);
+    Q_INVOKABLE void setBalanceFade(qreal bal, qreal fade);
+    Q_INVOKABLE void setSpeedCompensation(const QString &mode);
+    Q_INVOKABLE void setQuantumLogicMode(const QString &mode);
+    Q_INVOKABLE void setQuantumLogicImmersion(qreal imm);
+    Q_INVOKABLE void setQuantumLogic(const QString &mode, qreal imm);
+    Q_INVOKABLE void playRevelDemo();
+    Q_INVOKABLE void stopRevelDemo();
+    Q_INVOKABLE void toggleRevelDemo();
 
     QString amFrequency() const { return m_amFrequency; }
     QString amStationName() const { return m_amStationName; }
@@ -252,6 +289,13 @@ signals:
     void onlineSearchResultsChanged();
     void isSearchingOnlineChanged();
 
+    void toneChanged();
+    void balanceChanged();
+    void fadeChanged();
+    void speedCompensationChanged();
+    void quantumLogicChanged();
+    void revelDemoChanged();
+
 private slots:
     void onMediaProgressUpdated(int pos, int dur);
     void onAmStationsNetworkReply();
@@ -340,4 +384,21 @@ private:
     QTimer *m_audioSwitchTimer{nullptr};
     PersistenceManager *m_persistence{nullptr};
     bool m_bootComplete{false};
+
+    // Sound DSP & Soundstage State
+    int m_bass{0};
+    int m_mid{0};
+    int m_treble{0};
+    qreal m_balance{0.0};
+    qreal m_fade{0.0};
+    QString m_speedCompensation{"Medium"};
+    QString m_quantumLogicMode{"Audience"};
+    qreal m_quantumLogicImmersion{75.0};
+    bool m_isRevelDemoPlaying{false};
+    double m_lastVehicleSpeed{0.0};
+    QPointer<QMediaPlayer> m_revelPlayer;
+    QPointer<QAudioOutput> m_revelAudioOutput;
+
+    void applySpeedCompensatedVolume(double speed);
+    void updateAlsaHardwareBalance();
 };
