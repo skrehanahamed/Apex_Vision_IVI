@@ -87,6 +87,11 @@ SystemBackend::SystemBackend(PersistenceManager *persistence, QObject *parent)
         }
     });
     m_wifiScanTimer.start(25000);
+
+    // Real-time network throughput polling (every 1000 ms)
+    connect(&m_netSpeedTimer, &QTimer::timeout, this, &SystemBackend::updateNetworkSpeed);
+    m_netSpeedTimer.start(1000);
+    QTimer::singleShot(250, this, &SystemBackend::updateNetworkSpeed);
 }
 
 SystemBackend::~SystemBackend()
@@ -1009,3 +1014,65 @@ void SystemBackend::playSound(const QString &soundName)
 #endif
     }
 }
+
+void SystemBackend::updateNetworkSpeed()
+{
+    qint64 currentRx = 0;
+    qint64 currentTx = 0;
+    bool found = false;
+
+#if defined(Q_OS_LINUX)
+    QFile file(QStringLiteral("/proc/net/dev"));
+    if (file.open(QIODevice::ReadOnly)) {
+        const QByteArray data = file.readAll();
+        const QString content = QString::fromUtf8(data);
+        const QStringList lines = content.split(QLatin1Char('\n'), Qt::SkipEmptyParts);
+        for (const QString &line : lines) {
+            if (line.contains(QLatin1String("wlan0:")) || line.contains(QLatin1String("eth0:"))) {
+                const QStringList tokens = line.split(QRegularExpression(QStringLiteral("\\s+")), Qt::SkipEmptyParts);
+                if (tokens.size() >= 10) {
+                    qint64 rx = tokens[1].toLongLong();
+                    qint64 tx = tokens[9].toLongLong();
+                    currentRx += rx;
+                    currentTx += tx;
+                    found = true;
+                }
+            }
+        }
+    }
+#endif
+
+    const qint64 now = QDateTime::currentMSecsSinceEpoch();
+    if (found && m_lastNetTime > 0 && now > m_lastNetTime) {
+        const double deltaSec = (now - m_lastNetTime) / 1000.0;
+        if (deltaSec > 0.1) {
+            m_downloadBytesPerSec = qMax(0.0, static_cast<double>(currentRx - m_lastRxBytes) / deltaSec);
+            m_uploadBytesPerSec = qMax(0.0, static_cast<double>(currentTx - m_lastTxBytes) / deltaSec);
+        }
+    } else if (!m_wifiConnected) {
+        m_downloadBytesPerSec = 0.0;
+        m_uploadBytesPerSec = 0.0;
+    }
+
+    if (found) {
+        m_lastRxBytes = currentRx;
+        m_lastTxBytes = currentTx;
+        m_lastNetTime = now;
+    }
+
+    auto formatRate = [](double bytesPerSec) -> QString {
+        if (bytesPerSec <= 0.0) return QStringLiteral("0 B");
+        if (bytesPerSec < 1024.0) return QString::number(qRound(bytesPerSec)) + QStringLiteral(" B");
+        if (bytesPerSec < 1024.0 * 1024.0) {
+            double kb = bytesPerSec / 1024.0;
+            return QString::number(kb, 'f', (kb < 10.0) ? 1 : 0) + QStringLiteral(" kB");
+        }
+        double mb = bytesPerSec / (1024.0 * 1024.0);
+        return QString::number(mb, 'f', 1) + QStringLiteral(" MB");
+    };
+
+    m_downloadSpeed = formatRate(m_downloadBytesPerSec);
+    m_uploadSpeed = formatRate(m_uploadBytesPerSec);
+    emit netSpeedChanged();
+}
+

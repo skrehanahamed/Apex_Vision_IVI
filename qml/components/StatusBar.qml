@@ -78,24 +78,25 @@ Rectangle {
                 opacity: networkSignalItem.isConnected ? 1.0 : 0.35
                 Behavior on opacity { NumberAnimation { duration: 250 } }
 
-                // "5G" or "2.5G" Text Badge (smaller than the signal lines)
+                // "5G" or "2.4G" Text Badge (smaller than the signal lines)
                 Text {
-                    anchors.bottom: barsRow.bottom
+                    anchors.bottom: parent.bottom
                     anchors.bottomMargin: 0.5
                     text: networkSignalItem.currentBand
-                    color: "#FFFFFF"
-                    font.pixelSize: (networkSignalItem.currentBand.length > 2) ? 8 : 8.5
+                    color: networkSignalItem.isConnected ? "#FFFFFF" : "#A0AEC0"
+                    font.pixelSize: (networkSignalItem.currentBand.length > 2) ? 8 : 9
                     font.bold: true
                     font.weight: Font.Bold
                     font.family: "Inter"
                     smooth: true
                 }
 
-                // Signal Lines (4 ascending bars)
+                // Active: Signal Lines (4 ascending bars)
                 Row {
                     id: barsRow
                     spacing: 1.8
                     anchors.bottom: parent.bottom
+                    visible: networkSignalItem.isConnected
 
                     Repeater {
                         model: [4, 7, 10, 13]
@@ -112,6 +113,37 @@ Rectangle {
                         }
                     }
                 }
+
+                // Disconnected: Small Cross ("X line" - clean crisp crossed lines)
+                Item {
+                    id: crossItem
+                    width: 10
+                    height: 10
+                    anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 1
+                    visible: !networkSignalItem.isConnected
+
+                    Rectangle {
+                        width: 1.8
+                        height: 10
+                        radius: 0.9
+                        color: "#E2E8F0"
+                        anchors.centerIn: parent
+                        rotation: 45
+                        antialiasing: true
+                        smooth: true
+                    }
+                    Rectangle {
+                        width: 1.8
+                        height: 10
+                        radius: 0.9
+                        color: "#E2E8F0"
+                        anchors.centerIn: parent
+                        rotation: -45
+                        antialiasing: true
+                        smooth: true
+                    }
+                }
             }
 
             // Click to refresh / double-click to toggle band
@@ -125,7 +157,7 @@ Rectangle {
                 }
                 onDoubleClicked: {
                     if (typeof SystemBackend !== "undefined" && SystemBackend.setWifiBand) {
-                        SystemBackend.setWifiBand(SystemBackend.wifiBand === "5G" ? "2.5G" : "5G");
+                        SystemBackend.setWifiBand(SystemBackend.wifiBand === "5G" ? "2.4G" : "5G");
                     }
                 }
             }
@@ -145,6 +177,71 @@ Rectangle {
                 source: "qrc:/ApexVision/qml/assets/icons/status_gps.png"
                 smooth: true
                 mipmap: true
+            }
+        }
+
+        // 4. Internet UP / Down Speed Indicator (Arrow + B / kB / MB)
+        Item {
+            id: netSpeedItem
+            width: 40
+            height: 26
+            anchors.horizontalCenter: parent.horizontalCenter
+            opacity: ((typeof SystemBackend !== "undefined") ? SystemBackend.wifiConnected : true) ? 1.0 : 0.35
+            Behavior on opacity { NumberAnimation { duration: 250 } }
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 1
+
+                // Upload (UP) Row
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 2.5
+
+                    Text {
+                        text: "▲"
+                        color: "#94A3B8"
+                        font.pixelSize: 7
+                        font.bold: true
+                        font.family: "Inter"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: (typeof SystemBackend !== "undefined" && SystemBackend.uploadSpeed) ? SystemBackend.uploadSpeed : "0 B"
+                        color: "#CBD5E1"
+                        font.pixelSize: 8
+                        font.bold: true
+                        font.family: "Inter"
+                        smooth: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                // Download (DOWN) Row
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 2.5
+
+                    Text {
+                        text: "▼"
+                        color: "#38BDF8"
+                        font.pixelSize: 7
+                        font.bold: true
+                        font.family: "Inter"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: (typeof SystemBackend !== "undefined" && SystemBackend.downloadSpeed) ? SystemBackend.downloadSpeed : "0 B"
+                        color: "#F8FAFC"
+                        font.pixelSize: 8
+                        font.bold: true
+                        font.family: "Inter"
+                        smooth: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
             }
         }
     }

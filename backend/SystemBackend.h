@@ -48,6 +48,10 @@ class SystemBackend : public QObject
     Q_PROPERTY(int volumePrompts READ volumePrompts WRITE setVolumePrompts NOTIFY volumePromptsChanged)
     Q_PROPERTY(int volumePhone READ volumePhone WRITE setVolumePhone NOTIFY volumePhoneChanged)
     Q_PROPERTY(int volumeCallRing READ volumeCallRing WRITE setVolumeCallRing NOTIFY volumeCallRingChanged)
+    Q_PROPERTY(QString downloadSpeed READ downloadSpeed NOTIFY netSpeedChanged)
+    Q_PROPERTY(QString uploadSpeed READ uploadSpeed NOTIFY netSpeedChanged)
+    Q_PROPERTY(double downloadBytesPerSec READ downloadBytesPerSec NOTIFY netSpeedChanged)
+    Q_PROPERTY(double uploadBytesPerSec READ uploadBytesPerSec NOTIFY netSpeedChanged)
     Q_PROPERTY(bool hasWebEngine READ hasWebEngine CONSTANT)
 
 public:
@@ -91,6 +95,10 @@ public:
     QString lastWifiError() const { return m_lastWifiError; }
     int brightness() const { return m_brightness; }
     QString unitsTemperature() const { return m_unitsTemperature; }
+    QString downloadSpeed() const { return m_downloadSpeed; }
+    QString uploadSpeed() const { return m_uploadSpeed; }
+    double downloadBytesPerSec() const { return m_downloadBytesPerSec; }
+    double uploadBytesPerSec() const { return m_uploadBytesPerSec; }
 
     Q_INVOKABLE void setVolumePrompts(int vol);
     Q_INVOKABLE void setVolumePhone(int vol);
@@ -155,10 +163,12 @@ signals:
     void volumePhoneChanged();
     void volumeCallRingChanged();
     void ttsFinished();
+    void netSpeedChanged();
 
 private slots:
     void updateClock();
     void updateWifiStatus();
+    void updateNetworkSpeed();
 
 private:
     static int parseGmtOffset(const QString &tzStr);
@@ -195,6 +205,14 @@ private:
     QString m_lastWifiError;
     QTimer m_wifiStatusTimer;
     QTimer m_wifiScanTimer;
+    QTimer m_netSpeedTimer;
+    QString m_downloadSpeed{QStringLiteral("0 B")};
+    QString m_uploadSpeed{QStringLiteral("0 B")};
+    double m_downloadBytesPerSec{0.0};
+    double m_uploadBytesPerSec{0.0};
+    qint64 m_lastRxBytes{0};
+    qint64 m_lastTxBytes{0};
+    qint64 m_lastNetTime{0};
     int m_brightness{85};
     QString m_unitsTemperature{"Celsius (°C)"};
     bool m_touchSoundsEnabled{true};

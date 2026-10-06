@@ -4401,32 +4401,34 @@
                     this.camera = new THREE.Camera();
                     this.scene = new THREE.Scene();
 
-                    // Studio 3D Vehicle Lighting:
-                    this.ambientLight = new THREE.AmbientLight(0xffffff, 2.2);
+                    // Studio 3D Vehicle Lighting (Balanced to prevent overexposure & reveal contours):
+                    this.ambientLight = new THREE.AmbientLight(0xe2e8f0, 0.55);
                     this.scene.add(this.ambientLight);
 
-                    this.sunLight = new THREE.DirectionalLight(0xfffaed, 2.6);
-                    this.sunLight.position.set(30, -50, 100).normalize();
+                    this.sunLight = new THREE.DirectionalLight(0xfffdf5, 1.5);
+                    this.sunLight.position.set(25, -45, 60).normalize();
                     this.scene.add(this.sunLight);
 
-                    this.fillLight = new THREE.DirectionalLight(0xdbeafe, 1.4);
-                    this.fillLight.position.set(-40, 50, 60).normalize();
+                    this.fillLight = new THREE.DirectionalLight(0xcfd8dc, 0.75);
+                    this.fillLight.position.set(-35, 45, 40).normalize();
                     this.scene.add(this.fillLight);
 
-                    this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x334155, 1.2);
+                    this.hemiLight = new THREE.HemisphereLight(0xffffff, 0x1e293b, 0.45);
                     this.scene.add(this.hemiLight);
 
                     this.setNightMode = function(isNight) {
                         if (isNight) {
-                            if (this.ambientLight) this.ambientLight.intensity = 1.2;
-                            if (this.sunLight) this.sunLight.intensity = 1.0;
-                            if (this.fillLight) this.fillLight.intensity = 0.8;
-                            if (this.hemiLight) this.hemiLight.intensity = 0.6;
+                            if (this.ambientLight) this.ambientLight.intensity = 0.35;
+                            if (this.sunLight) this.sunLight.intensity = 0.60;
+                            if (this.fillLight) this.fillLight.intensity = 0.40;
+                            if (this.hemiLight) this.hemiLight.intensity = 0.25;
+                            if (this.shadowMesh && this.shadowMesh.material) this.shadowMesh.material.opacity = 0.72;
                         } else {
-                            if (this.ambientLight) this.ambientLight.intensity = 2.2;
-                            if (this.sunLight) this.sunLight.intensity = 2.6;
-                            if (this.fillLight) this.fillLight.intensity = 1.4;
-                            if (this.hemiLight) this.hemiLight.intensity = 1.2;
+                            if (this.ambientLight) this.ambientLight.intensity = 0.55;
+                            if (this.sunLight) this.sunLight.intensity = 1.50;
+                            if (this.fillLight) this.fillLight.intensity = 0.75;
+                            if (this.hemiLight) this.hemiLight.intensity = 0.45;
+                            if (this.shadowMesh && this.shadowMesh.material) this.shadowMesh.material.opacity = 0.86;
                         }
                     };
                     if (window.currentMapTheme === 'night') {
@@ -4480,17 +4482,26 @@
                                         mat.depthWrite = true;
                                         mat.depthTest = true;
                                         const matName = (mat.name || '').toLowerCase();
-                                        // Paint Apex Zephyr exterior body shell and panels pearl white
-                                        if (matName.includes('paint') || 
-                                            matName.includes('bodyfrontgrillepaint') || 
-                                            matName.includes('carbodyfrostedplastic21') || 
-                                            matName.includes('carbodyint191')) {
-                                            mat.color.setHex(0xEDF2F7);
-                                            mat.roughness = 0.24;
-                                            mat.metalness = 0.18;
+                                        // 1. Exterior Body Paint Panels (Satin Pearl White with natural metallic depth)
+                                        if (matName.includes('paint') || matName.includes('bodyfrontgrillepaint')) {
+                                            mat.color.setHex(0xDCE4EC);
+                                            mat.roughness = 0.32;
+                                            mat.metalness = 0.24;
+                                            mat.needsUpdate = true;
+                                        } else if (matName.includes('chorme') || matName.includes('chrome')) {
+                                            // 2. Grille & Window trim Chrome
+                                            mat.color.setHex(0xC8D0D8);
+                                            mat.roughness = 0.12;
+                                            mat.metalness = 0.92;
+                                            mat.needsUpdate = true;
+                                        } else if (matName.includes('frostedplastic') || matName.includes('plastic51') || matName.includes('headlampplastic')) {
+                                            // 3. Lower bumper plastics, front intake grilles, and rocker panel trim (Contrast Dark Charcoal)
+                                            mat.color.setHex(0x181B20);
+                                            mat.roughness = 0.75;
+                                            mat.metalness = 0.10;
                                             mat.needsUpdate = true;
                                         } else if (matName.includes('bodyglass') || matName.includes('skyglass')) {
-                                            // Luxury tinted reflective glass matching Vehicle Studio
+                                            // 4. Luxury tinted reflective glass matching Vehicle Studio
                                             mat.color.setHex(0x05070A);
                                             mat.roughness = 0.04;
                                             mat.metalness = 0.20;
@@ -4498,10 +4509,15 @@
                                             mat.opacity = 0.88;
                                             mat.needsUpdate = true;
                                         } else if (matName.includes('wheeltire') || matName.includes('tire')) {
-                                            // Jet black rubber tires
+                                            // 5. Jet black rubber tires
                                             mat.color.setHex(0x080808);
                                             mat.roughness = 0.85;
                                             mat.metalness = 0.05;
+                                            mat.needsUpdate = true;
+                                        } else if (matName.includes('apex_backing')) {
+                                            mat.color.setHex(0x151515);
+                                            mat.roughness = 0.20;
+                                            mat.metalness = 0.80;
                                             mat.needsUpdate = true;
                                         } else if (mat.roughness !== undefined) {
                                             mat.roughness = Math.max(0.18, mat.roughness * 0.85);
@@ -4511,6 +4527,38 @@
                             });
 
                             this.carGroup.add(rawModel);
+
+                            // Authentic Ground Contact Shadow (Bake of chassis silhouette, tire AO & soft penumbra)
+                            try {
+                                const shadowLoader = new THREE.TextureLoader();
+                                shadowLoader.load(
+                                    'apex_car_shadow.png',
+                                    (shadowTexture) => {
+                                        shadowTexture.generateMipmaps = true;
+                                        shadowTexture.minFilter = THREE.LinearMipmapLinearFilter;
+                                        shadowTexture.magFilter = THREE.LinearFilter;
+                                        const shadowGeo = new THREE.PlaneGeometry(2.80, 5.60);
+                                        const shadowMat = new THREE.MeshBasicMaterial({
+                                            map: shadowTexture,
+                                            transparent: true,
+                                            opacity: (window.currentMapTheme === 'night') ? 0.72 : 0.86,
+                                            depthWrite: false
+                                        });
+                                        this.shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
+                                        this.shadowMesh.rotation.x = -Math.PI / 2;
+                                        this.shadowMesh.position.set(0, 0.012, 0);
+                                        this.carGroup.add(this.shadowMesh);
+                                        if (mapInst) mapInst.triggerRepaint();
+                                    },
+                                    undefined,
+                                    (err) => {
+                                        console.warn('[ApexZephyr] Could not load apex_car_shadow.png:', err);
+                                    }
+                                );
+                            } catch (e) {
+                                console.warn('[ApexZephyr] Shadow setup error:', e);
+                            }
+
                             this.isLoaded = true;
                             if (mapInst) mapInst.triggerRepaint();
                         },
@@ -4550,8 +4598,8 @@
                     const meterScale = mercCoord.meterInMercatorCoordinateUnits();
                     const currentZoom = this.map ? this.map.getZoom() : 16.5;
 
-                    // Prominent automotive 3D vehicle scaling (Google Maps 3D navigation style)
-                    const visualMultiplier = Math.max(14.0, 16.0 * Math.pow(1.15, Math.max(0, 16.5 - currentZoom)));
+                    // Proportional automotive 3D vehicle scaling (Fits cleanly inside roadway & lanes)
+                    const visualMultiplier = Math.max(7.0, 8.4 * Math.pow(1.08, Math.max(0, 16.5 - currentZoom)));
                     const finalScale = meterScale * visualMultiplier;
 
                     const rotationX = new THREE.Matrix4().makeRotationAxis(
@@ -5125,6 +5173,11 @@
 
             const startLng = coords[0][0];
             const startLat = coords[0][1];
+            // Don't teleport vehicle sideways across buildings/median if start point is within 25m
+            const distFromStart = calculateHaversineKm(currentLat, currentLng, startLat, startLng) * 1000.0;
+            const targetLng = distFromStart < 25.0 ? currentLng : startLng;
+            const targetLat = distFromStart < 25.0 ? currentLat : startLat;
+
             const nextLng = coords[1][0];
             const nextLat = coords[1][1];
 
@@ -5137,7 +5190,7 @@
             const fromHeading = currentHeading;
 
             let headingDiff = (targetHeading - fromHeading + 540) % 360 - 180;
-            const animDuration = 600; // ms, aligns smoothly with map.fitBounds
+            const animDuration = 550; // ms, aligns smoothly with map.fitBounds
             const startTime = performance.now();
 
             function stepAlign(now) {
@@ -5146,8 +5199,8 @@
                 // Ease out cubic
                 const ease = 1 - Math.pow(1 - p, 3);
 
-                currentLng = fromLng + (startLng - fromLng) * ease;
-                currentLat = fromLat + (startLat - fromLat) * ease;
+                currentLng = fromLng + (targetLng - fromLng) * ease;
+                currentLat = fromLat + (targetLat - fromLat) * ease;
                 currentHeading = (fromHeading + headingDiff * ease + 360) % 360;
 
                 if (marker) marker.setLngLat([currentLng, currentLat]);
@@ -6789,33 +6842,41 @@
                     traveledDistance += currentSpeedMps * dt;
                     if (traveledDistance > totalDistance) traveledDistance = totalDistance;
 
-                    // 3. Sub-segment linear position interpolation
+                    // 3. Continuous arc-length path point sampling
+                    const getRoutePointAtDist = (dTarget) => {
+                        const clamped = Math.max(0, Math.min(totalDistance, dTarget));
+                        let s = currentSeg;
+                        while (s < coords.length - 2 && dists[s + 1] < clamped) {
+                            s++;
+                        }
+                        const pA = coords[s];
+                        const pB = coords[s + 1];
+                        const segL = dists[s + 1] - dists[s];
+                        const frac = segL > 0.0001 ? Math.max(0, Math.min(1.0, (clamped - dists[s]) / segL)) : 0;
+                        return [
+                            pA[0] + frac * (pB[0] - pA[0]),
+                            pA[1] + frac * (pB[1] - pA[1])
+                        ];
+                    };
+
+                    // Current vehicle position precisely on route centerline
                     while (currentSeg < coords.length - 2 && dists[currentSeg + 1] < traveledDistance) {
                         currentSeg++;
                     }
-                    const p1 = coords[currentSeg];
-                    const p2 = coords[currentSeg + 1];
-                    const segLen = dists[currentSeg + 1] - dists[currentSeg];
-                    const u = segLen > 0.0001 ? Math.max(0, Math.min(1.0, (traveledDistance - dists[currentSeg]) / segLen)) : 0;
+                    const [curLng, curLat] = getRoutePointAtDist(traveledDistance);
 
-                    const curLng = p1[0] + u * (p2[0] - p1[0]);
-                    const curLat = p1[1] + u * (p2[1] - p1[1]);
-
-                    // 4. Shortest-path angular heading interpolation with corner rounding
-                    const segDlng = p2[0] - p1[0];
-                    const segDlat = p2[1] - p1[1];
-                    let segBearing = (Math.atan2(segDlng, segDlat) * 180 / Math.PI + 360) % 360;
-
-                    if (u > 0.60 && currentSeg + 2 < coords.length) {
-                        const p3 = coords[currentSeg + 2];
-                        const nextBearing = (Math.atan2(p3[0] - p2[0], p3[1] - p2[1]) * 180 / Math.PI + 360) % 360;
-                        let blend = (u - 0.60) / 0.40;
-                        let diffNext = (nextBearing - segBearing + 540) % 360 - 180;
-                        segBearing = (segBearing + diffNext * blend + 360) % 360;
+                    // 4. Predictive lookahead steering (pure pursuit) - smoothly leads vehicle into curves
+                    const lookaheadDist = Math.min(totalDistance, traveledDistance + Math.max(5.5, currentSpeedMps * 0.70));
+                    const [lookLng, lookLat] = getRoutePointAtDist(lookaheadDist);
+                    const dLng = lookLng - curLng;
+                    const dLat = lookLat - curLat;
+                    let targetBearing = currentSmoothedHeading;
+                    if (Math.hypot(dLng, dLat) > 0.000002) {
+                        targetBearing = (Math.atan2(dLng, dLat) * 180 / Math.PI + 360) % 360;
                     }
 
-                    let headDiff = (segBearing - currentSmoothedHeading + 540) % 360 - 180;
-                    const turnRate = Math.min(1.0, dt * 7.5);
+                    let headDiff = (targetBearing - currentSmoothedHeading + 540) % 360 - 180;
+                    const turnRate = Math.min(1.0, dt * 9.5); // responsive yet buttery smooth turn damping
                     currentSmoothedHeading = (currentSmoothedHeading + headDiff * turnRate + 360) % 360;
 
                     // Update vehicle state
