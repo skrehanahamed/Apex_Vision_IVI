@@ -19,6 +19,9 @@ MODE="patch"
 if [ "${1:-}" = "--qml" ]; then
   MODE="qml"
   echo ">> Mode: Ultra-Fast QML Hot-Patch (~290 KB payload)"
+elif [ "${1:-}" = "--web" ]; then
+  MODE="web"
+  echo ">> Mode: Web Maps & 3D Model OTA Patch"
 elif [ "${1:-}" = "--no-build" ]; then
   MODE="no-build"
   echo ">> Mode: Skip Docker build, send current binary and QML (~4.9 MB)"
@@ -80,6 +83,10 @@ if [ "$MODE" = "qml" ]; then
   tar -czf "${PATCH_ARCHIVE}" \
       "${EXCLUDE_ARGS[@]}" \
       -C "${SCRIPT_DIR}" qml
+elif [ "$MODE" = "web" ]; then
+  echo ">> Packing Web & 3D Maps assets..."
+  COPYFILE_DISABLE=1 tar --exclude="._*" -czf "${PATCH_ARCHIVE}" \
+      -C "${SCRIPT_DIR}" web
 else
   echo ">> Packing binary and QML patch..."
   tar -czf "${PATCH_ARCHIVE}" \

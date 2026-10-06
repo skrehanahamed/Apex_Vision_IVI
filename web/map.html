@@ -4485,9 +4485,23 @@
                                             matName.includes('bodyfrontgrillepaint') || 
                                             matName.includes('carbodyfrostedplastic21') || 
                                             matName.includes('carbodyint191')) {
-                                            mat.color.setHex(0xFFFFFF);
-                                            mat.roughness = 0.22;
-                                            mat.metalness = 0.16;
+                                            mat.color.setHex(0xEDF2F7);
+                                            mat.roughness = 0.24;
+                                            mat.metalness = 0.18;
+                                            mat.needsUpdate = true;
+                                        } else if (matName.includes('bodyglass') || matName.includes('skyglass')) {
+                                            // Luxury tinted reflective glass matching Vehicle Studio
+                                            mat.color.setHex(0x05070A);
+                                            mat.roughness = 0.04;
+                                            mat.metalness = 0.20;
+                                            mat.transparent = true;
+                                            mat.opacity = 0.88;
+                                            mat.needsUpdate = true;
+                                        } else if (matName.includes('wheeltire') || matName.includes('tire')) {
+                                            // Jet black rubber tires
+                                            mat.color.setHex(0x080808);
+                                            mat.roughness = 0.85;
+                                            mat.metalness = 0.05;
                                             mat.needsUpdate = true;
                                         } else if (mat.roughness !== undefined) {
                                             mat.roughness = Math.max(0.18, mat.roughness * 0.85);
