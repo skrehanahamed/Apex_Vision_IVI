@@ -297,6 +297,134 @@ Item {
                     }
                 }
             }
+
+            // Notification Bell Button
+            Item {
+                id: bellBtn
+                width: 40
+                height: 40
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 20
+                    color: bellMouse.pressed ? Qt.rgba(255, 255, 255, 0.16) :
+                           (bellMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.08) : "transparent")
+                }
+
+                Image {
+                    anchors.centerIn: parent
+                    width: 22
+                    height: 22
+                    source: "qrc:/ApexVision/qml/assets/icons/status_notification.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
+                }
+
+                MouseArea {
+                    id: bellMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (typeof PhoneBackend !== "undefined" && PhoneBackend.clearNotification) {
+                            PhoneBackend.clearNotification();
+                        }
+                    }
+                }
+            }
+
+            // Cellular / Wi-Fi Signal Indicator
+            Item {
+                id: signalItem
+                width: 44
+                height: 40
+
+                readonly property string currentBand: (typeof SystemBackend !== "undefined" && SystemBackend.wifiBand) ? SystemBackend.wifiBand : "5G"
+                readonly property bool isConnected: (typeof SystemBackend !== "undefined") ? SystemBackend.wifiConnected : true
+                readonly property int signalBars: (typeof SystemBackend !== "undefined") ? SystemBackend.wifiSignalBars : 4
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 3
+                    opacity: signalItem.isConnected ? 1.0 : 0.35
+
+                    Text {
+                        anchors.bottom: radioBarsRow.bottom
+                        anchors.bottomMargin: 0.5
+                        text: signalItem.currentBand
+                        color: "#FFFFFF"
+                        font.pixelSize: (signalItem.currentBand.length > 2) ? 8 : 8.5
+                        font.bold: true
+                        font.family: "Inter"
+                        smooth: true
+                    }
+
+                    Row {
+                        id: radioBarsRow
+                        spacing: 1.8
+                        anchors.bottom: parent.bottom
+
+                        Repeater {
+                            model: [4, 7, 10, 13]
+
+                            Rectangle {
+                                width: 2.2
+                                height: modelData
+                                anchors.bottom: parent.bottom
+                                radius: 1
+                                antialiasing: true
+                                smooth: true
+                                color: (index < signalItem.signalBars) ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.22)
+                            }
+                        }
+                    }
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (typeof SystemBackend !== "undefined" && SystemBackend.refreshWifiStatus) {
+                            SystemBackend.refreshWifiStatus();
+                        }
+                    }
+                }
+            }
+
+            // GPS Navigation Arrow Button
+            Item {
+                id: gpsBtn
+                width: 40
+                height: 40
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: 20
+                    color: gpsMouse.pressed ? Qt.rgba(255, 255, 255, 0.16) :
+                           (gpsMouse.containsMouse ? Qt.rgba(255, 255, 255, 0.08) : "transparent")
+                }
+
+                Image {
+                    anchors.centerIn: parent
+                    width: 22
+                    height: 22
+                    source: "qrc:/ApexVision/qml/assets/icons/status_gps.png"
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    mipmap: true
+                }
+
+                MouseArea {
+                    id: gpsMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.backRequested();
+                    }
+                }
+            }
         }
     }
 

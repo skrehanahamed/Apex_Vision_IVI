@@ -85,7 +85,7 @@ Item {
     property bool autofillPaymentsEnabled: true
     property int pointerSpeed: (typeof SystemBackend !== "undefined") ? SystemBackend.pointerSpeed : 50
     property bool hapticFeedbackEnabled: true
-    property bool soundOnKeypressEnabled: false
+    property bool soundOnKeypressEnabled: (typeof SystemBackend !== "undefined") ? SystemBackend.touchSoundsEnabled : true
     property bool showLanguageSwitchKey: true
     property bool physicalUseOnscreen: false
     property string virtualKbTestInput: ""
@@ -371,26 +371,63 @@ Item {
     property string notifCurrentScreen: "main" // "main" | "app_notifications"
     property int notifSlideDir: 1
 
-    // Sound sub-screens and audio tuning (Matching OEM reference photos)
+    // Sound sub-screens and audio tuning (Matching OEM reference photos & Pi 5 audio stack)
     property string soundCurrentScreen: "main" // "main" | "tone" | "balance_fade" | "speed_volume" | "quantum_logic" | "revel_experience" | "volume_settings" | "ringtones" | "notification_sounds"
     property int soundSlideDir: 1
     property string soundMode: "Audience"
-    property string quantumLogicMode: "Audience"
+    property string quantumLogicMode: (typeof MediaBackend !== "undefined") ? MediaBackend.quantumLogicMode : "Audience"
     property string soundBalancePreset: "All Seats"
-    property real soundFadeX: 0
-    property real soundFadeY: 0
-    property int soundBass: 0
-    property int soundMid: 0
-    property int soundTreble: 0
-    property real soundQuantumLogic: 75
-    property string speedCompVolume: "Medium"
-    property bool isPlayingRevelDemo: false
-    property int soundVolumeAudio: 1
-    property int soundVolumePrompts: 10
-    property int soundVolumePhone: 30
-    property int soundVolumeCallRing: 10
+    property real soundFadeX: (typeof MediaBackend !== "undefined") ? MediaBackend.balance : 0
+    property real soundFadeY: (typeof MediaBackend !== "undefined") ? MediaBackend.fade : 0
+    property int soundBass: (typeof MediaBackend !== "undefined") ? MediaBackend.bass : 0
+    property int soundMid: (typeof MediaBackend !== "undefined") ? MediaBackend.mid : 0
+    property int soundTreble: (typeof MediaBackend !== "undefined") ? MediaBackend.treble : 0
+    property real soundQuantumLogic: (typeof MediaBackend !== "undefined") ? MediaBackend.quantumLogicImmersion : 75
+    property string speedCompVolume: (typeof MediaBackend !== "undefined") ? MediaBackend.speedCompensation : "Medium"
+    property bool isPlayingRevelDemo: (typeof MediaBackend !== "undefined") ? MediaBackend.isRevelDemoPlaying : false
+    property int soundVolumeAudio: (typeof MediaBackend !== "undefined") ? Math.round(MediaBackend.volume / 100.0 * 30) : 15
+    property int soundVolumePrompts: (typeof SystemBackend !== "undefined") ? SystemBackend.volumePrompts : 10
+    property int soundVolumePhone: (typeof SystemBackend !== "undefined") ? SystemBackend.volumePhone : 30
+    property int soundVolumeCallRing: (typeof SystemBackend !== "undefined") ? SystemBackend.volumeCallRing : 10
     property string soundRingtone: "Default ringtone"
     property string soundNotificationSound: "Default notification"
+
+    onSoundBassChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setTone(root.soundBass, root.soundMid, root.soundTreble);
+    }
+    onSoundMidChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setTone(root.soundBass, root.soundMid, root.soundTreble);
+    }
+    onSoundTrebleChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setTone(root.soundBass, root.soundMid, root.soundTreble);
+    }
+    onSoundFadeXChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setBalanceFade(root.soundFadeX, root.soundFadeY);
+    }
+    onSoundFadeYChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setBalanceFade(root.soundFadeX, root.soundFadeY);
+    }
+    onSpeedCompVolumeChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setSpeedCompensation(root.speedCompVolume);
+    }
+    onQuantumLogicModeChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setQuantumLogic(root.quantumLogicMode, root.soundQuantumLogic);
+    }
+    onSoundQuantumLogicChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setQuantumLogic(root.quantumLogicMode, root.soundQuantumLogic);
+    }
+    onSoundVolumeAudioChanged: {
+        if (typeof MediaBackend !== "undefined") MediaBackend.setVolume(Math.round((root.soundVolumeAudio / 30.0) * 100));
+    }
+    onSoundVolumePromptsChanged: {
+        if (typeof SystemBackend !== "undefined") SystemBackend.setVolumePrompts(root.soundVolumePrompts);
+    }
+    onSoundVolumePhoneChanged: {
+        if (typeof SystemBackend !== "undefined") SystemBackend.setVolumePhone(root.soundVolumePhone);
+    }
+    onSoundVolumeCallRingChanged: {
+        if (typeof SystemBackend !== "undefined") SystemBackend.setVolumeCallRing(root.soundVolumeCallRing);
+    }
 
     // Privacy sub-screens (Matching OEM photo 1 & 2)
     property string privCurrentScreen: "main" // "main" | "microphone" | "location" | "app_permissions" | "infotainment_data" | "ads" | "data_sharing"
@@ -5062,7 +5099,13 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.isPlayingRevelDemo = !root.isPlayingRevelDemo
+                                        onClicked: {
+                                            if (typeof MediaBackend !== "undefined") {
+                                                MediaBackend.toggleRevelDemo();
+                                            } else {
+                                                root.isPlayingRevelDemo = !root.isPlayingRevelDemo;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -5693,6 +5736,9 @@ Item {
                                     selected: root.soundRingtone === modelData
                                     onSelectedRequested: {
                                         root.soundRingtone = modelData;
+                                        if (typeof SystemBackend !== "undefined") {
+                                            SystemBackend.playSound("preset_chime");
+                                        }
                                     }
                                 }
                             }
@@ -5741,6 +5787,9 @@ Item {
                                     selected: root.soundNotificationSound === modelData
                                     onSelectedRequested: {
                                         root.soundNotificationSound = modelData;
+                                        if (typeof SystemBackend !== "undefined") {
+                                            SystemBackend.playTouchSound();
+                                        }
                                     }
                                 }
                             }
@@ -8215,7 +8264,12 @@ Item {
                             SettingRowSwitch {
                                 title: "Sound on keypress"
                                 checked: root.soundOnKeypressEnabled
-                                onToggled: root.soundOnKeypressEnabled = !root.soundOnKeypressEnabled
+                                onToggled: {
+                                    root.soundOnKeypressEnabled = !root.soundOnKeypressEnabled;
+                                    if (typeof SystemBackend !== "undefined") {
+                                        SystemBackend.setTouchSoundsEnabled(root.soundOnKeypressEnabled);
+                                    }
+                                }
                             }
 
                             SettingRowSwitch {
@@ -12035,12 +12089,20 @@ Item {
                                                     SystemBackend.connectToNetwork(modelData.ssid);
                                                 }
                                             } else {
-                                                // Unsaved: open password connect screen
-                                                root.wifiTargetSsid = modelData.ssid;
-                                                root.wifiTargetSecurity = modelData.security;
-                                                root.wifiEnteredPassword = "";
-                                                root.connSlideDir = 1;
-                                                root.connCurrentScreen = "wifi_connect";
+                                                // Unsaved:
+                                                if (!modelData.isSecured || modelData.security === "Open") {
+                                                    // Open network: connect directly without asking for password
+                                                    if (typeof SystemBackend !== "undefined") {
+                                                        SystemBackend.connectToNetwork(modelData.ssid, "");
+                                                    }
+                                                } else {
+                                                    // Secured network: open password connect screen
+                                                    root.wifiTargetSsid = modelData.ssid;
+                                                    root.wifiTargetSecurity = modelData.security || "WPA2";
+                                                    root.wifiEnteredPassword = "";
+                                                    root.connSlideDir = 1;
+                                                    root.connCurrentScreen = "wifi_connect";
+                                                }
                                             }
                                         }
                                     }
@@ -12928,6 +12990,9 @@ Item {
                                                     SystemBackend.forgetNetwork(forgetSsid);
                                                 }
                                             }
+                                            root.wifiSelectedDetailsNet = null;
+                                            root.wifiTargetSsid = "";
+                                            root.wifiEnteredPassword = "";
                                             root.connSlideDir = -1;
                                             root.connCurrentScreen = "wifi";
                                         }

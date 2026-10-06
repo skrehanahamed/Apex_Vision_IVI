@@ -14,7 +14,7 @@
 [![Framework](https://img.shields.io/badge/Framework-Qt%206.7.3%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Wi-Fi](https://img.shields.io/badge/Wi--Fi-5%20GHz%20802.11ac%20%7C%20WPA3--SAE-007ACC.svg?style=for-the-badge&logo=wi-fi&logoColor=white)](https://www.wi-fi.org/)
 [![Audio](https://img.shields.io/badge/Audio-PipeWire%20%7C%20WirePlumber-8A2BE2.svg?style=for-the-badge)](https://pipewire.org/)
-[![Version](https://img.shields.io/badge/Version-v2.7.1%20Pi5%20Edition-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.7.2%20Pi5%20Edition-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -727,6 +727,24 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 ---
 
 ## Release History & Highlights
+
+### [v2.7.2] - True 3-Mesh Vehicle Architecture, HVAC Model Decoupling, Audio DSP & Wi-Fi Polish
+- **True 3-Mesh Consolidated Vehicle Architecture (`qml/climate3d/CarModel/`)**:
+  - Replaced the 7-mesh model with a clean, high-performance 3-mesh structure:
+    - `car_Body_Cabin_mesh.mesh` (25.0 MB) — Merged Exterior Body + Interior Cabin into 1 unified node (41 materials).
+    - `roof_Assembly_mesh.mesh` (5.4 MB) — Removable Roof assembly with panoramic sunroof (7 materials), translating off-screen in cabin mode.
+    - `wheels_Assembly_mesh.mesh` (200.8 KB) — 4 wheels consolidated into 1 draw node (4 materials), culling off-screen in ambient lighting mode.
+  - Reduced Model nodes from 7 to 3 (-57%), eliminating excess buffer re-bindings and saving ~15–20% CPU frametime on the Broadcom VideoCore VII GPU.
+  - Overall directory storage footprint reduced from 64 MB down to 34 MB (-47% storage saving).
+  - Authentic luxury automotive paint: Satin Pearl White (`#EDF2F7`, metalness 0.18, roughness 0.24, clearcoat 0.75) and deep-tinted reflective glass (`#05070A`, metalness 0.15, roughness 0.03, clearcoat 1.0) with hardware `BackFaceCulling`.
+- **HVAC Decoupling (`CarModel_Climate/`)**:
+  - Decoupled Climate 3D cabin airflow and thermal visualizations into an isolated `CarModel_Climate` module, guaranteeing zero cross-module dependency regressions between Vehicle Studio and Climate.
+- **Audio DSP & System Sound Synchronization**:
+  - Connected live tone controls (Bass, Mid, Treble), Balance/Fade, Speed Compensation Volume, and Revel Ultima demo audio playback directly from Settings to `MediaBackend` and `SystemBackend`.
+  - Added chime audio previews for ringtones and notifications.
+- **Wi-Fi UX Polish**:
+  - Open networks connect directly on tap without modal password prompts.
+  - Automatic cooldown synchronization on background scans with instant feedback on manual scan.
 
 ### [v2.7.1] - Ambient 3D Engine Optimization, Hardware Back-Face Culling, Wi-Fi 5 GHz & UI Polish
 - **Hardware-Accelerated Back-Face Culling (`Scene.qml`)**:

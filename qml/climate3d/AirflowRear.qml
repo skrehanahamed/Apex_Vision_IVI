@@ -55,7 +55,7 @@ Node {
     // Layer 1: Primary Stream
     Model {
         id: rearModel1
-        source: "CarModel/meshes/airflow_rear_console.mesh"
+        source: "CarModel_Climate/meshes/airflow_rear_console.mesh"
         castsShadows: false
         receivesShadows: false
 
@@ -105,7 +105,7 @@ Node {
     // Layer 2: Secondary overlapping stream for soft volumetric glow
     Model {
         id: rearModel2
-        source: "CarModel/meshes/airflow_rear_console.mesh"
+        source: "CarModel_Climate/meshes/airflow_rear_console.mesh"
         scale: Qt.vector3d(1.025, 1.025, 1.0)
         castsShadows: false
         receivesShadows: false

@@ -10,7 +10,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
-import "CarModel"
+import "CarModel_Climate"
 
 Item {
     id: cabinView
@@ -374,7 +374,7 @@ Item {
             // 2. Driver Left AC Vent: Emanates from vent mouth left of steering wheel
             AirflowStream {
                 id: driverLeftFlow
-                meshSource: "CarModel/meshes/airflow_driver_left.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_driver_left.mesh"
                 airColor: cabinView.airColor
                 fanSpeed: cabinView.fanSpeed
                 active: cabinView.faceVentsActive && cabinView.leftAirflowVisible
@@ -384,7 +384,7 @@ Item {
             // 3. Middle AC Vent 1 (Center-Left): Cascades down into center console
             AirflowStream {
                 id: centerLeftFlow
-                meshSource: "CarModel/meshes/airflow_center_left.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_center_left.mesh"
                 airColor: cabinView.airColor
                 fanSpeed: cabinView.fanSpeed
                 active: cabinView.faceVentsActive && cabinView.centerLeftAirflowVisible
@@ -396,7 +396,7 @@ Item {
             // 4. Middle AC Vent 2 (Center-Right): Cascades down toward passenger side
             AirflowStream {
                 id: centerRightFlow
-                meshSource: "CarModel/meshes/airflow_center_right.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_center_right.mesh"
                 airColor: cabinView.airColor
                 fanSpeed: cabinView.fanSpeed
                 active: cabinView.faceVentsActive && cabinView.centerRightAirflowVisible
@@ -408,7 +408,7 @@ Item {
             // 5. Passenger Right AC Vent: Emanates from passenger outer AC vent
             AirflowStream {
                 id: passengerRightFlow
-                meshSource: "CarModel/meshes/airflow_passenger_right.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_passenger_right.mesh"
                 airColor: cabinView.airColor
                 fanSpeed: cabinView.fanSpeed
                 active: cabinView.faceVentsActive && cabinView.rightAirflowVisible
@@ -426,7 +426,7 @@ Item {
             // 7. Driver Under-Seat Ground Flow Stream (Front Footwell / Driver Pedals)
             AirflowGround {
                 id: driverGroundFlow
-                meshSource: "CarModel/meshes/airflow_ground_driver.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_ground_driver.mesh"
                 airColor: cabinView.airColor
                 fanSpeed: cabinView.fanSpeed
                 active: !cabinView.isRearView && (cabinView.feetActive || cabinView.faceVentsActive) && cabinView.footwellAirflowVisible
@@ -435,7 +435,7 @@ Item {
             // 8. Passenger Under-Seat Ground Flow Stream (Front Footwell / Passenger Floor)
             AirflowGround {
                 id: passengerGroundFlow
-                meshSource: "CarModel/meshes/airflow_ground_passenger.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_ground_passenger.mesh"
                 airColor: cabinView.airColor
                 fanSpeed: cabinView.fanSpeed
                 active: !cabinView.isRearView && (cabinView.feetActive || cabinView.faceVentsActive) && cabinView.footwellAirflowVisible
@@ -444,7 +444,7 @@ Item {
             // 9. Rear Cabin Driver Under-Seat Ground Flow (Flows under Front Seat into Rear Footwell)
             AirflowRearGround {
                 id: rearDriverGroundFlow
-                meshSource: "CarModel/meshes/airflow_rear_underseat_driver.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_rear_underseat_driver.mesh"
                 airColor: (cabinView.rearTemperature >= 23.5) ? cabinView.warmColor : cabinView.coolColor
                 fanSpeed: cabinView.rearFanSpeed
                 active: cabinView.isRearView && cabinView.rearPower && (cabinView.rearAirflowMode === 1 || cabinView.rearAutoMode) && cabinView.footwellAirflowVisible
@@ -453,7 +453,7 @@ Item {
             // 10. Rear Cabin Passenger Under-Seat Ground Flow (Flows under Front Seat into Rear Footwell)
             AirflowRearGround {
                 id: rearPassengerGroundFlow
-                meshSource: "CarModel/meshes/airflow_rear_underseat_passenger.mesh"
+                meshSource: "CarModel_Climate/meshes/airflow_rear_underseat_passenger.mesh"
                 airColor: (cabinView.rearTemperature >= 23.5) ? cabinView.warmColor : cabinView.coolColor
                 fanSpeed: cabinView.rearFanSpeed
                 active: cabinView.isRearView && cabinView.rearPower && (cabinView.rearAirflowMode === 1 || cabinView.rearAutoMode) && cabinView.footwellAirflowVisible

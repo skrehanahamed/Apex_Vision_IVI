@@ -53,7 +53,7 @@ Node {
     // -------------------------------------------------------------------------
     Model {
         id: defrostIcePlume
-        source: "CarModel/meshes/airflow_defrost.mesh"
+        source: "CarModel_Climate/meshes/airflow_defrost.mesh"
         scale: Qt.vector3d(1.0, 1.0, 1.0)
         castsShadows: false
         receivesShadows: false
@@ -88,7 +88,7 @@ Node {
     // -------------------------------------------------------------------------
     Model {
         id: defrostIceFlow1
-        source: "CarModel/meshes/airflow_defrost.mesh"
+        source: "CarModel_Climate/meshes/airflow_defrost.mesh"
         scale: Qt.vector3d(1.002, 1.002, 1.002)
         castsShadows: false
         receivesShadows: false
@@ -137,7 +137,7 @@ Node {
     // -------------------------------------------------------------------------
     Model {
         id: defrostIceFlow2
-        source: "CarModel/meshes/airflow_defrost.mesh"
+        source: "CarModel_Climate/meshes/airflow_defrost.mesh"
         scale: Qt.vector3d(1.004, 1.004, 1.004)
         castsShadows: false
         receivesShadows: false

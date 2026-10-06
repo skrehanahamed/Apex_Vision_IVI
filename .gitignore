@@ -48,3 +48,5 @@ temp/
 config.json
 apex_settings.json
 CarModel_BACKUP/
+qml/climate3d/*Backup*/
+AGENTS.md
