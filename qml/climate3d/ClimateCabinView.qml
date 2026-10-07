@@ -48,6 +48,31 @@ Item {
     property bool feetActive: false
 
     // Computed Mode States
+    // Dynamic roof visibility:
+    // - Front -> Rear: Roof vanishes immediately (0ms) so top-down cabin is visible during camera flight.
+    // - Rear -> Front: Roof stays hidden during the 800ms camera flight; only appears after camera arrives inside the front cockpit!
+    property bool roofVisibleEffective: !cabinView.isRearView
+
+    Timer {
+        id: roofRestoreTimer
+        interval: 750 // Synchronized with 800ms camera flight
+        repeat: false
+        onTriggered: {
+            if (!cabinView.isRearView) {
+                cabinView.roofVisibleEffective = true;
+            }
+        }
+    }
+
+    onIsRearViewChanged: {
+        if (isRearView) {
+            roofRestoreTimer.stop();
+            roofVisibleEffective = false;
+        } else {
+            roofVisibleEffective = false;
+            roofRestoreTimer.restart();
+        }
+    }
     readonly property bool isFaceActive: faceVentsActive && (airflowMode === "FACE" || airflowMode === "FACE_FEET" || airflowMode === "AUTO")
     readonly property bool isFeetActive: feetActive || (airflowMode === "FEET" || airflowMode === "FACE_FEET" || airflowMode === "DEFROST_FEET")
     readonly property bool isDefrostActive: defrostActive || (airflowMode === "DEFROST" || airflowMode === "DEFROST_FEET" || maxDefrostActive)
@@ -173,7 +198,7 @@ Item {
                 roughness: 0.14
                 clearcoat: 1.0
                 lightsOn: true
-                roofVisible: !cabinView.isRearView
+                roofVisible: cabinView.roofVisibleEffective
             }
 
             // Illuminated APEX Logo on Steering Wheel Hub (Pure APEX, Ultra-visible in darkness)

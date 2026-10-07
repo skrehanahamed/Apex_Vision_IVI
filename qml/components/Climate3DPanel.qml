@@ -32,18 +32,44 @@ Item {
 
     signal closeRequested()
 
-    // Smooth pure fade in / fade out animation for the 3D cabin
-    opacity: isOpen ? 1.0 : 0.0
+    // Prewarm pipeline on boot (renders off-screen with 0.001 opacity for 1.2s to compile shaders and upload VBOs)
+    property bool prewarmed: false
+
+    Timer {
+        id: prewarmTimer
+        interval: 1200
+        running: true
+        repeat: false
+        onTriggered: {
+            root.prewarmed = true;
+        }
+    }
+
+    // Down-to-up slide animation on open, up-to-down slide on close
+    property real slideOffsetY: isOpen ? 0 : height
+    Behavior on slideOffsetY {
+        NumberAnimation {
+            duration: 380
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    transform: Translate {
+        y: root.slideOffsetY
+    }
+
+    // Smooth fade in / fade out synchronized with slide
+    opacity: isOpen ? 1.0 : (root.prewarmed ? 0.0 : 0.001)
     Behavior on opacity {
         NumberAnimation {
-            duration: 350
+            duration: 320
             easing.type: Easing.InOutQuad
         }
     }
 
-    // Remain visible during fade animation; disable input when closed
-    visible: isOpen || opacity > 0.001
-    enabled: isOpen
+    // Remain visible during animation and prewarm; disable input when closed or moving
+    visible: isOpen || !root.prewarmed || opacity > 0.001 || slideOffsetY < (height - 1)
+    enabled: isOpen && (slideOffsetY < 20)
 
     // Solid dark automotive cockpit background (Clean, completely flat with no circle shapes)
     Rectangle {
@@ -60,7 +86,7 @@ Item {
         id: cabinContainer
         anchors.fill: parent
         visible: !root.airQualityMenuOpen
-        opacity: (!root.airQualityMenuOpen && root.isOpen) ? 1.0 : 0.0
+        opacity: root.airQualityMenuOpen ? 0.0 : (root.isOpen ? 1.0 : (root.prewarmed ? 0.0 : 0.001))
 
         Loader {
             id: cabinLoader
@@ -180,15 +206,7 @@ Item {
             }
         }
 
-        transform: Translate {
-            y: root.isOpen ? 0 : 28
-            Behavior on y {
-                NumberAnimation {
-                    duration: 350
-                    easing.type: Easing.OutCubic
-                }
-            }
-        }
+
 
 
 
