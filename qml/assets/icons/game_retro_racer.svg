@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0F0C20"/>
+      <stop offset="50%" stop-color="#2D114D"/>
+      <stop offset="100%" stop-color="#0A0612"/>
+    </linearGradient>
+    <linearGradient id="sunGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF007F"/>
+      <stop offset="50%" stop-color="#FF5500"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <linearGradient id="carBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF"/>
+      <stop offset="100%" stop-color="#0077B6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background Rounded Shield -->
+  <rect x="4" y="4" width="120" height="120" rx="28" fill="url(#bgGrad)" stroke="#FF007F" stroke-width="2.5" stroke-opacity="0.6"/>
+
+  <!-- Retro Synthwave Sun with Pixel Scanlines -->
+  <circle cx="64" cy="52" r="26" fill="url(#sunGrad)"/>
+  <rect x="38" y="46" width="52" height="2.5" fill="#2D114D"/>
+  <rect x="40" y="52" width="48" height="3" fill="#2D114D"/>
+  <rect x="44" y="59" width="40" height="3.5" fill="#2D114D"/>
+  <rect x="48" y="67" width="32" height="4" fill="#2D114D"/>
+
+  <!-- Perspective Horizon & Road Grid Lines -->
+  <polygon points="20,118 48,72 80,72 108,118" fill="#150B28" stroke="#FF007F" stroke-width="1.5" stroke-opacity="0.5"/>
+  <line x1="64" y1="72" x2="64" y2="118" stroke="#FFD700" stroke-width="2" stroke-dasharray="4,4"/>
+  <line x1="48" y1="72" x2="34" y2="118" stroke="#00F0FF" stroke-width="1.5" stroke-opacity="0.6"/>
+  <line x1="80" y1="72" x2="94" y2="118" stroke="#00F0FF" stroke-width="1.5" stroke-opacity="0.6"/>
+
+  <!-- Speed Dust / Pixel Stars -->
+  <rect x="18" y="24" width="3" height="3" fill="#00F0FF"/>
+  <rect x="104" y="28" width="3" height="3" fill="#FFD700"/>
+  <rect x="96" y="16" width="2" height="2" fill="#00F0FF"/>
+  <rect x="28" y="38" width="2" height="2" fill="#FF007F"/>
+
+  <!-- Pixel Art Sports Car (Rear View) -->
+  <!-- Exhaust Flame Burst -->
+  <polygon points="56,112 59,122 62,112" fill="#FF5500"/>
+  <polygon points="66,112 69,122 72,112" fill="#FF5500"/>
+  <polygon points="57,112 59,118 61,112" fill="#FFD700"/>
+  <polygon points="67,112 69,118 71,112" fill="#FFD700"/>
+
+  <!-- Wheels (Pixel Blocks) -->
+  <rect x="42" y="98" width="8" height="14" rx="2" fill="#08080C" stroke="#00F0FF" stroke-width="1"/>
+  <rect x="78" y="98" width="8" height="14" rx="2" fill="#08080C" stroke="#00F0FF" stroke-width="1"/>
+
+  <!-- Chassis Lower Body -->
+  <rect x="48" y="96" width="32" height="14" rx="2" fill="url(#carBody)"/>
+  
+  <!-- Rear Neon Light Strip -->
+  <rect x="50" y="99" width="28" height="3" fill="#FF0055"/>
+  <rect x="52" y="100" width="24" height="1.5" fill="#FFAACC"/>
+
+  <!-- Cabin Greenhouse & Windshield -->
+  <rect x="53" y="86" width="22" height="11" rx="3" fill="#0A1828" stroke="#00F0FF" stroke-width="1.5"/>
+  <rect x="56" y="88" width="16" height="5" fill="#00F0FF" opacity="0.75"/>
+
+  <!-- Rear Wing / Spoiler -->
+  <rect x="44" y="91" width="40" height="3" rx="1.5" fill="#00F0FF"/>
+  <rect x="49" y="94" width="3" height="3" fill="#0077B6"/>
+  <rect x="76" y="94" width="3" height="3" fill="#0077B6"/>
+
+  <!-- Top Badge / Arcade Glow Star -->
+  <polygon points="64,12 66,18 72,18 67,22 69,28 64,24 59,28 61,22 56,18 62,18" fill="#FFD700"/>
+</svg>

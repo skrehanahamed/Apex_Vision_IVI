@@ -18,6 +18,8 @@ Item {
 
     signal backRequested()
 
+    property string activeGame: "" // "" = Gallery, "racer" = Apex Cyber Racer
+
     // =========================================================================
     // 1. MASTER DEFAULT BACKGROUND (Matches IVI system wallpaper)
     // =========================================================================
@@ -33,7 +35,7 @@ Item {
     // Subtle scrim so default background colors stay vibrant while ensuring high contrast
     Rectangle {
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.12)
+        color: Qt.rgba(0, 0, 0, 0.18)
         z: 0
     }
 
@@ -49,9 +51,10 @@ Item {
         anchors.leftMargin: 36
         anchors.rightMargin: 36
         height: 52
+        visible: root.activeGame === ""
         z: 10
 
-        // Signature IVI Back Button (Card removed as requested)
+        // Signature IVI Back Button
         Item {
             id: backBtn
             width: 38
@@ -103,7 +106,7 @@ Item {
             spacing: 2
 
             Text {
-                text: "Games"
+                text: "Arcade Games"
                 color: "#FFFFFF"
                 font.family: "Inter"
                 font.pixelSize: 22
@@ -111,14 +114,14 @@ Item {
             }
 
             Text {
-                text: "In-Cabin Entertainment"
+                text: "In-Cabin Cockpit Entertainment"
                 color: Qt.rgba(225/255, 238/255, 255/255, 0.70)
                 font.family: "Inter"
                 font.pixelSize: 13
             }
         }
 
-        // Right Status Pill (Coming Soon badge)
+        // Right Status Pill (2 Games Available)
         Rectangle {
             anchors.right: parent.right
             anchors.verticalCenter: parent.verticalCenter
@@ -128,17 +131,11 @@ Item {
             clip: true
 
             gradient: Gradient {
-                GradientStop {
-                    position: 0.0
-                    color: Qt.rgba(245/255, 158/255, 11/255, 0.22)
-                }
-                GradientStop {
-                    position: 1.0
-                    color: Qt.rgba(217/255, 119/255, 6/255, 0.16)
-                }
+                GradientStop { position: 0.0; color: Qt.rgba(0, 210/255, 255/255, 0.22) }
+                GradientStop { position: 1.0; color: Qt.rgba(0, 119/255, 182/255, 0.16) }
             }
 
-            border.color: Qt.rgba(245/255, 158/255, 11/255, 0.55)
+            border.color: Qt.rgba(0, 210/255, 255/255, 0.55)
             border.width: 1
 
             Row {
@@ -151,13 +148,13 @@ Item {
                     height: 8
                     radius: 4
                     anchors.verticalCenter: parent.verticalCenter
-                    color: "#F59E0B"
+                    color: "#00F0FF"
                 }
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Coming Soon"
-                    color: "#FDE68A"
+                    text: "Retro Arcade Edition"
+                    color: "#E0F2FE"
                     font.family: "Inter"
                     font.pixelSize: 13
                     font.weight: Font.DemiBold
@@ -167,215 +164,312 @@ Item {
     }
 
     // =========================================================================
-    // 3. MAIN CONTENT AREA (VehicleMenuCard Frosted Glass Aesthetic)
+    // 3. MAIN GALLERY VIEW (2 RETRO GAME CARDS)
     // =========================================================================
     Item {
-        id: contentArea
+        id: galleryContentArea
         anchors.top: headerBar.bottom
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: 28
-        anchors.bottomMargin: 40
+        anchors.topMargin: 20
+        anchors.bottomMargin: 30
+        visible: root.activeGame === ""
         z: 5
 
-        Column {
+        Row {
             anchors.centerIn: parent
-            spacing: 20
-            width: 540
+            spacing: 28
 
-            // Clean standalone Games logo without enclosing card
-            Image {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: 80
-                height: 80
-                source: "qrc:/ApexVision/qml/assets/icons/app_games.svg"
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true
-                sourceSize: Qt.size(256, 256)
-            }
-
-            // About Section / Headlines
-            Column {
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 6
-                width: parent.width
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "Games"
-                    color: "#FFFFFF"
-                    font.family: "Inter"
-                    font.pixelSize: 24
-                    font.weight: Font.DemiBold
-                }
-
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "In-cabin interactive gaming and entertainment experiences are coming soon in a future over-the-air software update."
-                    color: Qt.rgba(225/255, 238/255, 255/255, 0.70)
-                    font.family: "Inter"
-                    font.pixelSize: 14
-                    horizontalAlignment: Text.AlignHCenter
-                    wrapMode: Text.WordWrap
-                    width: parent.width - 40
-                }
-            }
-
-            // Divider line after the about section
+            // -------------------------------------------------------------
+            // GAME CARD 1: APEX CYBER RACER (Playable Retro Arcade)
+            // -------------------------------------------------------------
             Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width - 40
-                height: 1
-                color: Qt.rgba(255, 255, 255, 0.16)
-            }
-
-            // Status Card (VehicleMenuCard Frosted Glass Theme - No straight line)
-            Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width
-                height: 82
-                radius: 18
+                id: racerCard
+                width: 380
+                height: 290
+                radius: 24
                 clip: true
 
                 gradient: Gradient {
                     GradientStop {
                         position: 0.0
-                        color: Qt.rgba(215/255, 238/255, 255/255, 0.17)
+                        color: racerMouse.containsMouse ? Qt.rgba(0, 240/255, 255/255, 0.24) : Qt.rgba(215/255, 238/255, 255/255, 0.16)
                     }
                     GradientStop {
                         position: 1.0
-                        color: Qt.rgba(195/255, 225/255, 255/255, 0.11)
+                        color: racerMouse.containsMouse ? Qt.rgba(255/255, 0, 127/255, 0.20) : Qt.rgba(195/255, 225/255, 255/255, 0.08)
                     }
                 }
 
-                border.color: Qt.rgba(225/255, 242/255, 255/255, 0.36)
-                border.width: 1
+                border.color: racerMouse.containsMouse ? "#00F0FF" : Qt.rgba(225/255, 242/255, 255/255, 0.35)
+                border.width: racerMouse.containsMouse ? 2 : 1.2
+                scale: racerMouse.pressed ? 0.98 : (racerMouse.containsMouse ? 1.02 : 1.0)
+                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
 
-                Row {
+                Column {
                     anchors.fill: parent
-                    anchors.leftMargin: 20
-                    anchors.rightMargin: 20
-                    spacing: 16
+                    anchors.margins: 22
+                    spacing: 12
 
-                    Rectangle {
-                        width: 40
-                        height: 40
-                        radius: 20
-                        color: Qt.rgba(245/255, 158/255, 11/255, 0.20)
-                        border.color: Qt.rgba(245/255, 158/255, 11/255, 0.45)
-                        border.width: 1
-                        anchors.verticalCenter: parent.verticalCenter
+                    // Top Row: Retro Icon & Badges
+                    Row {
+                        width: parent.width
+                        spacing: 14
 
                         Image {
-                            anchors.centerIn: parent
-                            width: 22
-                            height: 22
-                            source: "qrc:/ApexVision/qml/assets/icons/app_games.svg"
+                            width: 68
+                            height: 68
+                            source: "qrc:/ApexVision/qml/assets/icons/game_retro_racer.svg"
                             fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 4
+
+                            // Live Pill Badge
+                            Rectangle {
+                                height: 22
+                                width: 92
+                                radius: 11
+                                color: Qt.rgba(0, 240/255, 255/255, 0.25)
+                                border.color: "#00F0FF"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "PLAY NOW"
+                                    color: "#00F0FF"
+                                    font.family: "monospace"
+                                    font.pixelSize: 10
+                                    font.weight: Font.Bold
+                                }
+                            }
+
+                            Text {
+                                text: "ARCADE • 60 FPS"
+                                color: "#FDE047"
+                                font.family: "monospace"
+                                font.pixelSize: 11
+                                font.weight: Font.Bold
+                            }
                         }
                     }
 
-                    Column {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 2
-                        width: parent.width - 70
+                    // Title & Description
+                    Text {
+                        text: "Apex Cyber Racer"
+                        color: "#FFFFFF"
+                        font.family: "Inter"
+                        font.pixelSize: 20
+                        font.weight: Font.Bold
+                    }
 
-                        Text {
-                            text: "Feature in Active Development"
-                            color: "#FFFFFF"
-                            font.family: "Inter"
-                            font.pixelSize: 15
-                            font.weight: Font.DemiBold
+                    Text {
+                        text: "Synthwave highway runner. Steer left and right to dodge traffic, grab energy cells, and trigger nitro boosts."
+                        color: Qt.rgba(225/255, 238/255, 255/255, 0.75)
+                        font.family: "Inter"
+                        font.pixelSize: 12
+                        wrapMode: Text.WordWrap
+                        lineHeight: 1.3
+                        width: parent.width
+                    }
+
+                    Item { Layout.fillHeight: true; height: 4 }
+
+                    // Launch Action Bar
+                    Rectangle {
+                        width: parent.width
+                        height: 42
+                        radius: 21
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: "#00F0FF" }
+                            GradientStop { position: 1.0; color: "#0284C7" }
                         }
 
-                        Text {
-                            text: "Requires vehicle in Park (P) • Coming in version 2.2 OTA"
-                            color: Qt.rgba(225/255, 238/255, 255/255, 0.65)
-                            font.family: "Inter"
-                            font.pixelSize: 12
-                            elide: Text.ElideRight
-                            width: parent.width
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 8
+                            Text {
+                                text: "START ENGINE"
+                                font.family: "monospace"
+                                font.pixelSize: 13
+                                font.weight: Font.Bold
+                                color: "#05070A"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+                            Text {
+                                text: "▶"
+                                font.pixelSize: 12
+                                color: "#05070A"
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
+                    }
+                }
+
+                MouseArea {
+                    id: racerMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        root.activeGame = "racer";
                     }
                 }
             }
 
-            // Feature Highlights Preview Card (VehicleMenuCard Theme - No straight line)
+            // -------------------------------------------------------------
+            // GAME CARD 2: 2048: CYBER FUSION (Retro Neon Puzzle)
+            // -------------------------------------------------------------
             Rectangle {
-                anchors.horizontalCenter: parent.horizontalCenter
-                width: parent.width
-                height: 140
-                radius: 18
+                id: puzzleCard
+                width: 380
+                height: 290
+                radius: 24
                 clip: true
 
                 gradient: Gradient {
-                    GradientStop { position: 0.0; color: Qt.rgba(215/255, 238/255, 255/255, 0.14) }
-                    GradientStop { position: 1.0; color: Qt.rgba(195/255, 225/255, 255/255, 0.09) }
+                    GradientStop {
+                        position: 0.0
+                        color: puzzleMouse.containsMouse ? Qt.rgba(139/255, 92/255, 246/255, 0.22) : Qt.rgba(215/255, 238/255, 255/255, 0.16)
+                    }
+                    GradientStop {
+                        position: 1.0
+                        color: puzzleMouse.containsMouse ? Qt.rgba(16/255, 185/255, 129/255, 0.18) : Qt.rgba(195/255, 225/255, 255/255, 0.08)
+                    }
                 }
 
-                border.color: Qt.rgba(225/255, 242/255, 255/255, 0.26)
-                border.width: 1
+                border.color: puzzleMouse.containsMouse ? "#8B5CF6" : Qt.rgba(225/255, 242/255, 255/255, 0.35)
+                border.width: puzzleMouse.containsMouse ? 2 : 1.2
+                scale: puzzleMouse.pressed ? 0.98 : (puzzleMouse.containsMouse ? 1.02 : 1.0)
+                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
 
                 Column {
                     anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 10
+                    anchors.margins: 22
+                    spacing: 12
+
+                    // Top Row: Retro Icon & Badges
+                    Row {
+                        width: parent.width
+                        spacing: 14
+
+                        Image {
+                            width: 68
+                            height: 68
+                            source: "qrc:/ApexVision/qml/assets/icons/game_retro_2048.svg"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                        }
+
+                        Column {
+                            anchors.verticalCenter: parent.verticalCenter
+                            spacing: 4
+
+                            // Coming Next Badge
+                            Rectangle {
+                                height: 22
+                                width: 104
+                                radius: 11
+                                color: Qt.rgba(245/255, 158/255, 11/255, 0.25)
+                                border.color: "#F59E0B"
+                                border.width: 1
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "NEXT TITLE"
+                                    color: "#FDE68A"
+                                    font.family: "monospace"
+                                    font.pixelSize: 10
+                                    font.weight: Font.Bold
+                                }
+                            }
+
+                            Text {
+                                text: "PUZZLE • TILE FUSION"
+                                color: "#34D399"
+                                font.family: "monospace"
+                                font.pixelSize: 11
+                                font.weight: Font.Bold
+                            }
+                        }
+                    }
+
+                    // Title & Description
+                    Text {
+                        text: "2048: Cyber Fusion"
+                        color: "#FFFFFF"
+                        font.family: "Inter"
+                        font.pixelSize: 20
+                        font.weight: Font.Bold
+                    }
 
                     Text {
-                        text: "Planned in-cabin gaming features:"
-                        color: "#E2E8F0"
+                        text: "Smooth neon tile-matching brain teaser. Swipe matching power cells to forge the legendary 2048 Apex hyperdrive."
+                        color: Qt.rgba(225/255, 238/255, 255/255, 0.75)
                         font.family: "Inter"
-                        font.pixelSize: 13
-                        font.weight: Font.DemiBold
+                        font.pixelSize: 12
+                        wrapMode: Text.WordWrap
+                        lineHeight: 1.3
+                        width: parent.width
                     }
 
-                    Row {
-                        spacing: 12
-                        Rectangle {
-                            width: 6; height: 6; radius: 3
-                            color: "#F59E0B"
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "Touchscreen arcade classics and puzzle titles while parked"
-                            color: Qt.rgba(225/255, 238/255, 255/255, 0.80)
-                            font.family: "Inter"
-                            font.pixelSize: 12
-                        }
-                    }
+                    Item { Layout.fillHeight: true; height: 4 }
 
-                    Row {
-                        spacing: 12
-                        Rectangle {
-                            width: 6; height: 6; radius: 3
-                            color: "#F59E0B"
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
-                        Text {
-                            text: "Bluetooth wireless game controller synchronization"
-                            color: Qt.rgba(225/255, 238/255, 255/255, 0.80)
-                            font.family: "Inter"
-                            font.pixelSize: 12
-                        }
-                    }
+                    // Coming Soon Action Bar
+                    Rectangle {
+                        width: parent.width
+                        height: 42
+                        radius: 21
+                        color: Qt.rgba(255, 255, 255, 0.12)
+                        border.color: Qt.rgba(255, 255, 255, 0.25)
+                        border.width: 1
 
-                    Row {
-                        spacing: 12
-                        Rectangle {
-                            width: 6; height: 6; radius: 3
-                            color: "#F59E0B"
-                            anchors.verticalCenter: parent.verticalCenter
-                        }
                         Text {
-                            text: "Driver profile high scores and cloud save backup"
-                            color: Qt.rgba(225/255, 238/255, 255/255, 0.80)
-                            font.family: "Inter"
+                            anchors.centerIn: parent
+                            text: "COMING IN NEXT UPDATE"
+                            font.family: "monospace"
                             font.pixelSize: 12
+                            font.weight: Font.Bold
+                            color: Qt.rgba(255, 255, 255, 0.70)
                         }
                     }
                 }
+
+                MouseArea {
+                    id: puzzleMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                }
+            }
+        }
+    }
+
+    // =========================================================================
+    // 4. ACTIVE GAME CONTAINER: APEX CYBER RACER
+    // =========================================================================
+    Loader {
+        id: racerGameLoader
+        anchors.fill: parent
+        active: root.activeGame === "racer"
+        visible: root.activeGame === "racer"
+        z: 50
+        source: (root.activeGame === "racer") ? "ApexCyberRacer.qml" : ""
+
+        onLoaded: {
+            if (item) {
+                item.exitRequested.connect(function() {
+                    root.activeGame = "";
+                });
+                item.forceActiveFocus();
             }
         }
     }

@@ -53,6 +53,8 @@
     <file>qml/assets/icons/app_trailer.svg</file>
     <file>qml/assets/icons/app_updates.svg</file>
     <file>qml/assets/icons/app_video.svg</file>
+    <file>qml/assets/icons/game_retro_racer.svg</file>
+    <file>qml/assets/icons/game_retro_2048.svg</file>
     <file>qml/assets/icons/bluetooth.svg</file>
     <file>qml/assets/icons/calm_wordmark.svg</file>
     <file>qml/assets/icons/car_top_balance_fade.png</file>
