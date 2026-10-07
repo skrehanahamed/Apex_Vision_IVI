@@ -347,7 +347,7 @@ private:
     QVariantList m_radioPresets;
     int m_activeRadioPresetIndex{-1};
     QVariantList m_fmStations;
-    int m_currentFmStationIndex{2};
+    int m_currentFmStationIndex{0};
 
     // OrbitXM State
     int m_sxmChannelNumber{2};
@@ -378,6 +378,7 @@ private:
     QNetworkAccessManager *m_networkManager{nullptr};
     QNetworkReply *m_icyMetadataReply{nullptr};
     QPointer<QNetworkReply> m_onlineArtReply{nullptr};
+    QHash<QString, QString> m_artCache;
     int m_artRequestChannelIndex{-1};
     QString m_lastIcyTitle;
     QTimer *m_icyPollTimer{nullptr};

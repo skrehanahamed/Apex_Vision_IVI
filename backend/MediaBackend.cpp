@@ -236,7 +236,7 @@ void MediaBackend::initAmStations()
 {
     m_amStations.clear();
 
-    // 8 Curated Distinct Medium Wave (AM) All India Radio Stations
+    // 4 Curated Distinct Medium Wave (AM) All India Radio Stations (Zero overlap with OrbitXM)
     auto addStation = [this](const QString &freq, const QString &name, const QString &city, const QString &streamUrl) {
         QVariantMap s;
         s["frequency"] = freq;
@@ -247,13 +247,9 @@ void MediaBackend::initAmStations()
     };
 
     addStation("530", "AIR Vividh Bharati", "National / Mumbai", "https://air.pc.cdn.bitgravity.com/air/live/pbaudio001/playlist.m3u8");
-    addStation("640", "AIR Berhampur", "Odisha Regional", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio00264kbps.m3u8");
-    addStation("720", "AIR Cuttack", "Eastern Coast", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio003/hlspbaudio00364kbps.m3u8");
-    addStation("810", "AIR Jaipur", "Rajasthan Network", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio004/hlspbaudio00464kbps.m3u8");
-    addStation("900", "AIR Lucknow", "Uttar Pradesh Central", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio008/hlspbaudio00864kbps.m3u8");
-    addStation("990", "AIR Patna", "Bihar Regional", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio009/hlspbaudio00964kbps.m3u8");
-    addStation("1026", "AIR Shimla", "Himachal Pradesh", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio010/hlspbaudio01064kbps.m3u8");
-    addStation("1130", "AIR Bengaluru", "Karnataka Regional", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio030/hlspbaudio03064kbps.m3u8");
+    addStation("660", "AIR National Samachar", "National News Network", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio002/hlspbaudio00264kbps.m3u8");
+    addStation("810", "AIR Regional Network", "Rajasthan / West Central", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio004/hlspbaudio00464kbps.m3u8");
+    addStation("1026", "AIR Shimla & Hill Service", "Himachal & Hill Region", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio010/hlspbaudio01064kbps.m3u8");
 
     // Only user-saved presets show at the bottom - starts completely empty (pure black)
     m_amPresets.clear();
@@ -345,9 +341,9 @@ void MediaBackend::setSource(const QString &source)
     updateActiveRadioPresetIndex();
     updateActiveSxmPresetIndex();
 
-    // Defer audio stream switch so UI event loop and animations never hitch or lag
+    // Defer audio stream switch so UI event loop and slide animations never hitch or lag
     if (m_audioSwitchTimer) {
-        m_audioSwitchTimer->start(50);
+        m_audioSwitchTimer->start(350);
     }
 }
 
@@ -388,9 +384,9 @@ void MediaBackend::syncFmWithMedia()
         m_station = s["name"].toString();
         m_trackTitle = s["city"].toString();
     } else {
-        m_frequency = "95.9";
-        m_station = "Bollywood Hits Radio";
-        m_trackTitle = "Top Bollywood Hits";
+        m_frequency = "91.1";
+        m_station = "AIR FM Gold";
+        m_trackTitle = "Delhi Capital Metro";
     }
     m_artist = "FM Stereo Broadcast";
     m_isHdRadio = true;
@@ -558,21 +554,16 @@ void MediaBackend::initFmStations()
         m_fmStations.append(s);
     };
 
+    // 4 Curated High-Fidelity FM Stations (Zero overlap with OrbitXM)
     addFm("91.1", "AIR FM Gold", "Delhi Capital Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio005/hlspbaudio00564kbps.m3u8");
-    addFm("93.5", "Superhits FM 93.5", "South Non-Stop Hits", "https://drive.uber.radio/uber/bollywoodnow/icecast.audio");
-    addFm("95.9", "Bollywood Hits Radio", "Top Bollywood Hits", "https://prclive1.listenon.in/Bollywood");
-    addFm("98.3", "Radio Mirchi Romance", "Modern Hindi Beats", "https://drive.uber.radio/uber/bollywoodlove/icecast.audio");
-    addFm("100.7", "AIR FM Gold Kolkata", "Kolkata Eastern Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio011/hlspbaudio01164kbps.m3u8");
-    addFm("101.4", "AIR FM Rainbow Chennai", "Chennai South Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio006/hlspbaudio00664kbps.m3u8");
-    addFm("101.9", "AIR FM Rainbow Hyderabad", "Deccan Telangana Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio007/hlspbaudio00764kbps.m3u8");
-    addFm("102.6", "AIR Rainbow Kannada", "Bengaluru Silicon Beats", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio027/hlspbaudio02764kbps.m3u8");
-    addFm("103.5", "Amruthavarshini Classical FM", "Classical Ragas & Melody", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio028/hlspbaudio02864kbps.m3u8");
+    addFm("100.7", "AIR FM Rainbow", "Kolkata Eastern Metro", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio011/hlspbaudio01164kbps.m3u8");
+    addFm("102.6", "Radio Mirchi Metro", "Bengaluru Silicon Beats", "https://airhlspush.pc.cdn.bitgravity.com/httppush/hlspbaudio027/hlspbaudio02764kbps.m3u8");
     addFm("104.0", "BBC World Service FM", "International News & Features", "http://stream.live.vc.bbcmedia.co.uk/bbc_world_service");
 
-    m_currentFmStationIndex = 2; // Default to 95.9 (Bollywood Hits Radio)
-    m_frequency = "95.9";
-    m_station = "Bollywood Hits Radio";
-    m_trackTitle = "Top Bollywood Hits";
+    m_currentFmStationIndex = 0; // Default to 91.1 (AIR FM Gold)
+    m_frequency = "91.1";
+    m_station = "AIR FM Gold";
+    m_trackTitle = "Delhi Capital Metro";
 
     emit fmStationsChanged();
     emit currentFmStationIndexChanged();
@@ -585,16 +576,7 @@ void MediaBackend::initDefaultRadioPresets()
 {
     m_radioPresets.clear();
 
-    // Curated broadcast stations with authentic logos/badges
-    m_radioPresets.append(QVariantMap{
-        {"band", "FM"},
-        {"frequency", "95.9"},
-        {"name", "Bollywood Hits"},
-        {"logoText", "BOLLYWOOD"},
-        {"logoColor", "#FFFFFF"},
-        {"logoBg", "#EC4899"},
-        {"isHoldToSet", false}
-    });
+    // Curated broadcast stations with authentic logos/badges matching non-overlapping stations
     m_radioPresets.append(QVariantMap{
         {"band", "FM"},
         {"frequency", "91.1"},
@@ -606,9 +588,18 @@ void MediaBackend::initDefaultRadioPresets()
     });
     m_radioPresets.append(QVariantMap{
         {"band", "FM"},
-        {"frequency", "93.5"},
-        {"name", "Superhits FM"},
-        {"logoText", "SUPERHITS"},
+        {"frequency", "100.7"},
+        {"name", "AIR Rainbow"},
+        {"logoText", "RAINBOW"},
+        {"logoColor", "#FFFFFF"},
+        {"logoBg", "#EC4899"},
+        {"isHoldToSet", false}
+    });
+    m_radioPresets.append(QVariantMap{
+        {"band", "FM"},
+        {"frequency", "102.6"},
+        {"name", "Mirchi Metro"},
+        {"logoText", "MIRCHI"},
         {"logoColor", "#FFFFFF"},
         {"logoBg", "#EF4444"},
         {"isHoldToSet", false}
@@ -629,15 +620,6 @@ void MediaBackend::initDefaultRadioPresets()
         {"logoText", "AIR"},
         {"logoColor", "#FFFFFF"},
         {"logoBg", "#0284C7"},
-        {"isHoldToSet", false}
-    });
-    m_radioPresets.append(QVariantMap{
-        {"band", "FM"},
-        {"frequency", "98.3"},
-        {"name", "Radio A9"},
-        {"logoText", "A9 HITS"},
-        {"logoColor", "#FFFFFF"},
-        {"logoBg", "#8B5CF6"},
         {"isHoldToSet", false}
     });
     m_radioPresets.append(QVariantMap{
@@ -1863,6 +1845,17 @@ void MediaBackend::fetchOnlineSxmArt(const QString &artist, const QString &title
     if (cleanArtist.isEmpty() && cleanTitle.isEmpty()) return;
 
     QString query = cleanArtist.isEmpty() ? cleanTitle : QString("%1 %2").arg(cleanArtist, cleanTitle);
+
+    // Instant return if already cached in memory (zero latency, zero network hits)
+    if (m_artCache.contains(query)) {
+        QString cachedArt = m_artCache.value(query);
+        if (!cachedArt.isEmpty() && cachedArt != m_sxmArtworkUrl) {
+            m_sxmArtworkUrl = cachedArt;
+            emit sxmTrackChanged();
+        }
+        return;
+    }
+
     QUrl url(QString("https://itunes.apple.com/search?term=%1&entity=song&limit=1")
                  .arg(QString(QUrl::toPercentEncoding(query))));
 
@@ -1872,7 +1865,7 @@ void MediaBackend::fetchOnlineSxmArt(const QString &artist, const QString &title
     m_onlineArtReply = m_networkManager->get(request);
     QPointer<QNetworkReply> replyPtr(m_onlineArtReply);
 
-    connect(m_onlineArtReply, &QNetworkReply::finished, this, [this, replyPtr, reqChannelIdx]() {
+    connect(m_onlineArtReply, &QNetworkReply::finished, this, [this, replyPtr, reqChannelIdx, query]() {
         if (!replyPtr) return;
         replyPtr->deleteLater();
         if (replyPtr == m_onlineArtReply) {
@@ -1894,6 +1887,9 @@ void MediaBackend::fetchOnlineSxmArt(const QString &artist, const QString &title
                     QJsonObject item = results[0].toObject();
                     QString art = item["artworkUrl100"].toString();
                     art.replace("100x100bb", "600x600bb");
+                    if (!art.isEmpty()) {
+                        m_artCache.insert(query, art);
+                    }
 
                     bool changed = false;
                     if (!art.isEmpty() && art != m_sxmArtworkUrl) {

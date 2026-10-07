@@ -14,7 +14,7 @@
 [![Framework](https://img.shields.io/badge/Framework-Qt%206.7.3%20%7C%20C%2B%2B20-41CD52.svg?style=for-the-badge&logo=qt&logoColor=white)](https://www.qt.io/)
 [![Wi-Fi](https://img.shields.io/badge/Wi--Fi-5%20GHz%20802.11ac%20%7C%20WPA3--SAE-007ACC.svg?style=for-the-badge&logo=wi-fi&logoColor=white)](https://www.wi-fi.org/)
 [![Audio](https://img.shields.io/badge/Audio-PipeWire%20%7C%20WirePlumber-8A2BE2.svg?style=for-the-badge)](https://pipewire.org/)
-[![Version](https://img.shields.io/badge/Version-v2.7.2%20Pi5%20Edition-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
+[![Version](https://img.shields.io/badge/Version-v2.7.3%20Pi5%20Edition-007ACC.svg?style=for-the-badge&logo=semver)](CMakeLists.txt)
 [![Developer](https://img.shields.io/badge/Developer-Sk%20Rehan%20Ahamed-FF6D00.svg?style=for-the-badge&logo=github)](https://github.com/skrehanahamed)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)](LICENSE)
 
@@ -343,9 +343,9 @@ CAN --> VehB : 500ms Simulation Loop
 
 <br/>
 
-### 21. Automotive OEM Welcome Screen & Specular Brand Evolution
+### 21. Automotive OEM Welcome Screen & Specular Brand Reveal
 ![Welcome Screen Specular Reveal](docs/screenshots/21_welcome_screen_metallic_shine.png)
-*Dynamic startup brand ignition sequence featuring brushed titanium and specular chrome APEX VISION emblems, synchronized acoustic welcome chime, and fluid reveal of the digital cockpit.*
+*Dynamic startup brand reveal featuring brushed titanium APEX hero emblem, sequential letter-by-letter V-I-S-I-O-N fade-in cascade, synchronized liquid silver specular shine sweep, and acoustic welcome chime.*
 
 <br/>
 
@@ -546,7 +546,7 @@ Apex_Vision_IVI/
 │   │   ├── VehicleStudioView.qml # 3D vehicle exterior interactive studio
 │   │   └── LaneKeepingCarView3D.qml # 3D lane-keeping assist chassis view
 │   ├── components/               # Reusable automotive cockpit components
-│   │   ├── WelcomeScreen.qml     # OEM startup animation with laser ignition, metallic shine, and audio chime
+│   │   ├── WelcomeScreen.qml     # OEM startup animation with smooth letter cascade fade and liquid silver specular shine
 │   │   ├── ClimateBar.qml        # Bottom climate dock with seat flyouts
 │   │   ├── Climate3DPanel.qml    # 3D climate overlay panel
 │   │   ├── CabinAirRefreshOverlay.qml # PM2.5 air purification gauge overlay
@@ -727,6 +727,27 @@ We gratefully acknowledge the following open-source projects, tools, and researc
 ---
 
 ## Release History & Highlights
+
+### [v2.7.3] - Executive Sedan Brand Reveal, Tone Slider Continuous Drag, Ambient Lighting Stutter Fix & AM/FM Deduplication
+- **Executive Sedan Startup Animation Overhaul (`WelcomeScreen.qml`)**:
+  - Eliminated legacy `HORIZON` and `SUV` stepping stones, focusing exclusively on the hero **APEX VISION** identity.
+  - Implemented an elegant, sequential letter-by-letter fade-in cascade (`V` → `I` → `S` → `I` → `O` → `N`) in satin silver executive typography (`font.family: "Inter"`, bold 28px, 26px tracking).
+  - Synchronized angled liquid silver / platinum specular reflection sweep cutting through both **APEX** and the assembled **V I S I O N** nameplate with ambient halo pulse.
+  - Streamlined startup duration to a responsive ~3.2 seconds before dissolving into the digital cockpit.
+- **Audio Equalizer (Tone) Continuous Drag & Performance Optimization (`VehiclePage.qml`, `SettingsPage.qml`)**:
+  - Upgraded Bass, Midrange, and Treble sliders from step tapping to continuous touch-drag tracking via direct `onPositionChanged` calculation.
+  - Eliminated 39 redundant child MouseArea items, preventing touch contention and slide animation hitching.
+  - Synchronized 250ms OutCubic soundstage and equalizer screen transitions with off-screen GPU texture caching.
+- **Vehicle Studio & Ambient Lighting Animation Optimization (`VehicleStudioView.qml`, `Scene.qml`, `VehiclePage.qml`)**:
+  - Replaced off-screen translation with native `visible` bindings for removable roof and wheel meshes.
+  - Removed artificial roof restore delay timers; synchronized 3D camera rig, direction lights, and ground shadow transitions to 380ms OutCubic.
+  - Enforced a minimum ambient baseline (0.25) on rim fill lighting, preventing Broadcom VideoCore VII GLSL shader re-compilations on mode entry/exit.
+- **Second-Row Seating & Cabin Overlay Polish (`VehiclePage.qml`)**:
+  - Restored cockpit background wallpaper with refined 0.15 scrim on the seat control overlay.
+  - Rescaled second-row seat render to proportional 510x340 sizing with arrow buttons anchored 16px from cushions/headrests.
+- **Radio Engine AM/FM Station Deduplication (`MediaBackend.cpp`, `MediaBackend.h`, `RadioPage.qml`)**:
+  - Separated AM and FM frequency portfolios from OrbitXM satellite broadcast channels.
+  - Eliminated duplicate channel listings, optimizing metadata retrieval and station tuning responsiveness.
 
 ### [v2.7.2] - True 3-Mesh Vehicle Architecture, HVAC Model Decoupling, Audio DSP & Wi-Fi Polish
 - **True 3-Mesh Consolidated Vehicle Architecture (`qml/climate3d/CarModel/`)**:

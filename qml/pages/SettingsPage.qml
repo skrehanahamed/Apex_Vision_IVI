@@ -500,8 +500,8 @@ Item {
         anchors.bottomMargin: 24
         z: 5
 
-        Behavior on anchors.leftMargin { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-        Behavior on anchors.rightMargin { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+        Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on anchors.rightMargin { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
         // Left Column Subtle Dark Backdrop (Gentle tint per OEM photo - not too dark)
         Rectangle {
@@ -519,8 +519,8 @@ Item {
             visible: opacity > 0.001
             z: 0
 
-            Behavior on opacity { NumberAnimation { duration: 240 } }
-            Behavior on anchors.leftMargin { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+            Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
         }
 
         // ---------------------------------------------------------------------
@@ -537,8 +537,8 @@ Item {
             visible: opacity > 0.001
             enabled: !root.isFullScreenMode
 
-            Behavior on anchors.leftMargin { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 240 } }
+            Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
             // Top-Left Header: Circular Sliders Logo + "Settings"
             Row {
@@ -859,7 +859,7 @@ Item {
             anchors.top: parent.top
             anchors.bottom: parent.bottom
 
-            Behavior on anchors.leftMargin { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
+            Behavior on anchors.leftMargin { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
             // =================================================================
             // DOWNWARDS TOAST NOTIFICATION (EXACT MATCH TO REFERENCE PHOTO)
@@ -3981,13 +3981,13 @@ Item {
                     anchors.top: parent.top
                     anchors.bottom: parent.bottom
                     width: parent.width
-                    x: root.soundCurrentScreen === "main" ? 0 : -parent.width * 0.4
+                    x: root.soundCurrentScreen === "main" ? 0 : -parent.width * 0.35
                     opacity: root.soundCurrentScreen === "main" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "main"
                     visible: opacity > 0.001
 
-                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+                    Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
                     Flickable {
                         anchors.fill: parent
@@ -4099,8 +4099,8 @@ Item {
                     enabled: root.soundCurrentScreen === "tone"
                     visible: opacity > 0.001
 
-                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+                    Behavior on x { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
                     // Centered Horizontal Layout of Sliders + Reset Button (Photo 2)
                     Row {
@@ -4146,7 +4146,6 @@ Item {
                                         height: 22
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         y: index * bassSliderItem.stepInterval - 11
-                                        z: 2
 
                                         Rectangle {
                                             width: index === 6 ? 6 : 4
@@ -4154,16 +4153,6 @@ Item {
                                             radius: index === 6 ? 3 : 2
                                             color: index === 6 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45)
                                             anchors.centerIn: parent
-                                        }
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            preventStealing: true
-                                            onPressed: {
-                                                root.soundBass = 6 - index;
-                                                bassTooltipTimer.restart();
-                                            }
                                         }
                                     }
                                 }
@@ -4176,6 +4165,15 @@ Item {
                                     y: root.soundBass >= 0 ? bassSliderItem.thumbY : 132
                                     height: Math.abs(root.soundBass) * bassSliderItem.stepInterval
                                     visible: root.soundBass !== 0
+
+                                    Behavior on y {
+                                        enabled: !bassMouse.pressed
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                                    }
+                                    Behavior on height {
+                                        enabled: !bassMouse.pressed
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                                    }
                                 }
 
                                 Rectangle {
@@ -4191,7 +4189,7 @@ Item {
 
                                     Behavior on y {
                                         enabled: !bassMouse.pressed
-                                        NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                                     }
                                 }
 
@@ -4236,9 +4234,15 @@ Item {
 
                                 MouseArea {
                                     id: bassMouse
-                                    anchors.fill: parent
-                                    anchors.margins: -16
-                                    z: 1
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.topMargin: -16
+                                    anchors.bottomMargin: -16
+                                    anchors.leftMargin: -25
+                                    anchors.rightMargin: -25
+                                    z: 20
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     preventStealing: true
@@ -4247,7 +4251,10 @@ Item {
                                         var localY = mouseY - 16;
                                         var clampedY = Math.max(0, Math.min(bassSliderItem.trackLength, localY));
                                         var step = Math.max(0, Math.min(12, Math.round(clampedY / bassSliderItem.stepInterval)));
-                                        root.soundBass = 6 - step;
+                                        var val = 6 - step;
+                                        if (root.soundBass !== val) {
+                                            root.soundBass = val;
+                                        }
                                         bassTooltipTimer.restart();
                                     }
 
@@ -4308,7 +4315,6 @@ Item {
                                         height: 22
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         y: index * midSliderItem.stepInterval - 11
-                                        z: 2
 
                                         Rectangle {
                                             width: index === 6 ? 6 : 4
@@ -4316,16 +4322,6 @@ Item {
                                             radius: index === 6 ? 3 : 2
                                             color: index === 6 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45)
                                             anchors.centerIn: parent
-                                        }
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            preventStealing: true
-                                            onPressed: {
-                                                root.soundMid = 6 - index;
-                                                midTooltipTimer.restart();
-                                            }
                                         }
                                     }
                                 }
@@ -4338,6 +4334,15 @@ Item {
                                     y: root.soundMid >= 0 ? midSliderItem.thumbY : 132
                                     height: Math.abs(root.soundMid) * midSliderItem.stepInterval
                                     visible: root.soundMid !== 0
+
+                                    Behavior on y {
+                                        enabled: !midMouse.pressed
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                                    }
+                                    Behavior on height {
+                                        enabled: !midMouse.pressed
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                                    }
                                 }
 
                                 Rectangle {
@@ -4353,7 +4358,7 @@ Item {
 
                                     Behavior on y {
                                         enabled: !midMouse.pressed
-                                        NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                                     }
                                 }
 
@@ -4398,9 +4403,15 @@ Item {
 
                                 MouseArea {
                                     id: midMouse
-                                    anchors.fill: parent
-                                    anchors.margins: -16
-                                    z: 1
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.topMargin: -16
+                                    anchors.bottomMargin: -16
+                                    anchors.leftMargin: -25
+                                    anchors.rightMargin: -25
+                                    z: 20
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     preventStealing: true
@@ -4409,7 +4420,10 @@ Item {
                                         var localY = mouseY - 16;
                                         var clampedY = Math.max(0, Math.min(midSliderItem.trackLength, localY));
                                         var step = Math.max(0, Math.min(12, Math.round(clampedY / midSliderItem.stepInterval)));
-                                        root.soundMid = 6 - step;
+                                        var val = 6 - step;
+                                        if (root.soundMid !== val) {
+                                            root.soundMid = val;
+                                        }
                                         midTooltipTimer.restart();
                                     }
 
@@ -4470,7 +4484,6 @@ Item {
                                         height: 22
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         y: index * trebleSliderItem.stepInterval - 11
-                                        z: 2
 
                                         Rectangle {
                                             width: index === 6 ? 6 : 4
@@ -4478,16 +4491,6 @@ Item {
                                             radius: index === 6 ? 3 : 2
                                             color: index === 6 ? "#FFFFFF" : Qt.rgba(255, 255, 255, 0.45)
                                             anchors.centerIn: parent
-                                        }
-
-                                        MouseArea {
-                                            anchors.fill: parent
-                                            cursorShape: Qt.PointingHandCursor
-                                            preventStealing: true
-                                            onPressed: {
-                                                root.soundTreble = 6 - index;
-                                                trebleTooltipTimer.restart();
-                                            }
                                         }
                                     }
                                 }
@@ -4500,6 +4503,15 @@ Item {
                                     y: root.soundTreble >= 0 ? trebleSliderItem.thumbY : 132
                                     height: Math.abs(root.soundTreble) * trebleSliderItem.stepInterval
                                     visible: root.soundTreble !== 0
+
+                                    Behavior on y {
+                                        enabled: !trebleMouse.pressed
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                                    }
+                                    Behavior on height {
+                                        enabled: !trebleMouse.pressed
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
+                                    }
                                 }
 
                                 Rectangle {
@@ -4515,7 +4527,7 @@ Item {
 
                                     Behavior on y {
                                         enabled: !trebleMouse.pressed
-                                        NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
+                                        NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
                                     }
                                 }
 
@@ -4560,9 +4572,15 @@ Item {
 
                                 MouseArea {
                                     id: trebleMouse
-                                    anchors.fill: parent
-                                    anchors.margins: -16
-                                    z: 1
+                                    anchors.top: parent.top
+                                    anchors.bottom: parent.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.topMargin: -16
+                                    anchors.bottomMargin: -16
+                                    anchors.leftMargin: -25
+                                    anchors.rightMargin: -25
+                                    z: 20
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     preventStealing: true
@@ -4571,7 +4589,10 @@ Item {
                                         var localY = mouseY - 16;
                                         var clampedY = Math.max(0, Math.min(trebleSliderItem.trackLength, localY));
                                         var step = Math.max(0, Math.min(12, Math.round(clampedY / trebleSliderItem.stepInterval)));
-                                        root.soundTreble = 6 - step;
+                                        var val = 6 - step;
+                                        if (root.soundTreble !== val) {
+                                            root.soundTreble = val;
+                                        }
                                         trebleTooltipTimer.restart();
                                     }
 
@@ -4648,9 +4669,10 @@ Item {
                     opacity: root.soundCurrentScreen === "balance_fade" ? 1.0 : 0.0
                     enabled: root.soundCurrentScreen === "balance_fade"
                     visible: opacity > 0.001
+                    layer.enabled: opacity > 0.001 && opacity < 0.999
 
-                    Behavior on x { NumberAnimation { duration: 280; easing.type: Easing.OutCubic } }
-                    Behavior on opacity { NumberAnimation { duration: 240; easing.type: Easing.InOutQuad } }
+                    Behavior on x { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
+                    Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutCubic } }
 
                     // Car + Soundstage Area
                     Item {

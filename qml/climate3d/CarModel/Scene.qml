@@ -973,8 +973,7 @@ Node {
                 }
                 Model {
                     id: roof_Assembly
-                    visible: true
-                    position: carModelRoot.roofVisible ? Qt.vector3d(0, 0, 0) : Qt.vector3d(0, -5000, 0)
+                    visible: carModelRoot.roofVisible
                     castsShadows: carModelRoot.roofVisible
                     receivesShadows: carModelRoot.roofVisible
                     objectName: "Roof_Assembly"
@@ -991,8 +990,7 @@ Node {
                 }
                 Model {
                     id: wheels_Assembly
-                    visible: true
-                    position: carModelRoot.wheelsVisible ? Qt.vector3d(0, 0, 0) : Qt.vector3d(0, -5000, 0)
+                    visible: carModelRoot.wheelsVisible
                     castsShadows: carModelRoot.wheelsVisible
                     receivesShadows: carModelRoot.wheelsVisible
                     objectName: "Wheels_Assembly"

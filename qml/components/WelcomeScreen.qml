@@ -2,13 +2,14 @@
  * ==============================================================================
  * Project: Apex VISION IVI - Digital Cockpit & Infotainment System
  * File: WelcomeScreen.qml
- * Description: Premium Automotive OEM Startup Animation for APEX VISION
- * Brand Evolution: APEX (Hero Brand) -> HORIZON -> SUV -> VISION (Final Lock & Shine)
+ * Description: Executive Automotive OEM Startup Animation for APEX VISION
+ * Brand Identity: APEX VISION (Smooth Letter Fade Cascade & Unified Specular Shine)
  * Features:
- *   - Synchronized Studio-Grade Automotive Welcome Sound Chime (welcome_startup.wav)
- *   - Authentic Brushed Titanium & Specular Chrome Metallic Textures for APEX & VISION
- *   - Synchronized Dynamic Specular Horizon Sweep Across Both Brand Emblems
- *   - Strict Audio Playback Lockout during Startup Reveal
+ *   - Synchronized Welcome Chime (welcome_startup.wav)
+ *   - APEX Hero Logo Reveal
+ *   - V - I - S - I - O - N Letters Fade In One by One with Smooth Elegant Dissolve
+ *   - Unified Full Specular Shine Sweep across both APEX & VISION
+ *   - Fast, Punchy ~3.2s Total Duration
  * Author / Developer: Sk Rehan Ahamed
  * License: MIT
  * ==============================================================================
@@ -61,20 +62,16 @@ Item {
     property real signatureShineOpacity: 0.0
     property real apexGlowOpacity: 0.0
 
-    property real horizonOpacity: 0.0
-    property real horizonX: 0
-    property real horizonY: 12
-
-    property real suvOpacity: 0.0
-    property real suvX: -25
-
-    property real visionOpacity: 0.0
-    property real visionX: 0
-    property real visionY: 8
-    property real visionScale: 0.95
+    // V - I - S - I - O - N Smooth Fade Opacity Properties
+    property real letter0Opacity: 0.0
+    property real letter1Opacity: 0.0
+    property real letter2Opacity: 0.0
+    property real letter3Opacity: 0.0
+    property real letter4Opacity: 0.0
+    property real letter5Opacity: 0.0
 
     // -------------------------------------------------------------------------
-    // 1. BACKGROUND: Deep automotive cockpit graphite & subtle studio vignette
+    // 1. BACKGROUND: Deep automotive cockpit obsidian & showroom vignette
     // -------------------------------------------------------------------------
     Rectangle {
         id: bgDark
@@ -111,7 +108,7 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: -42
 
-        // A. Restrained cool-white ambient glow radiating from the brushed emblem
+        // A. Restrained platinum-silver ambient glow radiating from the brushed emblem
         Image {
             id: imgGlow
             anchors.fill: parent
@@ -127,7 +124,7 @@ Item {
                 blurMax: 32
                 brightness: 0.50
                 colorization: 1.0
-                colorizationColor: "#D6E8FC" // Restrained cool-white glow
+                colorizationColor: "#E2E8F0" // Platinum silver glow
             }
         }
 
@@ -152,7 +149,7 @@ Item {
             layer.enabled: true
         }
 
-        // D. Traveling Metallic Shine Beam (Angled light sweep strictly inside emblem)
+        // D. Traveling Metallic Shine Beam (Liquid Silver / Chrome reflection)
         Item {
             id: shineCanvas
             anchors.fill: parent
@@ -169,17 +166,17 @@ Item {
                 gradient: Gradient {
                     orientation: Gradient.Horizontal
                     GradientStop { position: 0.0; color: "transparent" }
-                    GradientStop { position: 0.30; color: Qt.rgba(1.0, 1.0, 1.0, 0.20) }
-                    GradientStop { position: 0.48; color: Qt.rgba(1.0, 1.0, 1.0, 0.85) }
-                    GradientStop { position: 0.50; color: Qt.rgba(1.0, 1.0, 1.0, 1.0) }
-                    GradientStop { position: 0.52; color: Qt.rgba(1.0, 1.0, 1.0, 0.85) }
-                    GradientStop { position: 0.70; color: Qt.rgba(1.0, 1.0, 1.0, 0.20) }
+                    GradientStop { position: 0.30; color: Qt.rgba(0.90, 0.94, 0.98, 0.20) }
+                    GradientStop { position: 0.48; color: Qt.rgba(0.95, 0.98, 1.0, 0.85) }
+                    GradientStop { position: 0.50; color: "#FFFFFF" }
+                    GradientStop { position: 0.52; color: Qt.rgba(0.95, 0.98, 1.0, 0.85) }
+                    GradientStop { position: 0.70; color: Qt.rgba(0.90, 0.94, 0.98, 0.20) }
                     GradientStop { position: 1.0; color: "transparent" }
                 }
             }
         }
 
-        // E. Masked Specular Light Sweep Layer
+        // E. Masked Specular Light Sweep Layer on APEX
         MultiEffect {
             anchors.fill: parent
             source: shineCanvas
@@ -190,94 +187,115 @@ Item {
     }
 
     // -------------------------------------------------------------------------
-    // 3. VEHICLE GENERATION STAGE (Underneath APEX Logo, Zero Artifacts/Lines)
+    // 3. V - I - S - I - O - N STAGE (Letter-by-Letter Fade Beneath APEX Logo)
     // -------------------------------------------------------------------------
     Item {
         id: subTextStage
         anchors.top: logoContainer.bottom
-        anchors.topMargin: 28
+        anchors.topMargin: 24
         anchors.horizontalCenter: parent.horizontalCenter
         width: 600
         height: 60
 
-        // 1. HORIZON (First Model Identity)
-        Text {
-            id: textHorizon
+        // Base Visible Letters Row
+        Row {
+            id: visionLetterRow
             anchors.centerIn: parent
-            text: "HORIZON"
-            font.family: "Inter"
-            font.pixelSize: 22
-            font.weight: Font.DemiBold
-            font.letterSpacing: 16
-            color: "#A2B2C6" // Refined brushed titanium slate
-            opacity: root.horizonOpacity
-            visible: opacity > 0.001
-            transform: Translate { x: root.horizonX; y: root.horizonY }
+            spacing: 26
+
+            // Letter 0: V
+            Text {
+                text: "V"
+                font.family: "Inter"
+                font.pixelSize: 28
+                font.weight: Font.Bold
+                color: "#E2E8F0"
+                opacity: root.letter0Opacity
+            }
+
+            // Letter 1: I
+            Text {
+                text: "I"
+                font.family: "Inter"
+                font.pixelSize: 28
+                font.weight: Font.Bold
+                color: "#E2E8F0"
+                opacity: root.letter1Opacity
+            }
+
+            // Letter 2: S
+            Text {
+                text: "S"
+                font.family: "Inter"
+                font.pixelSize: 28
+                font.weight: Font.Bold
+                color: "#E2E8F0"
+                opacity: root.letter2Opacity
+            }
+
+            // Letter 3: I
+            Text {
+                text: "I"
+                font.family: "Inter"
+                font.pixelSize: 28
+                font.weight: Font.Bold
+                color: "#E2E8F0"
+                opacity: root.letter3Opacity
+            }
+
+            // Letter 4: O
+            Text {
+                text: "O"
+                font.family: "Inter"
+                font.pixelSize: 28
+                font.weight: Font.Bold
+                color: "#E2E8F0"
+                opacity: root.letter4Opacity
+            }
+
+            // Letter 5: N
+            Text {
+                text: "N"
+                font.family: "Inter"
+                font.pixelSize: 28
+                font.weight: Font.Bold
+                color: "#E2E8F0"
+                opacity: root.letter5Opacity
+            }
         }
 
-        // 2. SUV (Second Generation)
-        Text {
-            id: textSuv
-            anchors.centerIn: parent
-            text: "SUV"
-            font.family: "Inter"
-            font.pixelSize: 23
-            font.weight: Font.DemiBold
-            font.letterSpacing: 18
-            color: "#BDCEE0" // Clean automotive silver
-            opacity: root.suvOpacity
-            visible: opacity > 0.001
-            transform: Translate { x: root.suvX; y: 0 }
-        }
-
-        // 3. VISION (Current Model & Final Brand Identity with Machined Metallic Texture)
+        // Mask Source for Specular Glint on VISION Letters
         Item {
-            id: visionContainer
-            anchors.centerIn: parent
-            width: 600
-            height: 60
-            opacity: root.visionOpacity
-            visible: opacity > 0.001
-            transform: [
-                Translate { x: root.visionX; y: root.visionY },
-                Scale { xScale: root.visionScale; yScale: root.visionScale; origin.x: visionContainer.width / 2; origin.y: visionContainer.height / 2 }
-            ]
+            id: visionLetterMaskContainer
+            anchors.fill: parent
+            visible: false
+            layer.enabled: true
 
-            // Metallic Brushed VISION Emblem
-            Image {
-                id: imgVisionMetallic
+            Row {
                 anchors.centerIn: parent
-                width: 600
-                height: 60
-                source: "qrc:/ApexVision/qml/assets/icons/apex_vision_metallic.png"
-                fillMode: Image.PreserveAspectFit
-                smooth: true
-                mipmap: true
-            }
+                spacing: 26
 
-            // Mask Source for Specular Glint on VISION
-            Image {
-                id: imgVisionMask
-                anchors.fill: imgVisionMetallic
-                source: "qrc:/ApexVision/qml/assets/icons/apex_vision_metallic.png"
-                fillMode: Image.PreserveAspectFit
-                visible: false
-                layer.enabled: true
+                Text { text: "V"; font.family: "Inter"; font.pixelSize: 28; font.weight: Font.Bold; color: "#FFFFFF"; opacity: root.letter0Opacity }
+                Text { text: "I"; font.family: "Inter"; font.pixelSize: 28; font.weight: Font.Bold; color: "#FFFFFF"; opacity: root.letter1Opacity }
+                Text { text: "S"; font.family: "Inter"; font.pixelSize: 28; font.weight: Font.Bold; color: "#FFFFFF"; opacity: root.letter2Opacity }
+                Text { text: "I"; font.family: "Inter"; font.pixelSize: 28; font.weight: Font.Bold; color: "#FFFFFF"; opacity: root.letter3Opacity }
+                Text { text: "O"; font.family: "Inter"; font.pixelSize: 28; font.weight: Font.Bold; color: "#FFFFFF"; opacity: root.letter4Opacity }
+                Text { text: "N"; font.family: "Inter"; font.pixelSize: 28; font.weight: Font.Bold; color: "#FFFFFF"; opacity: root.letter5Opacity }
             }
+        }
 
-            // Masked Specular Light Sweep Layer on VISION (synchronized with APEX shine)
-            MultiEffect {
-                anchors.fill: imgVisionMetallic
-                source: shineCanvas
-                maskEnabled: true
-                maskSource: imgVisionMask
-                opacity: root.signatureShineOpacity * 0.90
-            }
+        // Masked Specular Light Sweep Layer on VISION (Synchronized with APEX shine)
+        MultiEffect {
+            anchors.fill: parent
+            source: shineCanvas
+            maskEnabled: true
+            maskSource: visionLetterMaskContainer
+            opacity: root.signatureShineOpacity * 0.95
         }
     }
 
     // -------------------------------------------------------------------------
-    // 4. MASTER OEM STARTUP ANIMATION TIMELINE (Exact 5.0s Total Runtime)
+    // 4. MASTER OEM STARTUP ANIMATION TIMELINE (~3.2s Total Execution Time)
     // -------------------------------------------------------------------------
     SequentialAnimation {
         id: startupSequence
@@ -294,73 +312,59 @@ Item {
                     }
                 }
             }
-            NumberAnimation { target: root; property: "apexLogoOpacity"; from: 0.0; to: 1.0; duration: 250; easing.type: Easing.OutQuad }
-            PauseAnimation { duration: 500 }
+            NumberAnimation { target: root; property: "apexLogoOpacity"; from: 0.0; to: 1.0; duration: 320; easing.type: Easing.OutCubic }
+            PauseAnimation { duration: 480 }
         }
 
-        // Phase 2: 0.5s – 1.1s: HORIZON Generation (600 ms total)
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "horizonOpacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
-            NumberAnimation { target: root; property: "horizonY"; from: 8; to: 0; duration: 180; easing.type: Easing.OutCubic }
-        }
-        PauseAnimation { duration: 420 }
+        // Phase 2: 0.5s – 1.35s: V - I - S - I - O - N Letters Fade In One by One
+        // Letter 0: 'V'
+        NumberAnimation { target: root; property: "letter0Opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: 40 }
 
-        // Phase 3: 1.1s – 1.7s: HORIZON → SUV (600 ms total)
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "horizonOpacity"; from: 1.0; to: 0.0; duration: 110; easing.type: Easing.InQuad }
-            NumberAnimation { target: root; property: "horizonX"; from: 0; to: 20; duration: 120; easing.type: Easing.InQuad }
+        // Letter 1: 'I'
+        NumberAnimation { target: root; property: "letter1Opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: 40 }
 
-            SequentialAnimation {
-                PauseAnimation { duration: 50 }
-                ParallelAnimation {
-                    NumberAnimation { target: root; property: "suvOpacity"; from: 0.0; to: 1.0; duration: 160; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "suvX"; from: -16; to: 0; duration: 160; easing.type: Easing.OutCubic }
-                }
-            }
-        }
-        PauseAnimation { duration: 380 }
+        // Letter 2: 'S'
+        NumberAnimation { target: root; property: "letter2Opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: 40 }
 
-        // Phase 4: 1.7s – 2.5s: SUV → VISION (800 ms total)
-        ParallelAnimation {
-            NumberAnimation { target: root; property: "suvOpacity"; from: 1.0; to: 0.0; duration: 120; easing.type: Easing.InQuad }
-            NumberAnimation { target: root; property: "suvX"; from: 0; to: 20; duration: 130; easing.type: Easing.InQuad }
+        // Letter 3: 'I'
+        NumberAnimation { target: root; property: "letter3Opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: 40 }
 
-            SequentialAnimation {
-                PauseAnimation { duration: 60 }
-                ParallelAnimation {
-                    NumberAnimation { target: root; property: "visionOpacity"; from: 0.0; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "visionY"; from: 6; to: 0; duration: 200; easing.type: Easing.OutCubic }
-                    NumberAnimation { target: root; property: "visionScale"; from: 0.94; to: 1.0; duration: 200; easing.type: Easing.OutCubic }
-                }
-            }
-        }
-        PauseAnimation { duration: 520 }
+        // Letter 4: 'O'
+        NumberAnimation { target: root; property: "letter4Opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
+        PauseAnimation { duration: 40 }
 
-        // Phase 5: 2.5s – 2.9s: FINAL METALLIC LOCK (400 ms)
-        PauseAnimation { duration: 400 }
+        // Letter 5: 'N'
+        NumberAnimation { target: root; property: "letter5Opacity"; from: 0.0; to: 1.0; duration: 180; easing.type: Easing.OutCubic }
 
-        // Phase 6: 2.9s – 4.1s: SIGNATURE METALLIC SPECULAR SHINE SWEEP (1200 ms)
+        // Settling lock pause
+        PauseAnimation { duration: 200 }
+
+        // Phase 3: 1.4s – 2.4s: FULL SIGNATURE SPECULAR SHINE SWEEP ACROSS BOTH (1000 ms)
         ParallelAnimation {
             NumberAnimation { target: root; property: "signatureShineOpacity"; from: 0.0; to: 1.0; duration: 120 }
 
-            // Clean metallic light sweep travels across both APEX logo and VISION
+            // Liquid silver specular sweep cuts through APEX and V I S I O N
             NumberAnimation {
                 target: root
                 property: "signatureShineX"
                 from: -180
                 to: 680
-                duration: 1050
+                duration: 950
                 easing.type: Easing.InOutSine
             }
 
-            // Restrained cool-white ambient glow swells and settles
+            // Refined platinum-silver glow pulse
             SequentialAnimation {
                 NumberAnimation {
                     target: root
                     property: "apexGlowOpacity"
                     from: 0.0
                     to: 0.45
-                    duration: 525
+                    duration: 475
                     easing.type: Easing.OutQuad
                 }
                 NumberAnimation {
@@ -368,21 +372,21 @@ Item {
                     property: "apexGlowOpacity"
                     from: 0.45
                     to: 0.10
-                    duration: 525
+                    duration: 475
                     easing.type: Easing.InQuad
                 }
             }
 
             SequentialAnimation {
-                PauseAnimation { duration: 950 }
+                PauseAnimation { duration: 830 }
                 NumberAnimation { target: root; property: "signatureShineOpacity"; from: 1.0; to: 0.0; duration: 120 }
             }
         }
 
-        // Phase 7: 4.1s – 4.6s: PROUD BRAND HOLD (500 ms)
-        PauseAnimation { duration: 500 }
+        // Phase 4: 2.4s – 2.8s: Brand Hold (400 ms)
+        PauseAnimation { duration: 400 }
 
-        // Phase 8: 4.6s – 5.0s: DISSOLVE TO LIVE COCKPIT (400 ms)
+        // Phase 5: 2.8s – 3.2s: Dissolve to Live Cockpit (400 ms)
         ParallelAnimation {
             NumberAnimation { target: root; property: "opacity"; from: 1.0; to: 0.0; duration: 400; easing.type: Easing.InOutQuad }
         }

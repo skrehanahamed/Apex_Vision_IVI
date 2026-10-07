@@ -218,7 +218,6 @@ Item {
         anchors.bottomMargin: 36
         width: 500
         z: 10
-        layer.enabled: true
 
         // Main Vehicle Overview 2x3 Grid (When Ambient Lighting screen is closed)
         Grid {
@@ -232,8 +231,8 @@ Item {
             opacity: (!root.ambientLightingPageOpen && !root.vehicleStatusPageOpen && !root.seatsPageOpen && !root.valetModePageOpen) ? 1.0 : 0.0
             visible: opacity > 0.001
             enabled: !root.ambientLightingPageOpen && !root.vehicleStatusPageOpen && !root.seatsPageOpen && !root.valetModePageOpen
-            Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on x { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
 
             // Card 1: Ambient Lighting (Navigation card to open ambient lighting screen)
             VehicleMenuCard {
@@ -334,8 +333,8 @@ Item {
             opacity: root.ambientLightingPageOpen ? 1.0 : 0.0
             visible: opacity > 0.001
             enabled: root.ambientLightingPageOpen
-            Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
-            Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
+            Behavior on x { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
+            Behavior on opacity { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
 
             // Top Header: Back button + Title
             Row {
@@ -872,7 +871,7 @@ Item {
         anchors.fill: parent
         clip: false
         z: 1
-        visible: opacity > 0.001
+        visible: (!root.seatsPageOpen && !root.valetModePageOpen) && (opacity > 0.001)
         opacity: (root.seatsPageOpen || root.valetModePageOpen) ? 0.0 : 1.0
         Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
@@ -1422,6 +1421,23 @@ Item {
         enabled: root.seatsPageOpen
         Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.OutCubic } }
 
+        // Master Project Default Background (Matching IVI system wallpaper)
+        Image {
+            id: seatsBgImage
+            anchors.fill: parent
+            source: "qrc:/ApexVision/qml/assets/default_background.png"
+            fillMode: Image.PreserveAspectCrop
+            smooth: true
+            z: 0
+        }
+
+        // Very light scrim so default background colors stay bright and vibrant
+        Rectangle {
+            anchors.fill: parent
+            color: Qt.rgba(0, 0, 0, 0.15)
+            z: 0
+        }
+
         // =====================================================================
         // LEVEL 1: SEATS MASTER HUB (Screenshots 6 & 7)
         // =====================================================================
@@ -1744,24 +1760,24 @@ Item {
                     // =========================================================================
                     // 🎯 2ND ROW SEAT IMAGE & ARROWS CONFIGURATION
                     // =========================================================================
-                    // Dimensions of the 2D seats image (Enlarged to utilize available space, matching passenger view)
-                    property real seatImageWidth: 780
-                    property real seatImageHeight: 520
+                    // Dimensions of the 2D seats image (Scaled cleanly with authentic 1.5:1 aspect ratio)
+                    property real seatImageWidth: 510
+                    property real seatImageHeight: 340
 
-                    // Position of the seats image within cabinOverlay (Centered nicely)
+                    // Position of the seats image within cabinOverlay (Centered nicely with headroom for top/bottom arrows)
                     property real seatImageX: Math.round((width - seatImageWidth) / 2)
-                    property real seatImageY: Math.round((height - seatImageHeight) / 2 - 20)
+                    property real seatImageY: Math.round((height - seatImageHeight) / 2 - 12)
 
-                    // Horizontal (X) Centers mathematically locked to each seat's spine:
-                    // In image copy 2.png (1536x1024), left seat center = 376.5, right seat center = 1154.0
-                    property int leftSeatCenterX: Math.round(seatImageX + (376.5 / 1536.0) * seatImageWidth)
-                    property int rightSeatCenterX: Math.round(seatImageX + (1154.0 / 1536.0) * seatImageWidth)
+                    // Horizontal (X) Centers mathematically locked to each seat spine:
+                    // In image copy 2.png (1536x1024), left seat center = 377.5, right seat center = 1155.0
+                    property int leftSeatCenterX: Math.round(seatImageX + (377.5 / 1536.0) * seatImageWidth)
+                    property int rightSeatCenterX: Math.round(seatImageX + (1155.0 / 1536.0) * seatImageWidth)
 
-                    // Vertical (Y) Levels for arrows (perfectly spaced above headrest and below cushion):
-                    // Headrest top in image = 86px -> frontArrowY (50px arrow, 16px gap)
-                    // Cushion bottom in image = 936px -> backArrowY (46px arrow, 16px gap)
+                    // Vertical (Y) Levels for arrows (clean 16px clearance: zero overlap with headrest or cushion):
+                    // Headrest top in image = 86px -> frontArrowY (50px arrow, 16px clearance above headrest)
+                    // Cushion bottom in image = 937px -> backArrowY (46px arrow, 16px clearance below cushion)
                     property int frontArrowY: Math.round(seatImageY + (86.0 / 1024.0) * seatImageHeight - 50 - 16)
-                    property int backArrowY: Math.round(seatImageY + (936.0 / 1024.0) * seatImageHeight + 16)
+                    property int backArrowY: Math.round(seatImageY + (937.0 / 1024.0) * seatImageHeight + 16)
 
                     // -------------------------------------------------------------
                     // 2D Luxury Seats Render Image

@@ -301,7 +301,7 @@ Item {
 
     Timer {
         id: hideRoofTimer
-        interval: 320
+        interval: 240
         repeat: false
         onTriggered: {
             if (root.ambientMode) {
@@ -310,22 +310,11 @@ Item {
         }
     }
 
-    Timer {
-        id: showRoofTimer
-        interval: 480
-        repeat: false
-        onTriggered: {
-            if (!root.ambientMode) {
-                root.roofVisibleDelayed = true;
-            }
-        }
-    }
-
     property bool ambientFlightActive: false
 
     Timer {
         id: flightActiveTimer
-        interval: 560
+        interval: 380
         repeat: false
         onTriggered: {
             root.ambientFlightActive = false;
@@ -342,12 +331,11 @@ Item {
         flightActiveTimer.restart();
 
         if (ambientMode) {
-            showRoofTimer.stop();
             root.roofVisibleDelayed = true;
             hideRoofTimer.restart();
         } else {
             hideRoofTimer.stop();
-            showRoofTimer.restart();
+            root.roofVisibleDelayed = true;
             root.currentYaw = root.heroYaw;
         }
     }
@@ -389,8 +377,8 @@ Item {
             lightProbe: Texture {
                 source: "assets/_Hall.ktx"
             }
-            probeExposure: root.ambientMode ? 0.28 : 0.45
-            Behavior on probeExposure { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
+            probeExposure: root.ambientMode ? 0.32 : 0.45
+            Behavior on probeExposure { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
 
             // Embedded Pi 5 GPU 60 FPS optimization: disable costly multi-pass full-screen bloom
             glowEnabled: false
@@ -418,11 +406,11 @@ Item {
 
             Behavior on position {
                 enabled: !statusTunerMouseArea.pressed
-                Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
+                Vector3dAnimation { duration: 380; easing.type: Easing.OutCubic }
             }
             Behavior on eulerRotation {
                 enabled: !rotateMouseArea.dragActive && !rotateMouseArea.inertiaActive && !statusTunerMouseArea.pressed
-                Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
+                Vector3dAnimation { duration: 380; easing.type: Easing.OutCubic }
             }
 
             PerspectiveCamera {
@@ -432,7 +420,7 @@ Item {
                     Qt.vector3d(root.heroCamOffsetX, 0.0, root.heroCameraZ)
 
                 Behavior on position {
-                    Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
+                    Vector3dAnimation { duration: 380; easing.type: Easing.OutCubic }
                 }
 
                 eulerRotation: root.statusMode ?
@@ -445,10 +433,10 @@ Item {
                 fieldOfView: root.ambientMode ? 28.0 : (root.statusMode ? (root.statusTab === "oil" ? root.statusOilFov : root.statusTireFov) : 27.0)
 
                 Behavior on fieldOfView {
-                    NumberAnimation { duration: 550; easing.type: Easing.OutCubic }
+                    NumberAnimation { duration: 380; easing.type: Easing.OutCubic }
                 }
                 Behavior on eulerRotation {
-                    Vector3dAnimation { duration: 550; easing.type: Easing.OutCubic }
+                    Vector3dAnimation { duration: 380; easing.type: Easing.OutCubic }
                 }
             }
         }
@@ -460,20 +448,20 @@ Item {
         DirectionalLight {
             id: primaryKeyLight
             eulerRotation: Qt.vector3d(-42, 35, 0)
-            brightness: root.ambientMode ? 0.6 : 2.2
+            brightness: root.ambientMode ? 0.7 : 2.2
             color: "#FFFFFF"
             castsShadow: false
-            Behavior on brightness { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
+            Behavior on brightness { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
         }
 
         // 2. Rim & Fill Light (Smooth continuous dimming to prevent shader re-compilation hitch)
         DirectionalLight {
             id: rimFillLight
             eulerRotation: Qt.vector3d(-28, -145, 0)
-            brightness: root.ambientMode ? 0.0 : 1.6
+            brightness: root.ambientMode ? 0.25 : 1.6
             color: "#B4CEEE"
             castsShadow: false
-            Behavior on brightness { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
+            Behavior on brightness { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
         }
 
         // ---------------------------------------------------------------------
@@ -488,7 +476,7 @@ Item {
                 id: groundShadowsContainer
                 opacity: root.ambientMode ? 0.0 : 1.0
                 scale: root.ambientMode ? Qt.vector3d(0.001, 0.001, 0.001) : Qt.vector3d(1.0, 1.0, 1.0)
-                Behavior on opacity { NumberAnimation { duration: 550; easing.type: Easing.OutCubic } }
+                Behavior on opacity { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
 
                 // Consolidated 60 FPS Ground Contact Shadow Quad
                 Model {
