@@ -417,7 +417,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled2doorlfint381Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -427,7 +427,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled2doorrfint381Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -468,7 +468,7 @@ Node {
         roughness: 0.65
         clearcoatAmount: 0.06
         clearcoatRoughnessAmount: 0.40
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -480,7 +480,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 0.9986796379089355
         normalMap: textures_Meshesuntitled2carbodyfrostedplastic50021Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -492,7 +492,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 0.999910831451416
         normalMap: textures_Meshesuntitled3carbodyint121Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -502,7 +502,7 @@ Node {
         roughness: 0.08
         metalness: 0.12
         specularAmount: 0.98
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -512,7 +512,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled3doorlbint371Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -522,7 +522,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled2carbodyint171Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -531,7 +531,7 @@ Node {
         baseColor: "#ff1b53ba"
         metalness: 0.05000000074505806
         roughness: 1
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -541,7 +541,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled3doorlbint381Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -551,7 +551,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled3doorrbint371Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -563,7 +563,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 0.9786701798439026
         normalMap: textures_Meshesuntitled2carbodyfrostedplastic50021Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -573,7 +573,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled3doorrbint381Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -584,7 +584,7 @@ Node {
         roughness: 0.35
         clearcoatAmount: 0.45
         clearcoatRoughnessAmount: 0.12
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -595,7 +595,7 @@ Node {
         roughness: 0.03
         clearcoatAmount: 1.0
         clearcoatRoughnessAmount: 0.01
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -607,7 +607,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 0.23323170840740204
         normalMap: textures_Meshesuntitled41Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -616,7 +616,7 @@ Node {
         baseColorMap: textures_Meshesuntitled1wheelbrowheeltire1Mtl_baseColor_png_texture
         metalness: 0.28
         roughness: 0.35
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -636,7 +636,7 @@ Node {
         baseColorMap: textures_Meshesuntitled1wheelfrowheeltire1Mtl_baseColor_png_texture
         metalness: 0.28
         roughness: 0.35
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -658,7 +658,7 @@ Node {
         roughness: 0.25
         emissiveMap: textures_Meshesuntitled1trunkbodyplate1Mtl_emissive_png_texture
         emissiveFactor: root.lightsOn ? Qt.vector3d(3.5, 3.5, 3.5) : Qt.vector3d(0, 0, 0)
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -734,7 +734,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 0.2393292635679245
         normalMap: textures_Meshesuntitled71Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -744,7 +744,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled131Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -754,7 +754,7 @@ Node {
         metalness: 0.05000000074505806
         roughness: 1
         emissiveMap: textures_Meshesuntitled8doorlfint371Mtl_baseColor_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -765,7 +765,7 @@ Node {
         roughness: 0.05
         clearcoatAmount: 1.0
         clearcoatRoughnessAmount: 0.02
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -775,7 +775,7 @@ Node {
         metalness: root.lightsOn ? 0.0 : 0.95
         roughness: root.lightsOn ? 0.05 : 0.08
         emissiveFactor: root.lightsOn ? Qt.vector3d(6.0, 6.0, 6.5) : Qt.vector3d(0, 0, 0)
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -795,7 +795,7 @@ Node {
         clearcoatAmount: 0.9
         clearcoatRoughnessAmount: 0.08
         emissiveFactor: root.lightsOn ? Qt.vector3d(6.0, 0.2, 0.2) : Qt.vector3d(0, 0, 0)
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -806,7 +806,7 @@ Node {
         roughness: root.roughness
         clearcoatAmount: root.clearcoat
         clearcoatRoughnessAmount: 0.06
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -830,7 +830,7 @@ Node {
         roughness: 0.20
         clearcoatAmount: 0.90
         clearcoatRoughnessAmount: 0.06
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -841,7 +841,7 @@ Node {
         roughness: 0.32
         clearcoatAmount: 0.60
         clearcoatRoughnessAmount: 0.10
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -850,7 +850,7 @@ Node {
         baseColor: "#ff080808"
         metalness: 0.05000000074505806
         roughness: 0.3246951103210449
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -862,7 +862,7 @@ Node {
         clearcoatAmount: root.clearcoat
         clearcoatRoughnessAmount: 0.04
         normalMap: textures_Meshesuntitled2carbodyfrostedplastic50021Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -873,7 +873,7 @@ Node {
         roughness: 0.04
         clearcoatAmount: 1.0
         clearcoatRoughnessAmount: 0.02
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -885,7 +885,7 @@ Node {
         clearcoatAmount: 0.9
         clearcoatRoughnessAmount: 0.08
         emissiveFactor: root.lightsOn ? Qt.vector3d(6.0, 0.2, 0.2) : Qt.vector3d(0, 0, 0)
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -897,7 +897,7 @@ Node {
         metalness: 0.05
         roughness: 0.40
         normalMap: textures_Meshesuntitled3carbodyleather20021Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -908,7 +908,7 @@ Node {
         roughness: 0.30640244483947754
         emissiveMap: textures_Meshesuntitled111Mtl_emissive_png_texture
         emissiveFactor: root.lightsOn ? Qt.vector3d(5.0, 5.0, 5.0) : Qt.vector3d(0, 0, 0)
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     Texture {
@@ -930,7 +930,7 @@ Node {
         metalness: 0.05
         roughness: 0.48
         normalMap: textures_Meshesuntitled3carbodyleather20021Mtl_normal_png_texture
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -942,7 +942,7 @@ Node {
         emissiveFactor: Qt.vector3d(5.5, 5.5, 6.0)
         metalness: 0.10
         roughness: 0.40
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
     PrincipledMaterial {
@@ -951,7 +951,7 @@ Node {
         baseColor: "#1e2024"
         metalness: 0.05
         roughness: 0.85
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
 
@@ -972,7 +972,7 @@ Node {
         baseColor: "#15181b"
         metalness: 0.9
         roughness: 0.1
-        cullMode: PrincipledMaterial.NoCulling
+        cullMode: PrincipledMaterial.BackFaceCulling
         alphaMode: PrincipledMaterial.Opaque
     }
 
