@@ -22,10 +22,10 @@ Node {
     property bool roofVisible: true
 
     // Four Tire Objects (object 21: FL, object 9: FR, object 29: RL, object 10: RR)
-    readonly property alias tireFL: object_21
-    readonly property alias tireFR: object_9
-    readonly property alias tireRL: object_29
-    readonly property alias tireRR: object_10
+    readonly property alias tireFL: car_Body_Cabin
+    readonly property alias tireFR: car_Body_Cabin
+    readonly property alias tireRL: car_Body_Cabin
+    readonly property alias tireRR: car_Body_Cabin
 
 
     // Resources
@@ -817,8 +817,10 @@ Node {
         roughness: 0.03
         clearcoatAmount: 1.0
         clearcoatRoughnessAmount: 0.01
-        cullMode: PrincipledMaterial.NoCulling
-        alphaMode: PrincipledMaterial.Opaque
+        cullMode: PrincipledMaterial.BackFaceCulling
+        opacity: 0.25
+        alphaMode: PrincipledMaterial.Blend
+        depthDrawMode: PrincipledMaterial.OpaqueOnlyDepthDraw
     }
     PrincipledMaterial {
         id: whiteRim_material
@@ -974,761 +976,84 @@ Node {
         alphaMode: PrincipledMaterial.Opaque
     }
 
-    // Nodes:
+    // Nodes: (True 2-Mesh Architecture: Full Car Body & Cabin + Removable Roof)
     Node {
-        id: sketchfab_model
-        objectName: "Sketchfab_model"
-        eulerRotation: Qt.vector3d(-90, 0, 0)
+        id: rootNode
+        objectName: "ROOT"
+
         Node {
-            id: node2023_Apex_obj_cleaner_materialmerger_gles
-            objectName: "2023 Apex Vehicle.obj.cleaner.materialmerger.gles"
-            position: Qt.vector3d(19.0592, 74.2330, 0)
+            id: node2023_Lincoln_Zephyr_obj_cleaner_materialmerger_gles
+            objectName: "2023 Lincoln Zephyr.obj.cleaner.materialmerger.gles"
 
-
+            // 1. Full Vehicle Assembly (Chassis, Cabin Interior, Dashboard, Seats, Wheels, Controls)
             Model {
-                id: apex_Emblem_Backing
-                objectName: "Apex_Emblem_Backing"
-                source: "meshes/apex_Emblem_Backing_mesh.mesh"
+                id: car_Body_Cabin
+                objectName: "car_Body_Cabin"
+                source: "meshes/car_Body_Cabin_mesh.mesh"
                 materials: [
-                    apex_Backing_Mtl_material
-                ]
-            }
-            Model {
-                id: apex_Emblem
-                objectName: "Apex_Emblem"
-                source: "meshes/apex_Emblem_mesh.mesh"
-                materials: [
+                    meshesuntitled101Mtl_material,
+                    meshesuntitled111Mtl_material,
+                    meshesuntitled131Mtl_material,
+                    meshesuntitled1bodyfrontgrilleint1Mtl_material,
+                    meshesuntitled1trunkbodyint1Mtl_material,
+                    meshesuntitled1bodyheadlampglass1Mtl_material,
+                    meshesuntitled1trunkbodyplate1Mtl_material,
+                    meshesuntitled1wheelfrowheeltire1Mtl_material,
+                    meshesuntitled1wheelbrowheeltire1Mtl_material,
+                    meshesuntitled2carbodyint171Mtl_material,
+                    meshesuntitled2carbodyint271Mtl_material,
+                    meshesuntitled2carbodyint471Mtl_material,
+                    meshesuntitled2doorlfint421Mtl_material,
+                    meshesuntitled2doorlfint381Mtl_material,
+                    meshesuntitled3carbodyint131Mtl_material,
+                    meshesuntitled2doorrfint381Mtl_material,
+                    meshesuntitled2doorrfint421Mtl_material,
+                    meshesuntitled2wheelflowheeltire1Mtl_material,
+                    meshesuntitled3carbodyfrostedplastic21Mtl_material,
+                    meshesuntitled3carbodyint121Mtl_material,
+                    meshesuntitled3doorlbint371Mtl_material,
+                    meshesuntitled3carbodyint181Mtl_material,
+                    meshesuntitled3doorlbint381Mtl_material,
+                    meshesuntitled3doorrbint371Mtl_material,
+                    meshesuntitled3doorrbint381Mtl_material,
+                    meshesuntitled3wheelblowheeltire1Mtl_material,
+                    meshesuntitled41Mtl_material,
+                    meshesuntitled5carbodyint151Mtl_material,
+                    meshesuntitled5doorlbint401Mtl_material,
+                    meshesuntitled5doorlfint401Mtl_material,
+                    meshesuntitled5doorrbint401Mtl_material,
+                    meshesuntitled5doorrfint401Mtl_material,
+                    meshesuntitled71Mtl_material,
+                    meshesuntitled8doorlfint371Mtl_material,
+                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material,
+                    meshesuntitled1bodylightglass1Mtl_material,
+                    meshesuntitled1trunkbodyplastic51Mtl_material,
+                    meshesuntitled1bodyfrontgrillepaint1Mtl_material,
+                    meshesuntitled1bodyheadlampplastic1Mtl_material,
+                    meshesuntitled2carbodyfrostedplastic50021Mtl_material,
+                    meshesuntitled2doorrfmirror1Mtl_material,
+                    meshesuntitled3carbodyint191Mtl_material,
+                    meshesuntitled3carbodyleather20021Mtl_material,
+                    meshesuntitledcarbodyleather51Mtl_material,
+                    apex_Backing_Mtl_material,
                     apex_Emblem_Mtl_material
                 ]
             }
+
+            // 2. Independent Removable Roof Assembly (Vanishes in Rear View for Unobstructed Cabin Sightlines)
             Model {
-                id: object_2
-                objectName: "Object_2"
-                source: "meshes/object_0_mesh.mesh"
-                materials: [
-                    meshesuntitled101Mtl_material
-                ]
-            }
-            Model {
-                id: object_3
-                objectName: "Object_3"
-                source: "meshes/object_1_mesh.mesh"
-                materials: [
-                    meshesuntitled111Mtl_material
-                ]
-            }
-            Model {
-                id: object_4
-                objectName: "Object_4"
-                source: "meshes/object_2_mesh.mesh"
-                materials: [
-                    meshesuntitled131Mtl_material
-                ]
-            }
-            Model {
-                id: object_5
-                objectName: "Object_5"
-                source: "meshes/object_3_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrilleint1Mtl_material
-                ]
-            }
-            Model {
-                id: object_6
-                objectName: "Object_6"
-                source: "meshes/object_4_mesh.mesh"
-                materials: [
-                    meshesuntitled1trunkbodyint1Mtl_material
-                ]
-            }
-            Model {
-                id: object_7
-                objectName: "Object_7"
-                source: "meshes/object_5_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampglass1Mtl_material
-                ]
-            }
-            Model {
-                id: object_8
-                objectName: "Object_8"
-                source: "meshes/object_6_mesh.mesh"
-                materials: [
-                    meshesuntitled1trunkbodyplate1Mtl_material
-                ]
-            }
-            Model {
-                id: object_9
-                objectName: "Object_9"
-                source: "meshes/object_7_mesh.mesh"
-                position: Qt.vector3d(-22.11885, -80.29015, 1.38448)
-                pivot: Qt.vector3d(-22.11885, -80.29015, 1.38448)
-                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
-                materials: [
-                    meshesuntitled1wheelfrowheeltire1Mtl_material,
-                    whiteRim_material
-                ]
-            }
-            Model {
-                id: object_10
-                objectName: "Object_10"
-                source: "meshes/object_8_mesh.mesh"
-                position: Qt.vector3d(-22.11885, -68.51400, 1.38448)
-                pivot: Qt.vector3d(-22.11885, -68.51400, 1.38448)
-                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
-                materials: [
-                    meshesuntitled1wheelbrowheeltire1Mtl_material,
-                    whiteRim_material
-                ]
-            }
-            Model {
-                id: object_11
-                objectName: "Object_11"
+                id: roof_Assembly
+                objectName: "roof_Assembly"
                 visible: root.roofVisible
-                source: "meshes/object_9_mesh.mesh"
+                source: "meshes/roof_Assembly_mesh.mesh"
                 materials: [
-                    meshesuntitled2bodyskyglassglassskylight1Mtl_material
-                ]
-            }
-            Model {
-                id: object_12
-                objectName: "Object_12"
-                visible: root.roofVisible
-                source: "meshes/object_10_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic61Mtl_material
-                ]
-            }
-            Model {
-                id: object_13
-                objectName: "Object_13"
-                source: "meshes/object_11_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyint171Mtl_material
-                ]
-            }
-            Model {
-                id: object_14
-                objectName: "Object_14"
-                source: "meshes/object_12_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyint271Mtl_material
-                ]
-            }
-            Model {
-                id: object_15
-                objectName: "Object_15"
-                source: "meshes/object_13_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyint471Mtl_material
-                ]
-            }
-            Model {
-                id: object_16
-                objectName: "Object_16"
-                source: "meshes/object_14_mesh.mesh"
-                materials: [
-                    meshesuntitled2doorlfint421Mtl_material
-                ]
-            }
-            Model {
-                id: object_17
-                objectName: "Object_17"
-                source: "meshes/object_15_mesh.mesh"
-                materials: [
-                    meshesuntitled2doorlfint381Mtl_material
-                ]
-            }
-            Model {
-                id: object_18
-                objectName: "Object_18"
-                source: "meshes/object_16_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyint131Mtl_material
-                ]
-            }
-            Model {
-                id: object_19
-                objectName: "Object_19"
-                source: "meshes/object_17_mesh.mesh"
-                materials: [
-                    meshesuntitled2doorrfint381Mtl_material
-                ]
-            }
-            Model {
-                id: object_20
-                objectName: "Object_20"
-                source: "meshes/object_18_mesh.mesh"
-                materials: [
-                    meshesuntitled2doorrfint421Mtl_material
-                ]
-            }
-            Model {
-                id: object_21
-                objectName: "Object_21"
-                source: "meshes/object_19_mesh.mesh"
-                position: Qt.vector3d(-15.99815, -80.29015, 1.38449)
-                pivot: Qt.vector3d(-15.99815, -80.29015, 1.38449)
-                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
-                materials: [
-                    meshesuntitled2wheelflowheeltire1Mtl_material,
-                    whiteRim_material
-                ]
-            }
-            Model {
-                id: object_22
-                objectName: "Object_22"
-                source: "meshes/object_20_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyfrostedplastic21Mtl_material
-                ]
-            }
-            Model {
-                id: object_23
-                objectName: "Object_23"
-                source: "meshes/object_21_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyint121Mtl_material
-                ]
-            }
-            Model {
-                id: object_24
-                objectName: "Object_24"
-                source: "meshes/object_22_mesh.mesh"
-                materials: [
-                    meshesuntitled3doorlbint371Mtl_material
-                ]
-            }
-            Model {
-                id: object_25
-                objectName: "Object_25"
-                source: "meshes/object_23_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyint181Mtl_material
-                ]
-            }
-            Model {
-                id: object_26
-                objectName: "Object_26"
-                source: "meshes/object_24_mesh.mesh"
-                materials: [
-                    meshesuntitled3doorlbint381Mtl_material
-                ]
-            }
-            Model {
-                id: object_27
-                objectName: "Object_27"
-                source: "meshes/object_25_mesh.mesh"
-                materials: [
-                    meshesuntitled3doorrbint371Mtl_material
-                ]
-            }
-            Model {
-                id: object_28
-                objectName: "Object_28"
-                source: "meshes/object_26_mesh.mesh"
-                materials: [
-                    meshesuntitled3doorrbint381Mtl_material
-                ]
-            }
-            Model {
-                id: object_29
-                objectName: "Object_29"
-                source: "meshes/object_27_mesh.mesh"
-                position: Qt.vector3d(-15.99815, -68.51500, 1.38452)
-                pivot: Qt.vector3d(-15.99815, -68.51500, 1.38452)
-                eulerRotation: Qt.vector3d(root.wheelAngle, 0, 0)
-                materials: [
-                    meshesuntitled3wheelblowheeltire1Mtl_material,
-                    whiteRim_material
-                ]
-            }
-            Model {
-                id: object_30
-                objectName: "Object_30"
-                source: "meshes/object_28_mesh.mesh"
-                materials: [
-                    meshesuntitled41Mtl_material
-                ]
-            }
-            Model {
-                id: object_31
-                objectName: "Object_31"
-                source: "meshes/object_29_mesh.mesh"
-                materials: [
-                    meshesuntitled5carbodyint151Mtl_material
-                ]
-            }
-            Model {
-                id: object_32
-                objectName: "Object_32"
-                source: "meshes/object_30_mesh.mesh"
-                materials: [
-                    meshesuntitled5doorlbint401Mtl_material
-                ]
-            }
-            Model {
-                id: object_33
-                objectName: "Object_33"
-                source: "meshes/object_31_mesh.mesh"
-                materials: [
-                    meshesuntitled5doorlfint401Mtl_material
-                ]
-            }
-            Model {
-                id: object_34
-                objectName: "Object_34"
-                source: "meshes/object_32_mesh.mesh"
-                materials: [
-                    meshesuntitled5doorrbint401Mtl_material
-                ]
-            }
-            Model {
-                id: object_35
-                objectName: "Object_35"
-                source: "meshes/object_33_mesh.mesh"
-                materials: [
-                    meshesuntitled5doorrfint401Mtl_material
-                ]
-            }
-            Model {
-                id: object_36
-                objectName: "Object_36"
-                source: "meshes/object_34_mesh.mesh"
-                materials: [
-                    meshesuntitled71Mtl_material
-                ]
-            }
-            Model {
-                id: object_37
-                objectName: "Object_37"
-                source: "meshes/object_35_mesh.mesh"
-                materials: [
-                    meshesuntitled8doorlfint371Mtl_material
-                ]
-            }
-            Model {
-                id: object_38
-                objectName: "Object_38"
-                source: "meshes/object_36_mesh.mesh"
-                materials: [
-                    whiteRim_material
-                ]
-            }
-            Model {
-                id: object_39
-                objectName: "Object_39"
-                source: "meshes/object_37_mesh.mesh"
-                materials: [
-                    whiteRim_material
-                ]
-            }
-            Model {
-                id: object_40
-                objectName: "Object_40"
-                source: "meshes/object_38_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material
-                ]
-            }
-            Model {
-                id: object_41
-                objectName: "Object_41"
-                source: "meshes/object_39_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material
-                ]
-            }
-            Model {
-                id: object_42
-                objectName: "Object_42"
-                source: "meshes/object_40_mesh.mesh"
-                materials: [
-                    headlightActive_material
-                ]
-            }
-            Model {
-                id: object_43
-                objectName: "Object_43"
-                source: "meshes/object_41_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material
-                ]
-            }
-            Model {
-                id: object_44
-                objectName: "Object_44"
-                source: "meshes/object_42_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material
-                ]
-            }
-            Model {
-                id: object_45
-                objectName: "Object_45"
-                source: "meshes/object_43_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material
-                ]
-            }
-            Model {
-                id: object_46
-                objectName: "Object_46"
-                visible: root.roofVisible
-                source: "meshes/object_44_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material
-                ]
-            }
-            Model {
-                id: object_47
-                objectName: "Object_47"
-                source: "meshes/object_45_mesh.mesh"
-                materials: [
-                    whiteRim_material
-                ]
-            }
-            Model {
-                id: object_48
-                objectName: "Object_48"
-                source: "meshes/object_46_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodylightglass1Mtl_material
-                ]
-            }
-            Model {
-                id: object_49
-                objectName: "Object_49"
-                source: "meshes/object_47_mesh.mesh"
-                materials: [
-                    meshesuntitled1trunkbodyplastic51Mtl_material
-                ]
-            }
-            Model {
-                id: object_50
-                 
-                objectName: "Object_50"
-                source: "meshes/object_48_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillepaint1Mtl_material
-                ]
-            }
-            Model {
-                id: object_51
-                 
-                objectName: "Object_51"
-                source: "meshes/object_49_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillepaint1Mtl_material
-                ]
-            }
-            Model {
-                id: object_52
-                 
-                objectName: "Object_52"
-                source: "meshes/object_50_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillepaint1Mtl_material
-                ]
-            }
-            Model {
-                id: object_53
-                 
-                objectName: "Object_53"
-                source: "meshes/object_51_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillepaint1Mtl_material
-                ]
-            }
-            Model {
-                id: object_54
-                 
-                objectName: "Object_54"
-                source: "meshes/object_52_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyfrontgrillepaint1Mtl_material
-                ]
-            }
-            Model {
-                id: object_55
-                objectName: "Object_55"
-                visible: root.roofVisible
-                source: "meshes/object_53_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyglassglass1Mtl_material
-                ]
-            }
-            Model {
-                id: object_56
-                objectName: "Object_56"
-                visible: root.roofVisible
-                source: "meshes/object_54_mesh.mesh"
-                materials: [
+                    meshesuntitled2bodyskyglassglassskylight1Mtl_material,
+                    meshesuntitled2carbodyfrostedplastic61Mtl_material,
+                    meshesuntitled1bodyfrontgrillechorme0011Mtl_material,
+                    meshesuntitled1bodyglassglass1Mtl_material,
                     meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_57
-                objectName: "Object_57"
-                visible: root.roofVisible
-                source: "meshes/object_55_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_58
-                objectName: "Object_58"
-                source: "meshes/object_56_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_59
-                objectName: "Object_59"
-                source: "meshes/object_57_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_60
-                objectName: "Object_60"
-                source: "meshes/object_58_mesh.mesh"
-                materials: [
-                    darkRimPocket_material
-                ]
-            }
-            Model {
-                id: object_61
-                objectName: "Object_61"
-                source: "meshes/object_59_mesh.mesh"
-                materials: [
-                    darkRimPocket_material
-                ]
-            }
-            Model {
-                id: object_62
-                objectName: "Object_62"
-                source: "meshes/object_60_mesh.mesh"
-                materials: [
-                    darkRimPocket_material
-                ]
-            }
-            Model {
-                id: object_63
-                objectName: "Object_63"
-                visible: root.roofVisible
-                source: "meshes/object_61_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_64
-                objectName: "Object_64"
-                source: "meshes/object_62_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_65
-                objectName: "Object_65"
-                source: "meshes/object_63_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_66_67_merged
-                objectName: "Object_66_67_Merged"
-                source: "meshes/object_66_67_merged_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_68
-                objectName: "Object_68"
-                source: "meshes/object_66_mesh.mesh"
-                materials: [
-                    darkRimPocket_material
-                ]
-            }
-            Model {
-                id: object_69
-                objectName: "Object_69"
-                source: "meshes/object_67_mesh.mesh"
-                materials: [
-                    darkRimPocket_material
-                ]
-            }
-            Model {
-                id: object_70
-                objectName: "Object_70"
-                source: "meshes/object_68_mesh.mesh"
-                materials: [
-                    darkRimPocket_material
-                ]
-            }
-            Model {
-                id: object_71
-                objectName: "Object_71"
-                source: "meshes/object_69_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_72
-                objectName: "Object_72"
-                source: "meshes/object_70_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_73
-                objectName: "Object_73"
-                visible: root.roofVisible
-                source: "meshes/object_71_mesh.mesh"
-                materials: [
-                    meshesuntitled1bodyheadlampplastic1Mtl_material
-                ]
-            }
-            Model {
-                id: object_74
-                objectName: "Object_74"
-                source: "meshes/object_72_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_75
-                objectName: "Object_75"
-                source: "meshes/object_73_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_76
-                objectName: "Object_76"
-                source: "meshes/object_74_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_77
-                objectName: "Object_77"
-                source: "meshes/object_75_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_78
-                objectName: "Object_78"
-                source: "meshes/object_76_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_79
-                objectName: "Object_79"
-                visible: root.roofVisible
-                source: "meshes/object_77_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_80
-                objectName: "Object_80"
-                source: "meshes/object_78_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_81
-                objectName: "Object_81"
-                source: "meshes/object_79_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_82
-                objectName: "Object_82"
-                source: "meshes/object_80_mesh.mesh"
-                materials: [
-                    meshesuntitled2carbodyfrostedplastic50021Mtl_material
-                ]
-            }
-            Model {
-                id: object_83
-                objectName: "Object_83"
-                source: "meshes/object_81_mesh.mesh"
-                materials: [
-                    meshesuntitled2doorrfmirror1Mtl_material
-                ]
-            }
-            Model {
-                id: object_84
-                objectName: "Object_84"
-                source: "meshes/object_82_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyint191Mtl_material
-                ]
-            }
-            Model {
-                id: object_85
-                objectName: "Object_85"
-                source: "meshes/object_83_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyleather20021Mtl_material
-                ]
-            }
-            Model {
-                id: object_86
-                objectName: "Object_86"
-                source: "meshes/object_84_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyleather20021Mtl_material
-                ]
-            }
-            Model {
-                id: object_87
-                objectName: "Object_87"
-                source: "meshes/object_85_mesh.mesh"
-                materials: [
-                    meshesuntitled3carbodyleather20021Mtl_material
-                ]
-            }
-            Model {
-                id: object_88
-                objectName: "Object_88"
-                source: "meshes/object_86_mesh.mesh"
-                materials: [
-                    meshesuntitledcarbodyleather51Mtl_material
-                ]
-            }
-            Model {
-                id: object_89
-                objectName: "Object_89"
-                source: "meshes/object_87_mesh.mesh"
-                materials: [
-                    steeringWheel_material
                 ]
             }
         }
     }
-
-    // Animations:
 }

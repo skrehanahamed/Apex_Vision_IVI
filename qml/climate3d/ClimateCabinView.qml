@@ -40,7 +40,7 @@ Item {
     property bool rearPower: true
     property real rearTemperature: 22.0
     property int rearAirflowMode: 0
-    property bool rearAutoMode: false
+    property bool rearAutoMode: true
 
     // Mode properties and compatibility bindings
     property bool faceVentsActive: true
@@ -324,14 +324,14 @@ Item {
                 roughness: 0.14
                 clearcoat: 1.0
                 lightsOn: true
-                roofVisible: false
+                roofVisible: !cabinView.isRearView
             }
 
             // Illuminated APEX Logo on Steering Wheel Hub (Pure APEX, Ultra-visible in darkness)
             Model {
                 id: apexSteeringBadge
                 source: "#Rectangle"
-                position: Qt.vector3d(0.371, 0.902, 0.442)
+                position: Qt.vector3d(0.371, 0.902, 0.445)
                 eulerRotation: Qt.vector3d(-24.0, 180.0, 0.0)
                 scale: Qt.vector3d(0.00115, 0.00058, 1.0)
                 castsShadows: false
