@@ -329,6 +329,8 @@ Item {
             width: parent.width
             anchors.top: parent.top
             anchors.bottom: parent.bottom
+            layer.enabled: true
+            layer.smooth: true
             x: root.ambientLightingPageOpen ? 0 : 36
             opacity: root.ambientLightingPageOpen ? 1.0 : 0.0
             visible: opacity > 0.001

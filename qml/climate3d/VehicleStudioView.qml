@@ -539,37 +539,40 @@ Item {
 
                 Behavior on lightFactor { NumberAnimation { duration: 250 } }
 
-                // High-efficiency unified central cabin point light
+                // High-efficiency unified central cabin point light (Keeps baseline 0.02 to precompile pipeline on boot)
                 PointLight {
                     id: cabinUnifiedAmbientLight
                     position: Qt.vector3d(0.0, 0.72, -0.05)
                     color: ambientLightingRig.activeColor
-                    brightness: ambientLightingRig.lightFactor * 2.2
+                    brightness: (root.ambientMode && root.ambientOn) ? (ambientLightingRig.lightFactor * 2.2) : 0.02
                     castsShadow: false
+                    Behavior on brightness { NumberAnimation { duration: 250 } }
                 }
             }
 
-            // Headlights & Taillights Lighting Rig
+            // Headlights & Taillights Lighting Rig (Kept visible: true to prevent GPU shader re-compilation hitch)
             Node {
                 id: headlightsRig
-                visible: root.lightsOn && !root.ambientMode
+                visible: true
 
                 SpotLight {
                     id: leftHeadlightSpot
                     position: Qt.vector3d(-0.61, 0.70, 2.30)
                     eulerRotation: Qt.vector3d(15, 177, 0)
                     color: "#defaff"
-                    brightness: 12.0
+                    brightness: (root.lightsOn && !root.ambientMode) ? 12.0 : 0.0
                     coneAngle: 55
                     innerConeAngle: 35
                     castsShadow: false
+                    Behavior on brightness { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
                 }
                 PointLight {
                     id: leftHeadlightGlow
                     position: Qt.vector3d(-0.61, 0.70, 2.30)
                     color: "#ffffff"
-                    brightness: 3.5
+                    brightness: (root.lightsOn && !root.ambientMode) ? 3.5 : 0.0
                     castsShadow: false
+                    Behavior on brightness { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
                 }
 
                 SpotLight {
@@ -577,17 +580,19 @@ Item {
                     position: Qt.vector3d(0.61, 0.70, 2.30)
                     eulerRotation: Qt.vector3d(15, 183, 0)
                     color: "#defaff"
-                    brightness: 12.0
+                    brightness: (root.lightsOn && !root.ambientMode) ? 12.0 : 0.0
                     coneAngle: 55
                     innerConeAngle: 35
                     castsShadow: false
+                    Behavior on brightness { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
                 }
                 PointLight {
                     id: rightHeadlightGlow
                     position: Qt.vector3d(0.61, 0.70, 2.30)
                     color: "#ffffff"
-                    brightness: 3.5
+                    brightness: (root.lightsOn && !root.ambientMode) ? 3.5 : 0.0
                     castsShadow: false
+                    Behavior on brightness { NumberAnimation { duration: 380; easing.type: Easing.OutCubic } }
                 }
             }
         }
