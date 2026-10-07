@@ -40,6 +40,7 @@ ui_*.h
 # Scratch and temp files
 tmp/
 temp/
+scratch/
 *.log
 
 # Local configuration and credentials
