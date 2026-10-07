@@ -179,135 +179,69 @@ Item {
 
         Row {
             anchors.centerIn: parent
-            spacing: 28
+            spacing: 40
 
             // -------------------------------------------------------------
-            // GAME CARD 1: APEX CYBER RACER (Playable Retro Arcade)
+            // GAME CARD 1: APEX CYBER RACER
             // -------------------------------------------------------------
             Rectangle {
                 id: racerCard
-                width: 380
-                height: 290
-                radius: 24
+                width: 260
+                height: 260
+                radius: 28
                 clip: true
 
                 gradient: Gradient {
                     GradientStop {
                         position: 0.0
-                        color: racerMouse.containsMouse ? Qt.rgba(0, 240/255, 255/255, 0.24) : Qt.rgba(215/255, 238/255, 255/255, 0.16)
+                        color: racerMouse.containsMouse ? Qt.rgba(0, 240/255, 255/255, 0.22) : Qt.rgba(215/255, 238/255, 255/255, 0.14)
                     }
                     GradientStop {
                         position: 1.0
-                        color: racerMouse.containsMouse ? Qt.rgba(255/255, 0, 127/255, 0.20) : Qt.rgba(195/255, 225/255, 255/255, 0.08)
+                        color: racerMouse.containsMouse ? Qt.rgba(255/255, 0, 127/255, 0.18) : Qt.rgba(195/255, 225/255, 255/255, 0.08)
                     }
                 }
 
-                border.color: racerMouse.containsMouse ? "#00F0FF" : Qt.rgba(225/255, 242/255, 255/255, 0.35)
+                border.color: racerMouse.containsMouse ? "#00F0FF" : Qt.rgba(225/255, 242/255, 255/255, 0.32)
                 border.width: racerMouse.containsMouse ? 2 : 1.2
-                scale: racerMouse.pressed ? 0.98 : (racerMouse.containsMouse ? 1.02 : 1.0)
-                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                scale: racerMouse.pressed ? 0.95 : (racerMouse.containsMouse ? 1.03 : 1.0)
+                Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: 140 } }
 
                 Column {
-                    anchors.fill: parent
-                    anchors.margins: 22
-                    spacing: 12
+                    anchors.centerIn: parent
+                    spacing: 16
 
-                    // Top Row: Retro Icon & Badges
-                    Row {
-                        width: parent.width
-                        spacing: 14
-
-                        Image {
-                            width: 68
-                            height: 68
-                            source: "qrc:/ApexVision/qml/assets/icons/game_retro_racer.svg"
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 4
-
-                            // Live Pill Badge
-                            Rectangle {
-                                height: 22
-                                width: 92
-                                radius: 11
-                                color: Qt.rgba(0, 240/255, 255/255, 0.25)
-                                border.color: "#00F0FF"
-                                border.width: 1
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "PLAY NOW"
-                                    color: "#00F0FF"
-                                    font.family: "monospace"
-                                    font.pixelSize: 10
-                                    font.weight: Font.Bold
-                                }
-                            }
-
-                            Text {
-                                text: "ARCADE • 60 FPS"
-                                color: "#FDE047"
-                                font.family: "monospace"
-                                font.pixelSize: 11
-                                font.weight: Font.Bold
-                            }
-                        }
+                    Image {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 124
+                        height: 124
+                        source: "qrc:/ApexVision/qml/assets/icons/game_retro_racer.svg"
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
                     }
 
-                    // Title & Description
-                    Text {
-                        text: "Apex Cyber Racer"
-                        color: "#FFFFFF"
-                        font.family: "Inter"
-                        font.pixelSize: 20
-                        font.weight: Font.Bold
-                    }
+                    Column {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 4
 
-                    Text {
-                        text: "Synthwave highway runner. Steer left and right to dodge traffic, grab energy cells, and trigger nitro boosts."
-                        color: Qt.rgba(225/255, 238/255, 255/255, 0.75)
-                        font.family: "Inter"
-                        font.pixelSize: 12
-                        wrapMode: Text.WordWrap
-                        lineHeight: 1.3
-                        width: parent.width
-                    }
-
-                    Item { Layout.fillHeight: true; height: 4 }
-
-                    // Launch Action Bar
-                    Rectangle {
-                        width: parent.width
-                        height: 42
-                        radius: 21
-                        gradient: Gradient {
-                            GradientStop { position: 0.0; color: "#00F0FF" }
-                            GradientStop { position: 1.0; color: "#0284C7" }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Cyber Racer"
+                            color: "#FFFFFF"
+                            font.family: "Inter"
+                            font.pixelSize: 18
+                            font.weight: Font.Bold
                         }
 
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 8
-                            Text {
-                                text: "START ENGINE"
-                                font.family: "monospace"
-                                font.pixelSize: 13
-                                font.weight: Font.Bold
-                                color: "#05070A"
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
-                            Text {
-                                text: "▶"
-                                font.pixelSize: 12
-                                color: "#05070A"
-                                anchors.verticalCenter: parent.verticalCenter
-                            }
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Arcade"
+                            color: "#00F0FF"
+                            font.family: "monospace"
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
                         }
                     }
                 }
@@ -324,19 +258,19 @@ Item {
             }
 
             // -------------------------------------------------------------
-            // GAME CARD 2: 2048: CYBER FUSION (Retro Neon Puzzle)
+            // GAME CARD 2: 2048: CYBER FUSION
             // -------------------------------------------------------------
             Rectangle {
                 id: puzzleCard
-                width: 380
-                height: 290
-                radius: 24
+                width: 260
+                height: 260
+                radius: 28
                 clip: true
 
                 gradient: Gradient {
                     GradientStop {
                         position: 0.0
-                        color: puzzleMouse.containsMouse ? Qt.rgba(139/255, 92/255, 246/255, 0.22) : Qt.rgba(215/255, 238/255, 255/255, 0.16)
+                        color: puzzleMouse.containsMouse ? Qt.rgba(139/255, 92/255, 246/255, 0.22) : Qt.rgba(215/255, 238/255, 255/255, 0.14)
                     }
                     GradientStop {
                         position: 1.0
@@ -344,101 +278,46 @@ Item {
                     }
                 }
 
-                border.color: puzzleMouse.containsMouse ? "#8B5CF6" : Qt.rgba(225/255, 242/255, 255/255, 0.35)
+                border.color: puzzleMouse.containsMouse ? "#8B5CF6" : Qt.rgba(225/255, 242/255, 255/255, 0.32)
                 border.width: puzzleMouse.containsMouse ? 2 : 1.2
-                scale: puzzleMouse.pressed ? 0.98 : (puzzleMouse.containsMouse ? 1.02 : 1.0)
-                Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-                Behavior on border.color { ColorAnimation { duration: 150 } }
+                scale: puzzleMouse.pressed ? 0.95 : (puzzleMouse.containsMouse ? 1.03 : 1.0)
+                Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: 140 } }
 
                 Column {
-                    anchors.fill: parent
-                    anchors.margins: 22
-                    spacing: 12
+                    anchors.centerIn: parent
+                    spacing: 16
 
-                    // Top Row: Retro Icon & Badges
-                    Row {
-                        width: parent.width
-                        spacing: 14
-
-                        Image {
-                            width: 68
-                            height: 68
-                            source: "qrc:/ApexVision/qml/assets/icons/game_retro_2048.svg"
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                            mipmap: true
-                        }
-
-                        Column {
-                            anchors.verticalCenter: parent.verticalCenter
-                            spacing: 4
-
-                            // Coming Next Badge
-                            Rectangle {
-                                height: 22
-                                width: 104
-                                radius: 11
-                                color: Qt.rgba(245/255, 158/255, 11/255, 0.25)
-                                border.color: "#F59E0B"
-                                border.width: 1
-
-                                Text {
-                                    anchors.centerIn: parent
-                                    text: "NEXT TITLE"
-                                    color: "#FDE68A"
-                                    font.family: "monospace"
-                                    font.pixelSize: 10
-                                    font.weight: Font.Bold
-                                }
-                            }
-
-                            Text {
-                                text: "PUZZLE • TILE FUSION"
-                                color: "#34D399"
-                                font.family: "monospace"
-                                font.pixelSize: 11
-                                font.weight: Font.Bold
-                            }
-                        }
+                    Image {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 124
+                        height: 124
+                        source: "qrc:/ApexVision/qml/assets/icons/game_retro_2048.svg"
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true
+                        mipmap: true
                     }
 
-                    // Title & Description
-                    Text {
-                        text: "2048: Cyber Fusion"
-                        color: "#FFFFFF"
-                        font.family: "Inter"
-                        font.pixelSize: 20
-                        font.weight: Font.Bold
-                    }
-
-                    Text {
-                        text: "Smooth neon tile-matching brain teaser. Swipe matching power cells to forge the legendary 2048 Apex hyperdrive."
-                        color: Qt.rgba(225/255, 238/255, 255/255, 0.75)
-                        font.family: "Inter"
-                        font.pixelSize: 12
-                        wrapMode: Text.WordWrap
-                        lineHeight: 1.3
-                        width: parent.width
-                    }
-
-                    Item { Layout.fillHeight: true; height: 4 }
-
-                    // Coming Soon Action Bar
-                    Rectangle {
-                        width: parent.width
-                        height: 42
-                        radius: 21
-                        color: Qt.rgba(255, 255, 255, 0.12)
-                        border.color: Qt.rgba(255, 255, 255, 0.25)
-                        border.width: 1
+                    Column {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 4
 
                         Text {
-                            anchors.centerIn: parent
-                            text: "COMING IN NEXT UPDATE"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "2048 Fusion"
+                            color: "#FFFFFF"
+                            font.family: "Inter"
+                            font.pixelSize: 18
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            text: "Puzzle"
+                            color: "#8B5CF6"
                             font.family: "monospace"
                             font.pixelSize: 12
-                            font.weight: Font.Bold
-                            color: Qt.rgba(255, 255, 255, 0.70)
+                            font.weight: Font.DemiBold
                         }
                     }
                 }
