@@ -92,7 +92,7 @@ else
   tar -czf "${PATCH_ARCHIVE}" \
       "${EXCLUDE_ARGS[@]}" \
       -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc \
-      -C "${SCRIPT_DIR}" qml
+      -C "${SCRIPT_DIR}" qml scripts
 fi
 
 TOTAL_BYTES=$(stat -f%z "${PATCH_ARCHIVE}" 2>/dev/null || stat -c%s "${PATCH_ARCHIVE}")

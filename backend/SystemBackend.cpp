@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <cmath>
 #include <QProcess>
+#include <QCoreApplication>
+#include <QFile>
 #include <QElapsedTimer>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -854,9 +856,19 @@ void SystemBackend::playTtsSample(const QString &text, double rate, double pitch
         }
     });
 
+#if defined(Q_OS_MACOS)
     QStringList args;
     args << "-r" << QString::number(wpm) << text;
     m_ttsProcess->start("say", args);
+#else
+    QString scriptPath = QCoreApplication::applicationDirPath() + "/scripts/apex_news_tts.py";
+    if (!QFile::exists(scriptPath)) {
+        scriptPath = "/opt/apex_vision_ivi/scripts/apex_news_tts.py";
+    }
+    QStringList args;
+    args << scriptPath << "--play" << "--text" << text << "--rate" << QString::number(rate);
+    m_ttsProcess->start("python3", args);
+#endif
 }
 
 void SystemBackend::stopTts()
@@ -868,6 +880,10 @@ void SystemBackend::stopTts()
         m_ttsProcess->deleteLater();
         m_ttsProcess = nullptr;
     }
+#if !defined(Q_OS_MACOS)
+    QProcess::execute("pkill", QStringList() << "-9" << "-f" << "apex_news_tts.py");
+    QProcess::execute("pkill", QStringList() << "-9" << "-f" << "gst-launch-1.0.*playbin");
+#endif
 }
 
 void SystemBackend::setUnitsTemperature(const QString &unit)

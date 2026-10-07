@@ -19,6 +19,7 @@ Item {
     property int selectedArticleIndex: 0
     property bool isLoading: false
     property bool isUpdating: false
+    property bool isBackgroundRefreshing: false
     property int updateCounter: 0
 
     // Distinct Briefing Modes: "none", "all", "single"
@@ -28,6 +29,51 @@ Item {
 
     // Persistent in-memory cache for all news stories across categories
     property var newsStore: ({})
+
+    onVisibleChanged: {
+        if (!visible) {
+            root.stopBriefing();
+        }
+    }
+
+    Component.onDestruction: {
+        root.stopBriefing();
+    }
+
+    // Condition 1: Post-Boot / Turn-On Background Refresh Timer (5s after startup)
+    Timer {
+        id: postBootRefreshTimer
+        interval: 5000
+        repeat: false
+        running: true
+        onTriggered: {
+            console.log("[NewsPage] Running post-boot background news auto-refresh...");
+            root.refreshNewsFromApi(true);
+        }
+    }
+
+    // Condition 2: Periodic Background Driving Refresh Timer (every 15 minutes)
+    Timer {
+        id: periodicNewsRefreshTimer
+        interval: 15 * 60 * 1000 // 15 mins (900,000 ms)
+        repeat: true
+        running: true
+        onTriggered: {
+            console.log("[NewsPage] Running periodic 15-min background news auto-refresh...");
+            root.refreshNewsFromApi(true);
+        }
+    }
+
+    // Condition 3: Wi-Fi Reconnect Trigger Timer (debounced 3s)
+    Timer {
+        id: wifiReconnectRefreshTimer
+        interval: 3000
+        repeat: false
+        onTriggered: {
+            console.log("[NewsPage] Wi-Fi connected, running background news auto-refresh...");
+            root.refreshNewsFromApi(true);
+        }
+    }
 
     // Automatic Continuous News Dictation Timer (Used only in "all" briefing mode)
     Timer {
@@ -58,7 +104,7 @@ Item {
         repeat: false
         property var pendingItems: null
         onTriggered: {
-            root.applyNewsUpdate(pendingItems);
+            root.applyNewsUpdate(pendingItems, false);
             pendingItems = null;
             root.isUpdating = false;
         }
@@ -78,7 +124,7 @@ Item {
         }
     }
 
-    // Precise TTS Completion Listener (Never cuts off early!)
+    // Precise TTS Completion & Wi-Fi Listener
     Connections {
         target: typeof SystemBackend !== "undefined" ? SystemBackend : null
         function onTtsFinished() {
@@ -88,6 +134,11 @@ Item {
             } else if (root.briefingMode === "single") {
                 // Single story briefing completes: stop cleanly without advancing!
                 root.stopBriefing();
+            }
+        }
+        function onWifiConnectedChanged() {
+            if (SystemBackend && SystemBackend.wifiConnected) {
+                wifiReconnectRefreshTimer.restart();
             }
         }
     }
@@ -1854,7 +1905,7 @@ Item {
         ]
     })
 
-    function applyNewsUpdate(apiArticles) {
+    function applyNewsUpdate(apiArticles, isSilent) {
         // Distribute and update fresh news across ALL categories
         for (var c = 0; c < root.categories.length; c++) {
             var catName = root.categories[c].name;
@@ -1944,20 +1995,36 @@ Item {
 
         // Repopulate newsModel for current active category
         var activeList = root.newsStore[root.activeCategoryIndex] || [];
+        var prevCount = newsModel.count;
+        var prevSelected = root.selectedArticleIndex;
+
         newsModel.clear();
         for (var k = 0; k < activeList.length; k++) {
             newsModel.append(activeList[k]);
         }
 
-        root.selectedArticleIndex = 0;
-        if (typeof articlesListView !== "undefined" && articlesListView) {
-            articlesListView.positionViewAtIndex(0, ListView.Beginning);
+        if (!isSilent) {
+            root.selectedArticleIndex = 0;
+            if (typeof articlesListView !== "undefined" && articlesListView) {
+                articlesListView.positionViewAtIndex(0, ListView.Beginning);
+            }
+        } else {
+            // Restore selection if valid so active reader is not disrupted
+            if (prevSelected >= 0 && prevSelected < newsModel.count) {
+                root.selectedArticleIndex = prevSelected;
+            }
         }
     }
 
-    function refreshNewsFromApi() {
-        if (root.isUpdating) return;
-        root.isUpdating = true;
+    function refreshNewsFromApi(isSilent) {
+        var silent = (isSilent === true);
+        if (root.isUpdating || (!silent && root.isBackgroundRefreshing)) return;
+
+        if (!silent) {
+            root.isUpdating = true;
+        } else {
+            root.isBackgroundRefreshing = true;
+        }
         root.updateCounter++;
 
         var apiUrl = "https://api.spaceflightnewsapi.net/v4/articles/?limit=8";
@@ -1968,9 +2035,14 @@ Item {
             if (requestDone) return;
             requestDone = true;
 
-            // Smooth minimum spin duration (850ms) so user sees the rotation
-            updateSpinTimer.pendingItems = fetchedItems;
-            updateSpinTimer.restart();
+            if (!silent) {
+                // Smooth minimum spin duration (850ms) so user sees the rotation
+                updateSpinTimer.pendingItems = fetchedItems;
+                updateSpinTimer.restart();
+            } else {
+                root.applyNewsUpdate(fetchedItems, true);
+                root.isBackgroundRefreshing = false;
+            }
         };
 
         apiSafetyTimer.timeoutAction = function() {
