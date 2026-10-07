@@ -1449,24 +1449,26 @@ void MediaBackend::initSxmChannels()
         m_sxmChannels.append(ch);
     }
 
-    // Ch 44: Orbit Indie & Acoustic
+    // Ch 44: Orbit Indie & Acoustic (24/7 Michael Jackson HD Stream)
     {
         QVariantMap ch;
         ch["number"] = 44;
         ch["name"] = "Orbit Indie & Acoustic";
-        ch["tagline"] = "Independent Indian Music & Acoustic Vibes";
-        ch["category"] = "Acoustic & Indie Pop";
+        ch["tagline"] = "The King of Pop — 24/7 Michael Jackson";
+        ch["category"] = "Pop Legend / 24/7 MJ";
         ch["badgeText"] = "INDIE";
         ch["badgeColor"] = "#10B981";
         ch["logoUrl"] = "qrc:/ApexVision/qml/assets/radio_logos/sxm_indie.png";
-        ch["streamUrl"] = "http://novazz.ice.infomaniak.ch/novazz-128.mp3";
+        ch["streamUrl"] = "http://streams.80s80s.de/mj/mp3-192/streams.80s80s.de/";
         QVariantList tr;
-        tr.append(createTrack("Husn", "Anuv Jain", "Husn - Single", 217,
-            "https://is1-ssl.mzstatic.com/image/thumb/Music211/v4/e5/5a/09/e55a0928-8d5f-8367-ee19-21df348e35cf/5054197943015.jpg/600x600bb.jpg"));
-        tr.append(createTrack("cold/mess", "Prateek Kuhad", "cold/mess", 278,
-            "https://is1-ssl.mzstatic.com/image/thumb/Music116/v4/fb/04/c2/fb04c2c5-555e-2f7d-080c-a61f22e70757/5054197873831.jpg/600x600bb.jpg"));
-        tr.append(createTrack("Liggi", "Ritviz", "DEV", 181,
-            "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/5f/85/3b/5f853b06-e69c-bc06-a05e-ff6fa40590a9/19UMGIM53909.rgb.jpg/600x600bb.jpg"));
+        tr.append(createTrack("Billie Jean", "Michael Jackson", "Thriller", 293,
+            "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/32/4f/fd/324ffda2-9e51-8f6a-0c2d-c6fd2b41ac55/074643811224.jpg/600x600bb.jpg"));
+        tr.append(createTrack("Beat It", "Michael Jackson", "Thriller", 258,
+            "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/32/4f/fd/324ffda2-9e51-8f6a-0c2d-c6fd2b41ac55/074643811224.jpg/600x600bb.jpg"));
+        tr.append(createTrack("Smooth Criminal", "Michael Jackson", "The Essential Michael Jackson", 258,
+            "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/3d/9d/38/3d9d3811-71f0-3a0e-1ada-3004e56ff852/827969428726.jpg/600x600bb.jpg"));
+        tr.append(createTrack("Man in the Mirror", "Michael Jackson", "Bad", 318,
+            "https://is1-ssl.mzstatic.com/image/thumb/Features124/v4/0b/fb/b5/0bfbb592-e2ce-065a-a098-09f55cee22db/dj.iziroksp.jpg/600x600bb.jpg"));
         ch["tracks"] = tr;
         m_sxmChannels.append(ch);
     }
@@ -1658,10 +1660,11 @@ void MediaBackend::syncSxmWithMedia()
         m_sxmAlbum = t["album"].toString();
         m_duration = t["duration"].toInt() > 0 ? t["duration"].toInt() : 180;
         m_progress = 42; // standard progress offset
-        if (!cachedArt.isEmpty()) {
+        QString trackArt = t["artwork"].toString();
+        if (!trackArt.isEmpty()) {
+            m_sxmArtworkUrl = trackArt;
+        } else if (!cachedArt.isEmpty()) {
             m_sxmArtworkUrl = cachedArt;
-        } else if (!t["artwork"].toString().isEmpty()) {
-            m_sxmArtworkUrl = t["artwork"].toString();
         }
     } else {
         m_sxmSongTitle = m_sxmChannelName;
@@ -1726,6 +1729,7 @@ void MediaBackend::fetchLiveIcyMetadata(const QString &streamUrl)
     }
 
     QNetworkRequest req((QUrl(streamUrl)));
+    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     req.setRawHeader("Icy-MetaData", "1");
     req.setRawHeader("User-Agent", "VLC/3.0.18");
 
@@ -1860,6 +1864,7 @@ void MediaBackend::fetchOnlineSxmArt(const QString &artist, const QString &title
                  .arg(QString(QUrl::toPercentEncoding(query))));
 
     QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
     request.setHeader(QNetworkRequest::UserAgentHeader, "ApexVisionIVI/1.0");
 
     m_onlineArtReply = m_networkManager->get(request);
