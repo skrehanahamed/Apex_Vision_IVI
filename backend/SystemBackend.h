@@ -52,6 +52,15 @@ class SystemBackend : public QObject
     Q_PROPERTY(QString uploadSpeed READ uploadSpeed NOTIFY netSpeedChanged)
     Q_PROPERTY(double downloadBytesPerSec READ downloadBytesPerSec NOTIFY netSpeedChanged)
     Q_PROPERTY(double uploadBytesPerSec READ uploadBytesPerSec NOTIFY netSpeedChanged)
+    Q_PROPERTY(double storageTotalGb READ storageTotalGb NOTIFY storageChanged)
+    Q_PROPERTY(double storageUsedGb READ storageUsedGb NOTIFY storageChanged)
+    Q_PROPERTY(double storageFreeGb READ storageFreeGb NOTIFY storageChanged)
+    Q_PROPERTY(double storageSystemGb READ storageSystemGb NOTIFY storageChanged)
+    Q_PROPERTY(double storageAppGb READ storageAppGb NOTIFY storageChanged)
+    Q_PROPERTY(double storageMediaGb READ storageMediaGb NOTIFY storageChanged)
+    Q_PROPERTY(double storageMapsGb READ storageMapsGb NOTIFY storageChanged)
+    Q_PROPERTY(int storagePercentUsed READ storagePercentUsed NOTIFY storageChanged)
+    Q_PROPERTY(QString storageSummaryText READ storageSummaryText NOTIFY storageChanged)
     Q_PROPERTY(bool hasWebEngine READ hasWebEngine CONSTANT)
 
 public:
@@ -99,6 +108,17 @@ public:
     QString uploadSpeed() const { return m_uploadSpeed; }
     double downloadBytesPerSec() const { return m_downloadBytesPerSec; }
     double uploadBytesPerSec() const { return m_uploadBytesPerSec; }
+    double storageTotalGb() const { return m_storageTotalGb; }
+    double storageUsedGb() const { return m_storageUsedGb; }
+    double storageFreeGb() const { return m_storageFreeGb; }
+    double storageSystemGb() const { return m_storageSystemGb; }
+    double storageAppGb() const { return m_storageAppGb; }
+    double storageMediaGb() const { return m_storageMediaGb; }
+    double storageMapsGb() const { return m_storageMapsGb; }
+    int storagePercentUsed() const { return m_storagePercentUsed; }
+    QString storageSummaryText() const { return m_storageSummaryText; }
+
+    Q_INVOKABLE void refreshStorageInfo();
 
     Q_INVOKABLE void setVolumePrompts(int vol);
     Q_INVOKABLE void setVolumePhone(int vol);
@@ -164,6 +184,7 @@ signals:
     void volumeCallRingChanged();
     void ttsFinished();
     void netSpeedChanged();
+    void storageChanged();
 
 private slots:
     void updateClock();
@@ -220,5 +241,16 @@ private:
     int m_volumePhone{30};
     int m_volumeCallRing{10};
     QProcess *m_ttsProcess{nullptr};
+
+    QTimer m_storageTimer;
+    double m_storageTotalGb{115.3};
+    double m_storageUsedGb{1.9};
+    double m_storageFreeGb{108.6};
+    double m_storageSystemGb{1.35};
+    double m_storageAppGb{0.36};
+    double m_storageMediaGb{0.12};
+    double m_storageMapsGb{0.07};
+    int m_storagePercentUsed{2};
+    QString m_storageSummaryText{QStringLiteral("1.9 GB used of 115.3 GB (108.6 GB available)")};
 };
 

@@ -112,6 +112,7 @@ qt_add_qml_module(apex_vision_ivi
         qml/pages/MessagesPage.qml
         qml/pages/GamesPage.qml
         qml/pages/ApexCyberRacer.qml
+        qml/pages/HelicopterGameView.qml
         qml/components/SideNavigation.qml
         qml/components/StatusBar.qml
         qml/components/MediaCard.qml

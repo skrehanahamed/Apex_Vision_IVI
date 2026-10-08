@@ -326,7 +326,7 @@ Item {
     property bool btPairingActive: false
     property bool btSearching: false
     property bool wifiEnabled: true
-    property real displayBrightness: 75
+    property real displayBrightness: typeof SystemBackend !== "undefined" ? SystemBackend.brightness : 85
     property string dispCurrentScreen: "main" // "main" | "brightness" | "mode" | "theme" | "calm_screen"
     property int dispSlideDir: 1
     property bool dispTouchscreenBeep: true
@@ -6514,10 +6514,16 @@ Item {
                             SettingRowChevron {
                                 iconSource: "qrc:/ApexVision/qml/assets/icons/icon_storage.svg"
                                 title: "Storage"
+                                subtitle: (typeof SystemBackend !== "undefined" && SystemBackend.storageTotalGb > 0)
+                                          ? (SystemBackend.storageUsedGb.toFixed(1) + " GB used of " + SystemBackend.storageTotalGb.toFixed(0) + " GB (" + SystemBackend.storageFreeGb.toFixed(0) + " GB free)")
+                                          : "1.9 GB used of 115 GB"
                                 infoText: "View system drive capacity, downloaded apps, media storage, and offline navigation maps."
                                 onClicked: {
                                     root.sysSlideDir = 1;
                                     root.sysCurrentScreen = "storage";
+                                    if (typeof SystemBackend !== "undefined") {
+                                        SystemBackend.refreshStorageInfo();
+                                    }
                                 }
                                 onInfoClicked: root.activeInfoText = infoText
                             }
@@ -7353,7 +7359,115 @@ Item {
                             width: parent.width
                             spacing: 0
 
-                            // 1. Music & audio (0.02 GB)
+                            // 0. Hero Live Storage Overview Card
+                            Rectangle {
+                                width: parent.width
+                                height: 126
+                                radius: 18
+                                color: Qt.rgba(255, 255, 255, 0.05)
+                                border.color: Qt.rgba(255, 255, 255, 0.12)
+                                border.width: 1
+
+                                Column {
+                                    anchors.fill: parent
+                                    anchors.margins: 16
+                                    spacing: 12
+
+                                    Row {
+                                        width: parent.width
+                                        Item {
+                                            width: parent.width
+                                            height: 44
+
+                                            Column {
+                                                anchors.left: parent.left
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                spacing: 4
+
+                                                Row {
+                                                    spacing: 8
+                                                    Text {
+                                                        text: (typeof SystemBackend !== "undefined" ? SystemBackend.storageUsedGb.toFixed(1) : "1.9") + " GB used"
+                                                        font.family: "Inter"
+                                                        font.pixelSize: 22
+                                                        font.weight: Font.Bold
+                                                        color: "#FFFFFF"
+                                                    }
+                                                    Text {
+                                                        text: "(" + (typeof SystemBackend !== "undefined" ? SystemBackend.storagePercentUsed : 2) + "% of " + (typeof SystemBackend !== "undefined" ? SystemBackend.storageTotalGb.toFixed(0) : "115") + " GB)"
+                                                        font.family: "Inter"
+                                                        font.pixelSize: 16
+                                                        font.weight: Font.Normal
+                                                        color: "#94A3B8"
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                    }
+                                                }
+
+                                                Text {
+                                                    text: (typeof SystemBackend !== "undefined" ? SystemBackend.storageFreeGb.toFixed(1) : "108.6") + " GB available free space"
+                                                    font.family: "Inter"
+                                                    font.pixelSize: 13
+                                                    color: "#38BDF8"
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Multi-Segment Composite Bar
+                                    Rectangle {
+                                        width: parent.width
+                                        height: 10
+                                        radius: 5
+                                        color: Qt.rgba(255, 255, 255, 0.12)
+                                        clip: true
+
+                                        Row {
+                                            anchors.fill: parent
+                                            spacing: 2
+
+                                            // System Segment (Amber)
+                                            Rectangle {
+                                                property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageTotalGb > 0 ? (SystemBackend.storageSystemGb / SystemBackend.storageTotalGb) : 0.012
+                                                width: Math.max(6, (parent.width - 6) * frac)
+                                                height: parent.height
+                                                color: "#FB923C"
+                                                radius: 4
+                                            }
+
+                                            // Apps Segment (Cyan)
+                                            Rectangle {
+                                                property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageTotalGb > 0 ? (SystemBackend.storageAppGb / SystemBackend.storageTotalGb) : 0.003
+                                                width: Math.max(4, (parent.width - 6) * frac)
+                                                height: parent.height
+                                                color: "#38BDF8"
+                                                radius: 4
+                                            }
+
+                                            // Media Segment (Purple)
+                                            Rectangle {
+                                                property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageTotalGb > 0 ? (SystemBackend.storageMediaGb / SystemBackend.storageTotalGb) : 0.001
+                                                width: Math.max(3, (parent.width - 6) * frac)
+                                                height: parent.height
+                                                color: "#A855F7"
+                                                radius: 4
+                                            }
+
+                                            // Maps Segment (Emerald)
+                                            Rectangle {
+                                                property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageTotalGb > 0 ? (SystemBackend.storageMapsGb / SystemBackend.storageTotalGb) : 0.001
+                                                width: Math.max(3, (parent.width - 6) * frac)
+                                                height: parent.height
+                                                color: "#10B981"
+                                                radius: 4
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            Item { width: 1; height: 18 }
+
+                            // 1. Music & audio
                             Item {
                                 width: parent.width
                                 height: 86
@@ -7395,7 +7509,7 @@ Item {
                                         Text {
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
-                                            text: "0.02 GB"
+                                            text: typeof SystemBackend !== "undefined" ? (SystemBackend.storageMediaGb >= 1.0 ? SystemBackend.storageMediaGb.toFixed(2) + " GB" : (SystemBackend.storageMediaGb * 1024).toFixed(0) + " MB") : "118 MB"
                                             font.family: "Inter"
                                             font.pixelSize: 20
                                             font.weight: Font.Normal
@@ -7410,16 +7524,17 @@ Item {
                                         color: Qt.rgba(255, 255, 255, 0.12)
 
                                         Rectangle {
-                                            width: Math.max(6, parent.width * 0.02)
+                                            property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageUsedGb > 0 ? (SystemBackend.storageMediaGb / SystemBackend.storageUsedGb) : 0.06
+                                            width: Math.max(6, parent.width * Math.min(1.0, frac))
                                             height: parent.height
                                             radius: 3
-                                            color: "#38BDF8"
+                                            color: "#A855F7"
                                         }
                                     }
                                 }
                             }
 
-                            // 2. Other apps (1.3 GB)
+                            // 2. Apex IVI Suite & Apps
                             Item {
                                 width: parent.width
                                 height: 86
@@ -7449,7 +7564,7 @@ Item {
                                             }
 
                                             Text {
-                                                text: "Other apps"
+                                                text: "Apex IVI Suite & Apps"
                                                 font.family: "Inter"
                                                 font.pixelSize: 22
                                                 font.weight: Font.DemiBold
@@ -7461,7 +7576,7 @@ Item {
                                         Text {
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
-                                            text: "1.3 GB"
+                                            text: typeof SystemBackend !== "undefined" ? (SystemBackend.storageAppGb >= 1.0 ? SystemBackend.storageAppGb.toFixed(2) + " GB" : (SystemBackend.storageAppGb * 1024).toFixed(0) + " MB") : "368 MB"
                                             font.family: "Inter"
                                             font.pixelSize: 20
                                             font.weight: Font.Normal
@@ -7476,7 +7591,8 @@ Item {
                                         color: Qt.rgba(255, 255, 255, 0.12)
 
                                         Rectangle {
-                                            width: Math.max(6, parent.width * 0.12)
+                                            property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageUsedGb > 0 ? (SystemBackend.storageAppGb / SystemBackend.storageUsedGb) : 0.18
+                                            width: Math.max(6, parent.width * Math.min(1.0, frac))
                                             height: parent.height
                                             radius: 3
                                             color: "#38BDF8"
@@ -7485,7 +7601,7 @@ Item {
                                 }
                             }
 
-                            // 3. Navigation & Offline Maps (0.00 GB)
+                            // 3. Navigation & Offline Maps
                             Item {
                                 width: parent.width
                                 height: 86
@@ -7527,7 +7643,7 @@ Item {
                                         Text {
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
-                                            text: "0.00 GB"
+                                            text: typeof SystemBackend !== "undefined" ? (SystemBackend.storageMapsGb >= 1.0 ? SystemBackend.storageMapsGb.toFixed(2) + " GB" : (SystemBackend.storageMapsGb * 1024).toFixed(0) + " MB") : "67 MB"
                                             font.family: "Inter"
                                             font.pixelSize: 20
                                             font.weight: Font.Normal
@@ -7540,11 +7656,19 @@ Item {
                                         height: 6
                                         radius: 3
                                         color: Qt.rgba(255, 255, 255, 0.12)
+
+                                        Rectangle {
+                                            property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageUsedGb > 0 ? (SystemBackend.storageMapsGb / SystemBackend.storageUsedGb) : 0.04
+                                            width: Math.max(6, parent.width * Math.min(1.0, frac))
+                                            height: parent.height
+                                            radius: 3
+                                            color: "#10B981"
+                                        }
                                     }
                                 }
                             }
 
-                            // 4. System (66 GB with Amber Fill matching photo)
+                            // 4. System (Linux OS & Kernel Firmware)
                             Item {
                                 width: parent.width
                                 height: 86
@@ -7574,7 +7698,7 @@ Item {
                                             }
 
                                             Text {
-                                                text: "System"
+                                                text: "System & Firmware"
                                                 font.family: "Inter"
                                                 font.pixelSize: 22
                                                 font.weight: Font.DemiBold
@@ -7586,7 +7710,7 @@ Item {
                                         Text {
                                             anchors.right: parent.right
                                             anchors.verticalCenter: parent.verticalCenter
-                                            text: "66 GB"
+                                            text: typeof SystemBackend !== "undefined" ? SystemBackend.storageSystemGb.toFixed(2) + " GB" : "1.35 GB"
                                             font.family: "Inter"
                                             font.pixelSize: 20
                                             font.weight: Font.Normal
@@ -7601,7 +7725,8 @@ Item {
                                         color: Qt.rgba(255, 255, 255, 0.12)
 
                                         Rectangle {
-                                            width: parent.width * 0.52
+                                            property real frac: typeof SystemBackend !== "undefined" && SystemBackend.storageUsedGb > 0 ? (SystemBackend.storageSystemGb / SystemBackend.storageUsedGb) : 0.72
+                                            width: Math.max(6, parent.width * Math.min(1.0, frac))
                                             height: parent.height
                                             radius: 3
                                             color: "#FB923C"
@@ -10910,6 +11035,7 @@ Item {
 
                         SettingRowChevron {
                             title: "Brightness level"
+                            subtitle: Math.round(root.displayBrightness) + "%"
                             showChevron: true
                             onClicked: {
                                 root.dispSlideDir = 1;
@@ -10987,12 +11113,29 @@ Item {
                             width: parent.width
                             spacing: 14
 
-                            Text {
-                                text: "Instrument panel brightness"
-                                font.family: "Inter"
-                                font.pixelSize: 18
-                                font.weight: Font.DemiBold
-                                color: "#FFFFFF"
+                            Item {
+                                width: parent.width
+                                height: 26
+
+                                Text {
+                                    anchors.left: parent.left
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Instrument panel brightness"
+                                    font.family: "Inter"
+                                    font.pixelSize: 18
+                                    font.weight: Font.DemiBold
+                                    color: "#FFFFFF"
+                                }
+
+                                Text {
+                                    anchors.right: parent.right
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: Math.round(instBrightnessSlider.value) + "%"
+                                    font.family: "Inter"
+                                    font.pixelSize: 18
+                                    font.weight: Font.Bold
+                                    color: "#F0B594"
+                                }
                             }
 
                             // Standalone custom slider with peach gradient track & 5 dots
@@ -11014,7 +11157,17 @@ Item {
                                     value: Math.max(10, root.displayBrightness)
                                     onMoved: {
                                         root.displayBrightness = value;
-                                        SystemBackend.setBrightness(value);
+                                        if (typeof SystemBackend !== "undefined") {
+                                            SystemBackend.setBrightness(value);
+                                        }
+                                    }
+                                    onValueChanged: {
+                                        if (instBrightnessSlider.pressed) {
+                                            root.displayBrightness = value;
+                                            if (typeof SystemBackend !== "undefined") {
+                                                SystemBackend.setBrightness(value);
+                                            }
+                                        }
                                     }
 
                                     background: Item {
@@ -12107,6 +12260,7 @@ Item {
                                                 root.connCurrentScreen = "wifi_details";
                                             } else if (Boolean(modelData.isSaved) || Boolean(modelData.saved)) {
                                                 // Saved network: pressing name connects directly!
+                                                root.profileToastMessage = "Connecting to " + modelData.ssid + "...";
                                                 if (typeof SystemBackend !== "undefined") {
                                                     SystemBackend.connectToNetwork(modelData.ssid);
                                                 }
@@ -12114,6 +12268,7 @@ Item {
                                                 // Unsaved:
                                                 if (!modelData.isSecured || modelData.security === "Open") {
                                                     // Open network: connect directly without asking for password
+                                                    root.profileToastMessage = "Connecting to open network " + modelData.ssid + "...";
                                                     if (typeof SystemBackend !== "undefined") {
                                                         SystemBackend.connectToNetwork(modelData.ssid, "");
                                                     }
@@ -12122,6 +12277,8 @@ Item {
                                                     root.wifiTargetSsid = modelData.ssid;
                                                     root.wifiTargetSecurity = modelData.security || "WPA2";
                                                     root.wifiEnteredPassword = "";
+                                                    root.wifiShowPassword = true;
+                                                    connWifiConnectView.activeTarget = "password";
                                                     root.connSlideDir = 1;
                                                     root.connCurrentScreen = "wifi_connect";
                                                 }
@@ -12155,6 +12312,9 @@ Item {
                                     root.wifiTargetSsid = "";
                                     root.wifiTargetSecurity = "WPA/WPA2/WPA3";
                                     root.wifiEnteredPassword = "";
+                                    root.wifiShowPassword = true;
+                                    connWifiConnectView.activeTarget = "ssid";
+                                    manualSsidInput.text = "";
                                     root.connSlideDir = 1;
                                     root.connCurrentScreen = "wifi_connect";
                                 }
@@ -12244,7 +12404,16 @@ Item {
                     function doConnect() {
                         if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
                         var target = (root.wifiTargetSsid !== "") ? root.wifiTargetSsid : manualSsidInput.text.trim();
-                        if (target !== "" && typeof SystemBackend !== "undefined") {
+                        if (!target) {
+                            root.profileToastMessage = "Please enter Wi-Fi network name";
+                            return;
+                        }
+                        if (root.wifiTargetSecurity !== "Open" && root.wifiEnteredPassword.length === 0) {
+                            root.profileToastMessage = "Please enter password";
+                            return;
+                        }
+                        root.profileToastMessage = "Connecting to " + target + "...";
+                        if (typeof SystemBackend !== "undefined") {
                             SystemBackend.connectToNetwork(target, root.wifiEnteredPassword);
                         }
                         root.connSlideDir = -1;
@@ -12346,6 +12515,10 @@ Item {
                                             font.family: "Inter"
                                             font.pixelSize: 16
                                             clip: true
+                                            onAccepted: {
+                                                connWifiConnectView.activeTarget = "password";
+                                                wifiPagePassInput.forceActiveFocus();
+                                            }
 
                                             Text {
                                                 anchors.fill: parent
@@ -12797,7 +12970,15 @@ Item {
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: connWifiConnectView.doConnect()
+                                        onClicked: {
+                                            if (root.wifiTargetSsid === "" && connWifiConnectView.activeTarget === "ssid") {
+                                                if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                                                connWifiConnectView.activeTarget = "password";
+                                                wifiPagePassInput.forceActiveFocus();
+                                            } else {
+                                                connWifiConnectView.doConnect();
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -12945,11 +13126,46 @@ Item {
 
                             Item { width: 1; height: 24 }
 
-                            // Action Buttons Row (Connect / Disconnect & Forget)
+                            // Action Buttons Row (Connect / Disconnect & Enter Password & Forget)
                             Row {
                                 anchors.right: parent.right
                                 anchors.rightMargin: 12
-                                spacing: 16
+                                spacing: 14
+
+                                // Enter / Re-enter Password Button
+                                Rectangle {
+                                    visible: Boolean(detailsCol.activeNetInfo && detailsCol.activeNetInfo.security !== "Open")
+                                    width: 154
+                                    height: 48
+                                    radius: 10
+                                    color: Qt.rgba(224/255, 169/255, 109/255, 0.18)
+                                    border.color: Qt.rgba(224/255, 169/255, 109/255, 0.45)
+                                    border.width: 1
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "Enter Password"
+                                        color: "#E0A96D"
+                                        font.family: "Inter"
+                                        font.pixelSize: 15
+                                        font.weight: Font.DemiBold
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (typeof SystemBackend !== "undefined") SystemBackend.playTouchSound();
+                                            root.wifiTargetSsid = detailsCol.activeNetInfo ? detailsCol.activeNetInfo.ssid : "";
+                                            root.wifiTargetSecurity = (detailsCol.activeNetInfo && detailsCol.activeNetInfo.security) ? detailsCol.activeNetInfo.security : "WPA2";
+                                            root.wifiEnteredPassword = "";
+                                            root.wifiShowPassword = true;
+                                            connWifiConnectView.activeTarget = "password";
+                                            root.connSlideDir = 1;
+                                            root.connCurrentScreen = "wifi_connect";
+                                        }
+                                    }
+                                }
 
                                 Rectangle {
                                     width: 140

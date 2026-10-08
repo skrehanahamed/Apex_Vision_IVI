@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Endless Helicopter Reborn</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #080C14;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: #080C14;
+    }
+
+    /* =========================================================================
+       1. HUD EXACTLY MATCHING AUTHOR'S GODOT IN-GAME SCREENSHOT
+       ========================================================================= */
+    .hud-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 24px;
+      z-index: 10;
+    }
+
+    .top-hud-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+
+    .left-hud-col {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    /* Author's authentic Score & Missile rounded blue boxes with neon border */
+    .godot-panel {
+      background: rgba(10, 26, 47, 0.82);
+      border: 2px solid #2874A6;
+      border-radius: 14px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.15);
+    }
+
+    .panel-label {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #7EC8E3;
+    }
+
+    .panel-val {
+      font-size: 26px;
+      font-weight: 800;
+      color: #FFD152;
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 2px 8px rgba(255, 209, 82, 0.4);
+    }
+
+    .panel-val.cyan {
+      color: #38BDF8;
+      text-shadow: 0 2px 8px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Exit button */
+    .exit-pill {
+      background: rgba(14, 21, 37, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      color: #E2E8F0;
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      width: fit-content;
+      transition: all 0.12s ease;
+    }
+    .exit-pill:active {
+      transform: scale(0.92);
+      background: rgba(56, 189, 248, 0.3);
+    }
+
+    /* Top Center Objective & Pause (matching Godot screenshot) */
+    .center-hud-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pause-pill {
+      background: rgba(14, 28, 48, 0.85);
+      border: 2px solid #205482;
+      border-radius: 18px;
+      padding: 6px 28px;
+      color: #E2E8F0;
+      font-size: 14px;
+      font-weight: 700;
+      pointer-events: auto;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+    .pause-pill:active {
+      transform: scale(0.94);
+    }
+
+    .mission-pill {
+      background: rgba(8, 18, 32, 0.85);
+      border: 2px solid #D97706;
+      border-radius: 10px;
+      padding: 6px 24px;
+      color: #FCD34D;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      box-shadow: 0 4px 14px rgba(217, 119, 6, 0.3);
+    }
+
+    /* Bottom-Right Tactile Launch Button (from author's fire_button.svg) */
+    .bottom-hud-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-end;
+      width: 100%;
+    }
+
+    .fire-button-wrap {
+      pointer-events: auto;
+      width: 112px;
+      height: 112px;
+      cursor: pointer;
+      transition: transform 0.08s ease;
+      touch-action: none;
+      filter: drop-shadow(0 6px 20px rgba(239, 68, 68, 0.6));
+    }
+    .fire-button-wrap:active, .fire-button-wrap.pressed {
+      transform: scale(0.90);
+      filter: drop-shadow(0 2px 10px rgba(239, 68, 68, 0.9));
+    }
+    .fire-button-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* =========================================================================
+       2. MODAL OVERLAYS (MATCHING AUTHOR'S TITLE & HANGAR)
+       ========================================================================= */
+    .overlay-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at center, rgba(14, 28, 48, 0.88) 0%, rgba(5, 10, 20, 0.96) 100%);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+    }
+    .overlay-screen.hidden {
+      display: none;
+    }
+
+    .title-logo-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 36px;
+      margin-bottom: 30px;
+    }
+
+    .logo-img {
+      max-height: 180px;
+      max-width: 320px;
+      object-fit: contain;
+      filter: drop-shadow(0 8px 24px rgba(0, 0, 0, 0.8));
+    }
+
+    .start-pill-btn {
+      background: rgba(14, 34, 62, 0.85);
+      border: 2px solid #38BDF8;
+      border-radius: 28px;
+      color: #FFFFFF;
+      font-size: 18px;
+      font-weight: 700;
+      padding: 16px 48px;
+      cursor: pointer;
+      box-shadow: 0 0 25px rgba(56, 189, 248, 0.4), inset 0 2px 6px rgba(255, 255, 255, 0.2);
+      transition: all 0.15s ease;
+      letter-spacing: 1px;
+      margin-top: 10px;
+    }
+    .start-pill-btn:active {
+      transform: scale(0.95);
+      background: rgba(56, 189, 248, 0.3);
+      box-shadow: 0 0 35px rgba(56, 189, 248, 0.7);
+    }
+
+    .hint-subtext {
+      color: rgba(226, 232, 240, 0.65);
+      font-size: 14px;
+      margin-top: 18px;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    /* Game Over Panel */
+    .gameover-box {
+      background: rgba(10, 20, 36, 0.92);
+      border: 2px solid #EF4444;
+      border-radius: 20px;
+      padding: 28px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 0 40px rgba(239, 68, 68, 0.4);
+      max-width: 520px;
+      width: 90%;
+    }
+    .go-heading {
+      color: #EF4444;
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      text-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    }
+    .stats-table {
+      display: flex;
+      justify-content: space-around;
+      width: 100%;
+      margin: 16px 0 24px;
+      gap: 16px;
+    }
+    .stat-entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 10px 18px;
+      border-radius: 12px;
+      min-width: 100px;
+    }
+    .stat-name {
+      font-size: 11px;
+      color: rgba(226, 232, 240, 0.6);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+    }
+    .stat-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: #38BDF8;
+      margin-top: 4px;
+    }
+    .stat-val.gold {
+      color: #FFD152;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- In-Game HUD (Exact 1:1 reproduction of author's run screen) -->
+  <div class="hud-layer">
+    <div class="top-hud-row">
+      <div class="left-hud-col">
+        <button class="exit-pill" id="exitBtn">
+          <span>←</span>
+          <span>EXIT</span>
+        </button>
+        <div class="godot-panel">
+          <span class="panel-label">SCORE</span>
+          <span class="panel-val" id="hudScore">0</span>
+        </div>
+        <div class="godot-panel">
+          <span class="panel-label">MISSILES</span>
+          <span class="panel-val cyan" id="hudAmmo">2</span>
+        </div>
+      </div>
+
+      <div class="center-hud-col">
+        <div class="pause-pill" id="pauseBtn">Pause</div>
+        <div class="mission-pill">Cavern Deep Run • Distance: <span id="hudDistance">0m</span></div>
+      </div>
+
+      <div style="width: 140px;"></div> <!-- Spacer balancing layout -->
+    </div>
+
+    <div class="bottom-hud-row">
+      <!-- Tactile Hexagonal Launch Button (fire_button.svg) -->
+      <div class="fire-button-wrap" id="fireBtn">
+        <img src="images/fire_button.svg" alt="Fire">
+      </div>
+    </div>
+  </div>
+
+  <!-- Start Screen (Matches author_title.png) -->
+  <div class="overlay-screen" id="startScreen">
+    <div class="title-logo-row">
+      <img src="images/BadGames.png" alt="Bad Games" class="logo-img">
+      <img src="images/EndlessHelicopter.png" alt="Endless Helicopter" class="logo-img">
+    </div>
+    <button class="start-pill-btn" id="startBtn">Tap, click, or press Space to continue</button>
+    <div class="hint-subtext">
+      <b>TOUCH &amp; HOLD / SPACE:</b> Lift Upward Thrusters &bull; 
+      <b>FIRE BUTTON / X:</b> Launch Rocket Missiles &bull; 
+      <b>COLLECT:</b> Blue Ammo Crates
+    </div>
+  </div>
+
+  <!-- Game Over Screen -->
+  <div class="overlay-screen hidden" id="gameOverScreen">
+    <div class="gameover-box">
+      <div class="go-heading">CRITICAL FAILURE</div>
+      <div class="stats-table">
+        <div class="stat-entry">
+          <span class="stat-name">Score</span>
+          <span class="stat-val" id="goScore">0</span>
+        </div>
+        <div class="stat-entry">
+          <span class="stat-name">Distance</span>
+          <span class="stat-val" id="goDistance">0m</span>
+        </div>
+        <div class="stat-entry">
+          <span class="stat-name">Best</span>
+          <span class="stat-val gold" id="goBest">0</span>
+        </div>
+      </div>
+      <button class="start-pill-btn" id="restartBtn">FLY AGAIN</button>
+    </div>
+  </div>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // =========================================================================
+    // 1. GODOT 4.6 GDScript REPRODUCTIONS & CONSTANTS
+    // =========================================================================
+    const JUMP_VELOCITY = -400.0;
+    const CONTINUOUS_THRUST = -1420.0;
+    const GRAVITY = 980.0;
+    const TILT_SPEED = 5.0;
+    const MAX_TILT = 0.48; // ~27.5 degrees
+    const BOUNDARY_INSET = 48.0;
+    const BOUNDARY_BOUNCE_DOWN_SPEED = 300.0;
+    const BOUNDARY_BOUNCE_UP_SPEED = 360.0;
+    const BOUNDARY_RECOVERY_SECONDS = 0.18;
+    const BOUNDARY_STALL_TIMEOUT_SECONDS = 0.65;
+    const BASE_SPEED = 240.0;
+    const MISSILE_SPEED = 640.0;
+    const MAX_AMMO = 2;
+
+    // Parallax Speed Factors (From author's systems/background_catalog.gd)
+    const FAR_SPEED_FACTOR = 0.10;
+    const MID_SPEED_FACTOR = 0.34;
+    const NEAR_SPEED_FACTOR = 0.70;
+
+    // =========================================================================
+    // 2. AUDIO ENGINE (HTML5 Audio Elements - Zero CORS Issues under file://)
+    // =========================================================================
+    class GameAudio {
+      constructor() {
+        this.firePool = [new Audio('audio/player_missile_fire.wav'), new Audio('audio/player_missile_fire.wav')];
+        this.fireIdx = 0;
+        this.deathSfx = new Audio('audio/death.wav');
+        this.reloadSfx = new Audio('audio/missile_reload_retro.wav');
+        this.heliLoop = new Audio('audio/helicopter.mp3');
+        this.heliLoop.loop = true;
+        this.heliLoop.volume = 0.35;
+        this.music = new Audio('audio/canyon_run.wav');
+        this.music.loop = true;
+        this.music.volume = 0.45;
+        this.hasStarted = false;
+      }
+
+      start() {
+        if (!this.hasStarted) {
+          this.hasStarted = true;
+          this.heliLoop.play().catch(() => {});
+          this.music.play().catch(() => {});
+        }
+      }
+
+      fire() {
+        const a = this.firePool[this.fireIdx];
+        this.fireIdx = (this.fireIdx + 1) % this.firePool.length;
+        a.currentTime = 0;
+        a.play().catch(() => {});
+      }
+
+      death() {
+        this.deathSfx.currentTime = 0;
+        this.deathSfx.play().catch(() => {});
+        this.heliLoop.pause();
+      }
+
+      reload() {
+        this.reloadSfx.currentTime = 0;
+        this.reloadSfx.play().catch(() => {});
+      }
+    }
+
+    const audio = new GameAudio();
+
+    // =========================================================================
+    // 3. CANVAS & ASSET PIPELINE
+    // =========================================================================
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Load authentic images
+    const assets = {
+      sky: new Image(),
+      far: new Image(),
+      mid: new Image(),
+      near: new Image(),
+      heli: new Image(),
+      obstacle: new Image(),
+      missile: new Image(),
+      pickup: new Image(),
+    };
+
+    // Author's iconic Alien Cavern biome
+    assets.sky.src = 'images/alien_cavern/sky.png';
+    assets.far.src = 'images/alien_cavern/far.png';
+    assets.mid.src = 'images/alien_cavern/mid.png';
+    assets.near.src = 'images/alien_cavern/near.png';
+
+    // Author's vector player helicopter & sprites
+    assets.heli.src = 'images/blackhawk_shadow.svg';
+    assets.obstacle.src = 'images/obstacle.svg';
+    assets.missile.src = 'images/missile.svg';
+    assets.pickup.src = 'images/missile_pickup.svg';
+
+    // =========================================================================
+    // 4. GAME STATE
+    // =========================================================================
+    let gameState = 'start'; // 'start', 'playing', 'paused', 'gameover'
+    let score = 0;
+    let distance = 0;
+    let highScore = parseInt(localStorage.getItem('apex_heli_hi') || '969', 10);
+    let ammo = MAX_AMMO;
+    let isLiftActive = false;
+    let lastTime = 0;
+    let screenShake = 0;
+
+    // Player Entity (Authentic 86x44 px proportion)
+    const player = {
+      x: 180,
+      y: height * 0.45,
+      width: 86,
+      height: 44,
+      vy: 0,
+      rotation: 0,
+      rotorAngle: 0,
+      boundaryZoneTimer: 0,
+      boundaryRecoveryTimer: 0,
+    };
+
+    // Parallax Positions
+    let scrollFar = 0;
+    let scrollMid = 0;
+    let scrollNear = 0;
+
+    // Object Arrays
+    let obstacles = [];
+    let missiles = [];
+    let pickups = [];
+    let particles = [];
+    let jetSparks = [];
+    let popups = [];
+    let spawnTimer = 0.5;
+    let pickupSpawnTimer = 4.0;
+
+    // =========================================================================
+    // 5. INPUT DISPATCHER
+    // =========================================================================
+    function startLift() {
+      if (gameState !== 'playing') return;
+      audio.start();
+      isLiftActive = true;
+      player.vy = JUMP_VELOCITY; // Instant Godot jump
+    }
+
+    function endLift() {
+      isLiftActive = false;
+    }
+
+    function shootMissile() {
+      if (gameState !== 'playing') return;
+      if (ammo <= 0) return;
+
+      ammo--;
+      updateHUD();
+      audio.fire();
+      screenShake = 4.0;
+
+      // Spawn missile from front nose
+      const noseX = player.x + Math.cos(player.rotation) * (player.width * 0.42);
+      const noseY = player.y + Math.sin(player.rotation) * (player.width * 0.42) + 5;
+
+      missiles.push({
+        x: noseX,
+        y: noseY,
+        width: 44,
+        height: 20,
+        rotation: player.rotation,
+        vx: Math.cos(player.rotation) * MISSILE_SPEED,
+        vy: Math.sin(player.rotation) * MISSILE_SPEED,
+      });
+
+      player.vy += 22; // Recoil
+    }
+
+    // Canvas touch handling
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.touches[0];
+      // If tapped in bottom right 22% zone, trigger fire
+      if (t.clientX > width * 0.78 && t.clientY > height * 0.65) {
+        shootMissile();
+      } else {
+        startLift();
+      }
+    }, { passive: false });
+
+    canvas.addEventListener('touchend', (e) => {
+      e.preventDefault();
+      endLift();
+    }, { passive: false });
+
+    canvas.addEventListener('touchcancel', (e) => {
+      e.preventDefault();
+      endLift();
+    }, { passive: false });
+
+    // Mouse handlers
+    canvas.addEventListener('mousedown', (e) => {
+      if (e.button === 0) startLift();
+      else if (e.button === 2) shootMissile();
+    });
+    canvas.addEventListener('mouseup', () => endLift());
+    window.addEventListener('contextmenu', e => e.preventDefault());
+
+    // Keyboard controls
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') {
+        if (gameState === 'start') launchGame();
+        else startLift();
+      } else if (e.code === 'KeyX' || e.code === 'KeyF' || e.code === 'Enter') {
+        shootMissile();
+      } else if (e.code === 'KeyP') {
+        togglePause();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space' || e.code === 'ArrowUp') endLift();
+    });
+
+    // Dedicated Fire Button (fire_button.svg)
+    const fireBtn = document.getElementById('fireBtn');
+    fireBtn.addEventListener('touchstart', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      fireBtn.classList.add('pressed');
+      shootMissile();
+    }, { passive: false });
+    fireBtn.addEventListener('touchend', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      fireBtn.classList.remove('pressed');
+    }, { passive: false });
+    fireBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      shootMissile();
+    });
+
+    // Exit Button
+    const exitBtn = document.getElementById('exitBtn');
+    exitBtn.addEventListener('click', () => {
+      document.title = "APEX_GAME_EXIT";
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'exit' }, '*');
+      }
+    });
+
+    // Pause Button
+    const pauseBtn = document.getElementById('pauseBtn');
+    function togglePause() {
+      if (gameState === 'playing') {
+        gameState = 'paused';
+        pauseBtn.textContent = 'Resume';
+      } else if (gameState === 'paused') {
+        gameState = 'playing';
+        pauseBtn.textContent = 'Pause';
+        lastTime = performance.now();
+      }
+    }
+    pauseBtn.addEventListener('click', togglePause);
+
+    // =========================================================================
+    // 6. HUD SYNCHRONIZER
+    // =========================================================================
+    const hudScore = document.getElementById('hudScore');
+    const hudAmmo = document.getElementById('hudAmmo');
+    const hudDistance = document.getElementById('hudDistance');
+
+    function updateHUD() {
+      hudScore.textContent = Math.floor(score);
+      hudAmmo.textContent = ammo;
+      hudDistance.textContent = Math.floor(distance) + 'm';
+    }
+
+    // =========================================================================
+    // 7. GAME LIFECYCLE (LAUNCH & CRASH)
+    // =========================================================================
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const goScore = document.getElementById('goScore');
+    const goDistance = document.getElementById('goDistance');
+    const goBest = document.getElementById('goBest');
+
+    function launchGame() {
+      audio.start();
+      startScreen.classList.add('hidden');
+      gameOverScreen.classList.add('hidden');
+      gameState = 'playing';
+
+      score = 0;
+      distance = 0;
+      ammo = MAX_AMMO;
+      updateHUD();
+
+      player.y = height * 0.45;
+      player.vy = 0;
+      player.rotation = 0;
+      player.boundaryZoneTimer = 0;
+      player.boundaryRecoveryTimer = 0;
+
+      obstacles = [];
+      missiles = [];
+      pickups = [];
+      particles = [];
+      jetSparks = [];
+      popups = [];
+      spawnTimer = 0.6;
+      pickupSpawnTimer = 4.0;
+      screenShake = 0;
+
+      lastTime = performance.now();
+    }
+
+    function triggerCrash() {
+      if (gameState !== 'playing') return;
+      gameState = 'gameover';
+      audio.death();
+      screenShake = 16.0;
+
+      // Heavy explosion shockwave particles
+      for (let i = 0; i < 50; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 60 + Math.random() * 320;
+        particles.push({
+          x: player.x,
+          y: player.y,
+          vx: Math.cos(ang) * spd,
+          vy: Math.sin(ang) * spd,
+          size: 6 + Math.random() * 14,
+          color: ['#FF5500', '#FFCC00', '#FF0033', '#38BDF8', '#FFFFFF'][Math.floor(Math.random() * 5)],
+          life: 0.9,
+          maxLife: 0.9,
+        });
+      }
+
+      if (score > highScore) {
+        highScore = Math.floor(score);
+        localStorage.setItem('apex_heli_hi', highScore.toString());
+      }
+
+      goScore.textContent = Math.floor(score);
+      goDistance.textContent = Math.floor(distance) + 'm';
+      goBest.textContent = highScore;
+
+      setTimeout(() => {
+        gameOverScreen.classList.remove('hidden');
+      }, 700);
+    }
+
+    startBtn.addEventListener('click', launchGame);
+    restartBtn.addEventListener('click', launchGame);
+
+    // =========================================================================
+    // 8. SPAWNING HAZARDS & BONUSES
+    // =========================================================================
+    function spawnObstacle() {
+      const isDrone = Math.random() < 0.35;
+      const size = isDrone ? 56 : (72 + Math.random() * 40);
+      const yMin = BOUNDARY_INSET + 40;
+      const yMax = height - BOUNDARY_INSET - 40;
+      const y = yMin + Math.random() * (yMax - yMin);
+
+      obstacles.push({
+        x: width + 80,
+        y: y,
+        size: size,
+        isDrone: isDrone,
+        bobOffset: Math.random() * Math.PI * 2,
+        rot: 0,
+        rotSpeed: (Math.random() - 0.5) * 1.5,
+      });
+    }
+
+    function spawnPickup() {
+      const yMin = BOUNDARY_INSET + 60;
+      const yMax = height - BOUNDARY_INSET - 60;
+      pickups.push({
+        x: width + 60,
+        y: yMin + Math.random() * (yMax - yMin),
+        size: 42,
+        bobOffset: Math.random() * Math.PI * 2,
+      });
+    }
+
+    function addScorePopup(x, y, text, color = '#FFD152') {
+      popups.push({
+        x: x,
+        y: y,
+        text: text,
+        color: color,
+        life: 1.0,
+      });
+    }
+
+    // =========================================================================
+    // 9. GAME UPDATE
+    // =========================================================================
+    function update(dt) {
+      // Screen shake decay
+      if (screenShake > 0) {
+        screenShake = Math.max(0, screenShake - 30 * dt);
+      }
+
+      if (gameState !== 'playing') {
+        player.rotorAngle += 24.0 * dt;
+        return;
+      }
+
+      distance += BASE_SPEED * 0.1 * dt;
+      score += 10.0 * dt;
+      updateHUD();
+
+      // Lift physics
+      if (isLiftActive) {
+        player.vy += CONTINUOUS_THRUST * dt;
+      }
+      player.vy += GRAVITY * dt;
+
+      // Godot 4.6 GDScript Tilt calculation
+      const targetTilt = Math.max(-MAX_TILT, Math.min(MAX_TILT, player.vy / 800.0));
+      player.rotation += (targetTilt - player.rotation) * Math.min(1.0, TILT_SPEED * dt);
+      player.rotorAngle += 36.0 * dt;
+      player.y += player.vy * dt;
+
+      // Jet exhaust spark particles behind helicopter
+      const exhaustX = player.x - Math.cos(player.rotation) * (player.width * 0.38);
+      const exhaustY = player.y - Math.sin(player.rotation) * (player.width * 0.38) + 2;
+      jetSparks.push({
+        x: exhaustX,
+        y: exhaustY,
+        vx: -160 + (Math.random() - 0.5) * 40,
+        vy: (Math.random() - 0.5) * 30,
+        size: 3 + Math.random() * 4,
+        color: Math.random() < 0.6 ? '#FF9540' : '#FFD176',
+        life: 0.25,
+        maxLife: 0.25,
+      });
+
+      // Boundaries
+      const topLimit = BOUNDARY_INSET;
+      const bottomLimit = height - BOUNDARY_INSET;
+      const inZone = (player.y < topLimit + 8 || player.y > bottomLimit - 8);
+
+      if (inZone) {
+        player.boundaryZoneTimer += dt;
+        if (player.boundaryZoneTimer >= BOUNDARY_STALL_TIMEOUT_SECONDS) {
+          triggerCrash();
+          return;
+        }
+      } else {
+        player.boundaryZoneTimer = 0.0;
+      }
+
+      if (player.boundaryRecoveryTimer > 0) {
+        player.boundaryRecoveryTimer -= dt;
+      }
+
+      if (player.y < topLimit) {
+        player.y = topLimit;
+        if (player.boundaryRecoveryTimer <= 0) {
+          player.vy = BOUNDARY_BOUNCE_DOWN_SPEED;
+          player.boundaryRecoveryTimer = BOUNDARY_RECOVERY_SECONDS;
+          screenShake = 5.0;
+        } else if (player.vy < 0) {
+          player.vy = 0;
+        }
+      } else if (player.y > bottomLimit) {
+        player.y = bottomLimit;
+        if (player.boundaryRecoveryTimer <= 0) {
+          player.vy = -BOUNDARY_BOUNCE_UP_SPEED;
+          player.boundaryRecoveryTimer = BOUNDARY_RECOVERY_SECONDS;
+          screenShake = 5.0;
+        } else if (player.vy > 0) {
+          player.vy = 0;
+        }
+      }
+
+      // Parallax scroll
+      scrollFar = (scrollFar + BASE_SPEED * FAR_SPEED_FACTOR * dt);
+      scrollMid = (scrollMid + BASE_SPEED * MID_SPEED_FACTOR * dt);
+      scrollNear = (scrollNear + BASE_SPEED * NEAR_SPEED_FACTOR * dt);
+
+      // Spawning
+      spawnTimer -= dt;
+      if (spawnTimer <= 0) {
+        spawnObstacle();
+        spawnTimer = 1.4 + Math.random() * 0.9;
+      }
+
+      pickupSpawnTimer -= dt;
+      if (pickupSpawnTimer <= 0) {
+        if (ammo < MAX_AMMO) spawnPickup();
+        pickupSpawnTimer = 5.0 + Math.random() * 3.0;
+      }
+
+      // Missiles
+      for (let i = missiles.length - 1; i >= 0; i--) {
+        const m = missiles[i];
+        m.x += m.vx * dt;
+        m.y += m.vy * dt;
+
+        // Missile smoke
+        particles.push({
+          x: m.x - 12,
+          y: m.y + (Math.random() - 0.5) * 4,
+          vx: -90,
+          vy: (Math.random() - 0.5) * 20,
+          size: 3 + Math.random() * 4,
+          color: '#FF7700',
+          life: 0.28,
+          maxLife: 0.28,
+        });
+
+        if (m.x > width + 100) {
+          missiles.splice(i, 1);
+          continue;
+        }
+
+        // Missile vs Obstacle Collision
+        for (let j = obstacles.length - 1; j >= 0; j--) {
+          const obs = obstacles[j];
+          const dist = Math.hypot(m.x - obs.x, m.y - obs.y);
+          if (dist < (obs.size * 0.48 + 14)) {
+            // Hit!
+            screenShake = 7.0;
+            const pts = obs.isDrone ? 90 : 50;
+            score += pts;
+            addScorePopup(obs.x, obs.y, `+${pts} PTS`);
+            audio.death();
+
+            // Debris explosion
+            for (let p = 0; p < 22; p++) {
+              const a = Math.random() * Math.PI * 2;
+              const s = 40 + Math.random() * 200;
+              particles.push({
+                x: obs.x,
+                y: obs.y,
+                vx: Math.cos(a) * s,
+                vy: Math.sin(a) * s,
+                size: 4 + Math.random() * 8,
+                color: obs.isDrone ? '#38BDF8' : '#78909C',
+                life: 0.65,
+                maxLife: 0.65,
+              });
+            }
+
+            obstacles.splice(j, 1);
+            missiles.splice(i, 1);
+            break;
+          }
+        }
+      }
+
+      // Obstacles
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obs = obstacles[i];
+        obs.x -= BASE_SPEED * dt;
+        obs.rot += obs.rotSpeed * dt;
+        if (obs.isDrone) {
+          obs.y += Math.sin(performance.now() * 0.004 + obs.bobOffset) * 0.8;
+        }
+
+        // Player Collision
+        const closeX = Math.max(player.x - player.width * 0.38, Math.min(obs.x, player.x + player.width * 0.38));
+        const closeY = Math.max(player.y - player.height * 0.38, Math.min(obs.y, player.y + player.height * 0.38));
+        const dist = Math.hypot(obs.x - closeX, obs.y - closeY);
+
+        if (dist < obs.size * 0.40) {
+          triggerCrash();
+          return;
+        }
+
+        if (obs.x < -120) {
+          obstacles.splice(i, 1);
+        }
+      }
+
+      // Pickups
+      for (let i = pickups.length - 1; i >= 0; i--) {
+        const pick = pickups[i];
+        pick.x -= BASE_SPEED * dt;
+        pick.y += Math.sin(performance.now() * 0.005 + pick.bobOffset) * 0.7;
+
+        if (Math.hypot(player.x - pick.x, player.y - pick.y) < 55) {
+          audio.reload();
+          ammo = Math.min(MAX_AMMO, ammo + 1);
+          score += 25;
+          updateHUD();
+          addScorePopup(pick.x, pick.y, '+1 MISSILE', '#38BDF8');
+          pickups.splice(i, 1);
+          continue;
+        }
+
+        if (pick.x < -80) {
+          pickups.splice(i, 1);
+        }
+      }
+
+      // Particles & Sparks
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+      for (let i = jetSparks.length - 1; i >= 0; i--) {
+        const p = jetSparks[i];
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.life -= dt;
+        if (p.life <= 0) jetSparks.splice(i, 1);
+      }
+
+      // Popups
+      for (let i = popups.length - 1; i >= 0; i--) {
+        const ft = popups[i];
+        ft.y -= 45 * dt;
+        ft.life -= dt;
+        if (ft.life <= 0) popups.splice(i, 1);
+      }
+    }
+
+    // =========================================================================
+    // 10. RENDERING ENGINE
+    // =========================================================================
+    function drawRepeatingLayer(img, offset) {
+      if (!img.complete || img.naturalWidth === 0) return;
+      const scale = height / img.naturalHeight;
+      const drawW = img.naturalWidth * scale;
+      const normOffset = offset % drawW;
+
+      let drawX = -normOffset;
+      while (drawX < width) {
+        ctx.drawImage(img, drawX, 0, drawW, height);
+        drawX += drawW;
+      }
+    }
+
+    function render() {
+      ctx.save();
+
+      // Screen shake transform
+      if (screenShake > 0) {
+        const sx = (Math.random() - 0.5) * screenShake;
+        const sy = (Math.random() - 0.5) * screenShake;
+        ctx.translate(sx, sy);
+      }
+
+      // 1. Cosmic Atmosphere & Deep Cavern Sky
+      if (assets.sky.complete && assets.sky.naturalWidth > 0) {
+        ctx.drawImage(assets.sky, 0, 0, width, height);
+      } else {
+        const g = ctx.createLinearGradient(0, 0, 0, height);
+        g.addColorStop(0, '#0B1528');
+        g.addColorStop(0.5, '#16223B');
+        g.addColorStop(1, '#080C14');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, width, height);
+      }
+
+      // 2. Multi-Layer Parallax Cavern
+      drawRepeatingLayer(assets.far, scrollFar);
+      drawRepeatingLayer(assets.mid, scrollMid);
+      drawRepeatingLayer(assets.near, scrollNear);
+
+      // 3. Electric Boundary Force-Fields
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+      ctx.fillRect(0, 0, width, BOUNDARY_INSET);
+      ctx.fillRect(0, height - BOUNDARY_INSET, width, BOUNDARY_INSET);
+
+      ctx.strokeStyle = '#38BDF8';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = '#38BDF8';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(0, BOUNDARY_INSET);
+      ctx.lineTo(width, BOUNDARY_INSET);
+      ctx.moveTo(0, height - BOUNDARY_INSET);
+      ctx.lineTo(width, height - BOUNDARY_INSET);
+      ctx.stroke();
+      ctx.shadowBlur = 0; // Reset shadow
+
+      // 4. Jet Exhaust Sparks
+      for (const p of jetSparks) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 5. Obstacles
+      for (const obs of obstacles) {
+        ctx.save();
+        ctx.translate(obs.x, obs.y);
+        ctx.rotate(obs.rot);
+        if (assets.obstacle.complete && assets.obstacle.naturalWidth > 0) {
+          ctx.drawImage(assets.obstacle, -obs.size * 0.5, -obs.size * 0.5, obs.size, obs.size);
+        } else {
+          ctx.fillStyle = '#64748B';
+          ctx.beginPath();
+          ctx.arc(0, 0, obs.size * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // 6. Pickups
+      for (const pick of pickups) {
+        ctx.save();
+        ctx.translate(pick.x, pick.y);
+        if (assets.pickup.complete && assets.pickup.naturalWidth > 0) {
+          ctx.drawImage(assets.pickup, -pick.size * 0.5, -pick.size * 0.5, pick.size, pick.size);
+        }
+        ctx.restore();
+      }
+
+      // 7. Missiles
+      for (const m of missiles) {
+        ctx.save();
+        ctx.translate(m.x, m.y);
+        ctx.rotate(m.rotation);
+        if (assets.missile.complete && assets.missile.naturalWidth > 0) {
+          ctx.drawImage(assets.missile, -m.width * 0.5, -m.height * 0.5, m.width, m.height);
+        }
+        ctx.restore();
+      }
+
+      // 8. Player Helicopter
+      if (gameState !== 'gameover') {
+        ctx.save();
+        ctx.translate(player.x, player.y);
+        ctx.rotate(player.rotation);
+
+        if (assets.heli.complete && assets.heli.naturalWidth > 0) {
+          ctx.drawImage(assets.heli, -player.width * 0.5, -player.height * 0.5, player.width, player.height);
+        }
+
+        ctx.restore();
+      }
+
+      // 9. Explosion Particles
+      for (const p of particles) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // 10. Combat Popups (Gold & Cyan glowing text)
+      for (const ft of popups) {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, ft.life);
+        ctx.font = '900 18px Inter, sans-serif';
+        ctx.fillStyle = ft.color;
+        ctx.textAlign = 'center';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+        ctx.shadowBlur = 8;
+        ctx.fillText(ft.text, ft.x, ft.y);
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 11. MAIN LOOP TICK
+    // =========================================================================
+    function tick(time) {
+      if (!lastTime) lastTime = time;
+      const dt = Math.min(0.05, (time - lastTime) / 1000.0);
+      lastTime = time;
+
+      update(dt);
+      render();
+
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+
+    updateHUD();
+
+  })();
+  </script>
+</body>
+</html>

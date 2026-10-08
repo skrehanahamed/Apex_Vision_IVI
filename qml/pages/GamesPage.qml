@@ -106,7 +106,7 @@ Item {
             spacing: 2
 
             Text {
-                text: "Arcade Games"
+                text: "Games"
                 color: "#FFFFFF"
                 font.family: "Inter"
                 font.pixelSize: 22
@@ -120,51 +120,10 @@ Item {
                 font.pixelSize: 13
             }
         }
-
-        // Right Status Pill (2 Games Available)
-        Rectangle {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            height: 36
-            width: statusRow.width + 28
-            radius: 18
-            clip: true
-
-            gradient: Gradient {
-                GradientStop { position: 0.0; color: Qt.rgba(0, 210/255, 255/255, 0.22) }
-                GradientStop { position: 1.0; color: Qt.rgba(0, 119/255, 182/255, 0.16) }
-            }
-
-            border.color: Qt.rgba(0, 210/255, 255/255, 0.55)
-            border.width: 1
-
-            Row {
-                id: statusRow
-                anchors.centerIn: parent
-                spacing: 8
-
-                Rectangle {
-                    width: 8
-                    height: 8
-                    radius: 4
-                    anchors.verticalCenter: parent.verticalCenter
-                    color: "#00F0FF"
-                }
-
-                Text {
-                    anchors.verticalCenter: parent.verticalCenter
-                    text: "Retro Arcade Edition"
-                    color: "#E0F2FE"
-                    font.family: "Inter"
-                    font.pixelSize: 13
-                    font.weight: Font.DemiBold
-                }
-            }
-        }
     }
 
     // =========================================================================
-    // 3. MAIN GALLERY VIEW (2 RETRO GAME CARDS)
+    // 3. MAIN GALLERY VIEW (APP-STYLE GAME ICONS & SHORT NAMES)
     // =========================================================================
     Item {
         id: galleryContentArea
@@ -172,77 +131,65 @@ Item {
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
-        anchors.topMargin: 20
+        anchors.topMargin: 28
+        anchors.leftMargin: 48
+        anchors.rightMargin: 48
         anchors.bottomMargin: 30
         visible: root.activeGame === ""
         z: 5
 
         Row {
-            anchors.centerIn: parent
+            anchors.left: parent.left
+            anchors.top: parent.top
             spacing: 40
 
             // -------------------------------------------------------------
-            // GAME CARD 1: APEX CYBER RACER
+            // GAME 1: RACER
             // -------------------------------------------------------------
-            Rectangle {
-                id: racerCard
-                width: 260
-                height: 260
-                radius: 28
-                clip: true
-
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0.0
-                        color: racerMouse.containsMouse ? Qt.rgba(0, 240/255, 255/255, 0.22) : Qt.rgba(215/255, 238/255, 255/255, 0.14)
-                    }
-                    GradientStop {
-                        position: 1.0
-                        color: racerMouse.containsMouse ? Qt.rgba(255/255, 0, 127/255, 0.18) : Qt.rgba(195/255, 225/255, 255/255, 0.08)
-                    }
-                }
-
-                border.color: racerMouse.containsMouse ? "#00F0FF" : Qt.rgba(225/255, 242/255, 255/255, 0.32)
-                border.width: racerMouse.containsMouse ? 2 : 1.2
-                scale: racerMouse.pressed ? 0.95 : (racerMouse.containsMouse ? 1.03 : 1.0)
-                Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
-                Behavior on border.color { ColorAnimation { duration: 140 } }
+            Item {
+                id: racerItem
+                width: 100
+                height: 120
 
                 Column {
                     anchors.centerIn: parent
-                    spacing: 16
+                    spacing: 12
 
-                    Image {
+                    Item {
+                        id: racerIconContainer
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: 124
-                        height: 124
-                        source: "qrc:/ApexVision/qml/assets/icons/game_retro_racer.svg"
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        mipmap: true
+                        width: 76
+                        height: 76
+
+                        scale: racerMouse.pressed ? 0.90 : (racerMouse.containsMouse ? 1.05 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: 160
+                                easing.type: Easing.OutBack
+                                easing.overshoot: 1.2
+                            }
+                        }
+
+                        Image {
+                            anchors.fill: parent
+                            source: "qrc:/ApexVision/qml/assets/icons/game_retro_racer.svg"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                            sourceSize: Qt.size(256, 256)
+                        }
                     }
 
-                    Column {
+                    Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 4
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Cyber Racer"
-                            color: "#FFFFFF"
-                            font.family: "Inter"
-                            font.pixelSize: 18
-                            font.weight: Font.Bold
-                        }
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Arcade"
-                            color: "#00F0FF"
-                            font.family: "monospace"
-                            font.pixelSize: 12
-                            font.weight: Font.DemiBold
-                        }
+                        text: "Racer"
+                        color: "#FFFFFF"
+                        font.family: "Inter"
+                        font.pixelSize: 15
+                        font.weight: Font.Medium
+                        horizontalAlignment: Text.AlignHCenter
+                        opacity: racerMouse.pressed ? 0.75 : 1.0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
                     }
                 }
 
@@ -252,73 +199,61 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
+                        if (typeof SystemBackend !== "undefined") {
+                            SystemBackend.playTouchSound();
+                        }
                         root.activeGame = "racer";
                     }
                 }
             }
 
             // -------------------------------------------------------------
-            // GAME CARD 2: 2048: CYBER FUSION
+            // GAME 2: 2048
             // -------------------------------------------------------------
-            Rectangle {
-                id: puzzleCard
-                width: 260
-                height: 260
-                radius: 28
-                clip: true
-
-                gradient: Gradient {
-                    GradientStop {
-                        position: 0.0
-                        color: puzzleMouse.containsMouse ? Qt.rgba(139/255, 92/255, 246/255, 0.22) : Qt.rgba(215/255, 238/255, 255/255, 0.14)
-                    }
-                    GradientStop {
-                        position: 1.0
-                        color: puzzleMouse.containsMouse ? Qt.rgba(16/255, 185/255, 129/255, 0.18) : Qt.rgba(195/255, 225/255, 255/255, 0.08)
-                    }
-                }
-
-                border.color: puzzleMouse.containsMouse ? "#8B5CF6" : Qt.rgba(225/255, 242/255, 255/255, 0.32)
-                border.width: puzzleMouse.containsMouse ? 2 : 1.2
-                scale: puzzleMouse.pressed ? 0.95 : (puzzleMouse.containsMouse ? 1.03 : 1.0)
-                Behavior on scale { NumberAnimation { duration: 130; easing.type: Easing.OutCubic } }
-                Behavior on border.color { ColorAnimation { duration: 140 } }
+            Item {
+                id: puzzleItem
+                width: 100
+                height: 120
 
                 Column {
                     anchors.centerIn: parent
-                    spacing: 16
+                    spacing: 12
 
-                    Image {
+                    Item {
+                        id: puzzleIconContainer
                         anchors.horizontalCenter: parent.horizontalCenter
-                        width: 124
-                        height: 124
-                        source: "qrc:/ApexVision/qml/assets/icons/game_retro_2048.svg"
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        mipmap: true
+                        width: 76
+                        height: 76
+
+                        scale: puzzleMouse.pressed ? 0.90 : (puzzleMouse.containsMouse ? 1.05 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: 160
+                                easing.type: Easing.OutBack
+                                easing.overshoot: 1.2
+                            }
+                        }
+
+                        Image {
+                            anchors.fill: parent
+                            source: "qrc:/ApexVision/qml/assets/icons/game_retro_2048.svg"
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                            sourceSize: Qt.size(256, 256)
+                        }
                     }
 
-                    Column {
+                    Text {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 4
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "2048 Fusion"
-                            color: "#FFFFFF"
-                            font.family: "Inter"
-                            font.pixelSize: 18
-                            font.weight: Font.Bold
-                        }
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            text: "Puzzle"
-                            color: "#8B5CF6"
-                            font.family: "monospace"
-                            font.pixelSize: 12
-                            font.weight: Font.DemiBold
-                        }
+                        text: "2048"
+                        color: "#FFFFFF"
+                        font.family: "Inter"
+                        font.pixelSize: 15
+                        font.weight: Font.Medium
+                        horizontalAlignment: Text.AlignHCenter
+                        opacity: puzzleMouse.pressed ? 0.75 : 1.0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
                     }
                 }
 
@@ -327,13 +262,87 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (typeof SystemBackend !== "undefined") {
+                            SystemBackend.playTouchSound();
+                        }
+                    }
+                }
+            }
+
+            // -------------------------------------------------------------
+            // GAME 3: ENDLESS HELICOPTER
+            // -------------------------------------------------------------
+            Item {
+                id: heliItem
+                width: 100
+                height: 120
+
+                Column {
+                    anchors.centerIn: parent
+                    spacing: 12
+
+                    Item {
+                        id: heliIconContainer
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 76
+                        height: 76
+
+                        scale: heliMouse.pressed ? 0.90 : (heliMouse.containsMouse ? 1.05 : 1.0)
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: 160
+                                easing.type: Easing.OutBack
+                                easing.overshoot: 1.2
+                            }
+                        }
+
+                        Image {
+                            anchors.fill: parent
+                            source: "qrc:/ApexVision/qml/assets/icons/game_helicopter.png"
+                            onStatusChanged: {
+                                if (status === Image.Error && source.toString().indexOf(".svg") === -1) {
+                                    source = "qrc:/ApexVision/qml/assets/icons/game_helicopter.svg";
+                                }
+                            }
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            mipmap: true
+                            sourceSize: Qt.size(256, 256)
+                        }
+                    }
+
+                    Text {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        text: "Helicopter"
+                        color: "#FFFFFF"
+                        font.family: "Inter"
+                        font.pixelSize: 15
+                        font.weight: Font.Medium
+                        horizontalAlignment: Text.AlignHCenter
+                        opacity: heliMouse.pressed ? 0.75 : 1.0
+                        Behavior on opacity { NumberAnimation { duration: 120 } }
+                    }
+                }
+
+                MouseArea {
+                    id: heliMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (typeof SystemBackend !== "undefined") {
+                            SystemBackend.playTouchSound();
+                        }
+                        root.activeGame = "helicopter";
+                    }
                 }
             }
         }
     }
 
     // =========================================================================
-    // 4. ACTIVE GAME CONTAINER: APEX CYBER RACER
+    // 4. ACTIVE GAME CONTAINERS
     // =========================================================================
     Loader {
         id: racerGameLoader
@@ -342,6 +351,24 @@ Item {
         visible: root.activeGame === "racer"
         z: 50
         source: (root.activeGame === "racer") ? "ApexCyberRacer.qml" : ""
+
+        onLoaded: {
+            if (item) {
+                item.exitRequested.connect(function() {
+                    root.activeGame = "";
+                });
+                item.forceActiveFocus();
+            }
+        }
+    }
+
+    Loader {
+        id: helicopterGameLoader
+        anchors.fill: parent
+        active: root.activeGame === "helicopter"
+        visible: root.activeGame === "helicopter"
+        z: 50
+        source: (root.activeGame === "helicopter") ? "HelicopterGameView.qml" : ""
 
         onLoaded: {
             if (item) {

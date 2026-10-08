@@ -46,7 +46,7 @@ if [ "$MODE" = "patch" ]; then
       export PATH="/workspace/build/tmp/sysroots-uninative/aarch64-linux/usr/bin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin/python3-native:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin/perl-native:/workspace/sources/poky/scripts:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin/aarch64-poky-linux:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot/usr/bin/crossscripts:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/sbin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/usr/bin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/sbin:/workspace/build/tmp/work/cortexa76-poky-linux/apex-ivi/1.0/recipe-sysroot-native/bin:/workspace/sources/poky/bitbake/bin:/workspace/build/tmp/hosttools:$PATH"
       
       cd /workspace/APEX_VISION_IVI_PI5/build-rpi5
-      ninja -j 6 apex_vision_ivi
+      ninja -j 6 apex_vision_ivi assets_rcc
   '
 fi
 
@@ -89,7 +89,7 @@ elif [ "$MODE" = "web" ]; then
       -C "${SCRIPT_DIR}" web
 else
   echo ">> Packing binary and QML patch..."
-  tar -czf "${PATCH_ARCHIVE}" \
+  COPYFILE_DISABLE=1 tar --exclude="._*" -czf "${PATCH_ARCHIVE}" \
       "${EXCLUDE_ARGS[@]}" \
       -C "${SCRIPT_DIR}/build-rpi5" apex_vision_ivi assets.rcc \
       -C "${SCRIPT_DIR}" qml scripts

@@ -28,6 +28,9 @@ Window {
         anchors.fill: parent
         property bool climate3DOpen: climateBar.climate3DOpen
         property bool studioPrewarmed: false
+        property bool backgroundPagesActive: false
+        readonly property var settingsPage: (typeof settingsLoader !== "undefined" && settingsLoader && settingsLoader.item) ? settingsLoader.item : null
+        readonly property var gamesPage: (typeof gamesLoader !== "undefined" && gamesLoader && gamesLoader.item) ? gamesLoader.item : null
 
         Timer {
             id: studioPrewarmTimer
@@ -36,6 +39,17 @@ Window {
             repeat: false
             onTriggered: {
                 mainRoot.studioPrewarmed = true;
+            }
+        }
+
+        // Asynchronous background prewarm timer — fires during WelcomeScreen reveal so pages are 100% ready on unveil
+        Timer {
+            id: backgroundPrewarmTimer
+            interval: 400
+            running: true
+            repeat: false
+            onTriggered: {
+                mainRoot.backgroundPagesActive = true;
             }
         }
 
@@ -394,27 +408,34 @@ Window {
                     }
                 }
 
-                // Page 4: Settings (Smooth fade transition on open & close)
-                SettingsPage {
-                    id: settingsPage
+                // Page 4: Settings (Asynchronous background pre-warming via dynamic source)
+                Loader {
+                    id: settingsLoader
                     anchors.fill: parent
                     z: (pageStack.currentIndex === 4) ? 25 : 1
                     visible: opacity > 0.001
                     opacity: pageStack.currentIndex === 4 ? 1.0 : 0.0
                     enabled: pageStack.currentIndex === 4 && opacity > 0.90
+                    asynchronous: true
+                    active: mainRoot.backgroundPagesActive || pageStack.currentIndex === 4
+                    source: (mainRoot.backgroundPagesActive || pageStack.currentIndex === 4) ? "pages/SettingsPage.qml" : ""
+                    onLoaded: {
+                        if (item) {
+                            item.returnIndex = 1;
+                            item.backRequested.connect(function() {
+                                if (item.activeCategory === "profile" && item.returnIndex === 1) {
+                                    item.returnIndex = 11;
+                                }
+                                pageStack.currentIndex = item.returnIndex;
+                                item.returnIndex = 1;
+                            });
+                        }
+                    }
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
                         }
-                    }
-                    returnIndex: 1
-                    onBackRequested: {
-                        if (activeCategory === "profile" && returnIndex === 1) {
-                            returnIndex = 11;
-                        }
-                        pageStack.currentIndex = returnIndex;
-                        returnIndex = 1;
                     }
                 }
 
@@ -646,22 +667,29 @@ Window {
                     }
                 }
 
-                // Page 14: Games (In-Cabin Entertainment - Coming Soon)
-                GamesPage {
-                    id: gamesPage
-                    objectName: "gamesPage"
+                // Page 14: Games (Asynchronous background pre-warming)
+                Loader {
+                    id: gamesLoader
+                    objectName: "gamesLoader"
                     anchors.fill: parent
                     visible: pageStack.currentIndex === 14 || opacity > 0.001
                     opacity: pageStack.currentIndex === 14 ? 1.0 : 0.0
                     enabled: pageStack.currentIndex === 14 && opacity > 0.8
+                    asynchronous: true
+                    active: mainRoot.backgroundPagesActive || pageStack.currentIndex === 14
+                    source: (mainRoot.backgroundPagesActive || pageStack.currentIndex === 14) ? "pages/GamesPage.qml" : ""
+                    onLoaded: {
+                        if (item) {
+                            item.backRequested.connect(function() {
+                                pageStack.currentIndex = 2; // Return to Apps page
+                            });
+                        }
+                    }
                     Behavior on opacity {
                         NumberAnimation {
                             duration: 320
                             easing.type: Easing.InOutCubic
                         }
-                    }
-                    onBackRequested: {
-                        pageStack.currentIndex = 2; // Return to Apps page
                     }
                 }
             }
@@ -858,6 +886,32 @@ Window {
                         MediaBackend.setSource("OrbitXM");
                     }
                 }
+            }
+        }
+
+        // =====================================================================
+        // MASTER HARDWARE / SOFTWARE SCREEN BRIGHTNESS DIMMER
+        // Dims display dynamically based on SystemBackend.brightness.
+        // Calibrated with a safe floor so the display NEVER becomes dark or invisible.
+        // =====================================================================
+        Rectangle {
+            id: displayBrightnessDimmer
+            anchors.fill: parent
+            z: 9999
+            color: "#000000"
+            // At 100% brightness: opacity is 0.0 (full brightness)
+            // At 10% brightness: opacity is 0.65 (retains 35% luminance, clear and readable)
+            // Floor ensures screen is ALWAYS visible and never pitch black
+            opacity: {
+                var b = typeof SystemBackend !== "undefined" ? SystemBackend.brightness : 85;
+                var clampedB = Math.max(10, Math.min(100, b));
+                return (1.0 - (clampedB - 10) / 90.0) * 0.65;
+            }
+            visible: opacity > 0.005
+            enabled: false // Transparent to all mouse and touch events
+
+            Behavior on opacity {
+                NumberAnimation { duration: 160; easing.type: Easing.OutQuad }
             }
         }
 
