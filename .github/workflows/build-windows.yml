@@ -5,6 +5,8 @@ on:
     branches: [ main, master ]
     tags:
       - 'v*.*.*'
+      - '!*pi5*'
+      - '!pi5*'
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:

@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - 'v*.*.*'
+      - '!*pi5*'
+      - '!pi5*'
   release:
     types: [published]
   workflow_dispatch:
