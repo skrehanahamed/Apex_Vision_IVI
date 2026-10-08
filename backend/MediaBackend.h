@@ -15,11 +15,12 @@
 #include <QVariantMap>
 #include <QPointer>
 
+#include <QMediaPlayer>
+#include <QAudioOutput>
+#include <QNetworkReply>
+
 class VehicleSimulator;
-class QMediaPlayer;
-class QAudioOutput;
 class QNetworkAccessManager;
-class QNetworkReply;
 class QTimer;
 
 class PersistenceManager;
