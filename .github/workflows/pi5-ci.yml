@@ -59,6 +59,11 @@ jobs:
     name: Build & Syntax Verification (Ubuntu / Qt 6)
     runs-on: ubuntu-22.04
     needs: validate-code
+    permissions:
+      contents: read
+      pull-requests: write
+      statuses: write
+      checks: write
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -111,13 +116,11 @@ jobs:
           cmake --build build --config Release -j 2
 
       - name: SonarCloud Code Analysis
-        uses: SonarSource/sonarqube-scan-action@v5
+        uses: SonarSource/sonarqube-scan-action@v8.3.0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: "https://sonarcloud.io"
-        with:
-          args: >
-            --define "sonar.cfamily.compile-commands=build/compile_commands.json"
 
   # ============================================================================
   # 3. RASPBERRY PI 5 DEPLOYMENT BUNDLE PACKAGER
