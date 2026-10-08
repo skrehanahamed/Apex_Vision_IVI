@@ -1,0 +1,196 @@
+name: Raspberry Pi 5 CI & Release
+
+on:
+  push:
+    branches: [ pi5 ]
+    tags:
+      - 'v*-pi5*'
+      - 'pi5-v*'
+  pull_request:
+    branches: [ pi5 ]
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: 'Publish GitHub Release with Pi 5 package'
+        required: false
+        type: boolean
+        default: false
+      release_tag:
+        description: 'Release tag name (e.g., v2.7.5-pi5)'
+        required: false
+        default: ''
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # 1. CODE & QML VALIDATION (Fast Lint & Integrity Verification)
+  # ============================================================================
+  validate-code:
+    name: Code & QML Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Pi 5 Repository
+        uses: actions/checkout@v4
+
+      - name: Verify Shell Scripts Syntax
+        run: |
+          echo ">> Linting deployment shell scripts..."
+          bash -n patch-pi5.sh
+          bash -n deploy-pi5.sh
+          echo "✅ Shell scripts syntax valid."
+
+      - name: Verify QML & Asset Structure
+        run: |
+          echo ">> Validating QML and asset manifest..."
+          python3 -c "import os, sys; critical = ['CMakeLists.txt', 'main.cpp', 'qml/Main.qml', 'qml/components/WelcomeScreen.qml', 'qml/pages/HomePage.qml', 'qml/pages/VehiclePage.qml', 'qml/pages/SettingsPage.qml', 'qml/pages/GamesPage.qml', 'qml/pages/HelicopterGameView.qml', 'patch-pi5.sh', 'deploy-pi5.sh']; missing = [f for f in critical if not os.path.exists(f)]; sys.exit(1) if missing else print('All critical files present.')"
+
+      - name: Lint JSON & Configuration Files
+        run: |
+          echo ">> Validating JSON configuration files..."
+          python3 -c "import json, glob; [json.load(open(f)) for f in glob.glob('**/*.json', recursive=True) if 'node_modules' not in f and '.git' not in f]; print('All JSON configurations valid.')"
+
+  # ============================================================================
+  # 2. APPLICATION BUILD & VERIFICATION
+  # ============================================================================
+  build-verification:
+    name: Build & Syntax Verification (Ubuntu / Qt 6)
+    runs-on: ubuntu-22.04
+    needs: validate-code
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Build Dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo apt-get -o Acquire::Retries=3 install -y --no-install-recommends \
+            build-essential cmake ninja-build libgl1-mesa-dev libxkbcommon-dev \
+            libegl1-mesa-dev libfontconfig1-dev libfreetype6-dev libasound2-dev \
+            libpulse-dev libdbus-1-dev
+
+      - name: Setup Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.5.3'
+          modules: 'qtpositioning qtquick3d qtshadertools qtquicktimeline qtmultimedia'
+          cache: true
+          cache-key-prefix: 'qt6-pi5-build-cache-v1'
+
+      - name: Configure CMake
+        run: |
+          cmake -B build -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_PREFIX_PATH="${QT_ROOT}"
+
+      - name: Build Core IVI Binary
+        run: |
+          cmake --build build --config Release -j 2
+
+  # ============================================================================
+  # 3. RASPBERRY PI 5 DEPLOYMENT BUNDLE PACKAGER
+  # ============================================================================
+  package-pi5:
+    name: Package Pi 5 Release Bundle
+    runs-on: ubuntu-latest
+    needs: validate-code
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Create Automotive Deploy Bundle
+        run: |
+          BUNDLE_DIR="apex_vision_ivi_pi5_bundle"
+          mkdir -p "${BUNDLE_DIR}/qml" "${BUNDLE_DIR}/web" "${BUNDLE_DIR}/assets"
+          
+          # Copy QML, web applications, and system configs
+          cp -r qml/* "${BUNDLE_DIR}/qml/"
+          cp -r web/* "${BUNDLE_DIR}/web/"
+          if [ -d "assets" ]; then cp -r assets/* "${BUNDLE_DIR}/assets/"; fi
+          
+          # Generate install and launch scripts
+          cat << 'EOF' > "${BUNDLE_DIR}/install.sh"
+          #!/bin/bash
+          set -euo pipefail
+          echo "========================================================"
+          echo " 🚗 Installing APEX VISION IVI on Raspberry Pi 5"
+          echo "========================================================"
+          INSTALL_DIR="/opt/apex_vision_ivi"
+          mkdir -p "${INSTALL_DIR}"
+          cp -r qml web assets "${INSTALL_DIR}/"
+          if [ -f "apex_vision_ivi" ]; then
+              cp apex_vision_ivi "${INSTALL_DIR}/"
+              chmod +x "${INSTALL_DIR}/apex_vision_ivi"
+          fi
+          if [ -f "assets.rcc" ]; then
+              cp assets.rcc "${INSTALL_DIR}/"
+          fi
+          echo "✅ Deployment installed to ${INSTALL_DIR}"
+          EOF
+          chmod +x "${BUNDLE_DIR}/install.sh"
+
+          # Package into tar.gz and zip archives
+          tar -czf apex-vision-ivi-pi5-assets.tar.gz -C "${BUNDLE_DIR}" .
+          zip -r apex-vision-ivi-pi5-assets.zip "${BUNDLE_DIR}"
+
+      - name: Upload Pi 5 Bundle Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apex-vision-ivi-pi5-bundle
+          path: |
+            apex-vision-ivi-pi5-assets.tar.gz
+            apex-vision-ivi-pi5-assets.zip
+          retention-days: 14
+
+  # ============================================================================
+  # 4. GITHUB RELEASE PUBLISHER (Tags or Manual Dispatch)
+  # ============================================================================
+  publish-release:
+    name: Publish Pi 5 Release
+    runs-on: ubuntu-latest
+    needs: [build-verification, package-pi5]
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'workflow_dispatch' && github.event.inputs.create_release == 'true')
+    steps:
+      - name: Download Packaged Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: apex-vision-ivi-pi5-bundle
+
+      - name: Determine Release Tag
+        id: release_info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            TAG="${{ github.event.inputs.release_tag }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Create or Update GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: "Apex Vision IVI Pi 5 - ${{ steps.release_info.outputs.tag }}"
+          body: |
+            ## APEX VISION IVI — Raspberry Pi 5 Release (${{ steps.release_info.outputs.tag }})
+            
+            ### Highlights
+            - Dedicated Raspberry Pi 5 Automotive Infotainment Build
+            - Hardware-accelerated OpenGL ES 3.1 on VideoCore VII
+            - Fast-Boot Dynamic QML Lazy Loading (Sub-15s boot time)
+            - Wi-Fi Reconnect & WPA2/WPA3 Fast Association
+            - Helicopter Classic Cockpit Arcade Game
+            
+            ### Deployment
+            Extract and deploy directly to `/opt/apex_vision_ivi` on your Raspberry Pi 5.
+          files: |
+            apex-vision-ivi-pi5-assets.tar.gz
+            apex-vision-ivi-pi5-assets.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
